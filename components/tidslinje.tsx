@@ -5,42 +5,23 @@ import moment from 'moment'
 
 function Tidslinje() {
 
-
-
-const items = [
-  {
-    id: 1,
-    group: "e679c310-7767-42de-b287-e0b51d410dd1",
-    title: 'item 1',
-    start_time: moment().subtract(5,'hour'),
-    end_time: moment().add(4, 'hour')
-  },
- 
-  {
-    id: 2,
-    group: "3fb3bdcb-f30b-438d-8991-e37640946cdf",
-    title: 'item 3',
-    start_time: moment().add(-0.5, 'hour'),
-    end_time: moment().add(0.5, 'hour')
-  },
-  {
-    id: 3,
-    group: 1,
-    title: 'item 3',
-    start_time: moment().add(2, 'hour'),
-    end_time: moment().add(3, 'hour')
-  }
-]
-
 const [groupData, setGroupData] = useState(null)
+const [itemData, setItemData] = useState(null)
 const [isLoading, setLoading] = useState(false)
 
 useEffect(() => {
   setLoading(true)
-  fetch('https://vaktor-plan-api.dev.intern.nav.no/api/v1/groups/')
-    .then((res) => res.json())
-    .then((groupData) => {
+  Promise.all([
+  fetch('https://vaktor-plan-api.dev.intern.nav.no/api/v1/groups/'),
+  fetch('https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/')
+]).then(async([groupRes,scheduleRes]) => {
+const groups = await groupRes.json(); 
+const schedules = await scheduleRes.json(); 
+return[groups, schedules]
+})
+    .then(([groupData, itemData]) => {
       setGroupData(groupData)
+      setItemData(itemData)
       setLoading(false)
     })
 }, [])
@@ -48,16 +29,18 @@ useEffect(() => {
 if (isLoading) return <p>Loading...</p>
 if (!groupData) return <p>No profile data</p>
 
-
 const vaktlagList:any = groupData;
 const groups:any = []
 vaktlagList.map((vaktlag:any) =>{
-  groups.push({title:vaktlag.name, id: vaktlag.id})
+  groups.push({title:vaktlag.name, id: vaktlag.id, stackItems:true})
 })
 
-console.log(groups)
-
-
+const itemList:any = itemData;
+const items:any = []
+itemList.map((itemObj:any) =>{
+  items.push({id: itemObj.id, start_time: moment().subtract(5,'hour'),
+  end_time: moment().add(4, 'hour'), title: itemObj.active_user_id, group: itemObj.group_id })
+})
 
     return  (
                 <Timeline
@@ -67,8 +50,6 @@ console.log(groups)
                     defaultTimeEnd={moment().add(12, 'hour')}
                 />)
                 
-
 }
-
 
  export default Tidslinje;
