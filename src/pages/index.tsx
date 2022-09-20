@@ -1,13 +1,14 @@
 import type { NextPage } from "next";
+import GroupDetailsModal from "../components/GroupDetailsModal";
+import Tidslinje from "../components/tidslinje";
 
-        import Tidslinje from "../components/tidslinje";
+const Home: NextPage = () => {
+return (
+    <div>
+      <GroupDetailsModal />
+      <Tidslinje />
+    </div>
+    );
+};
 
-        const Home: NextPage = () => {
-        return (
-<div>
-  <Tidslinje />
-</div>
-        );
-        };
-
-        export default Home;
+export default Home;
