@@ -1,7 +1,7 @@
 import Timeline from "react-calendar-timeline";
 import { useState, useEffect } from "react";
 import moment from "moment";
-import { RandomColor, BorderColor } from "./Randomcolor";
+import { RandomColor, setGrpColor } from "./Randomcolor";
 
 function Tidslinje() {
   var tinycolor = require("tinycolor2");
@@ -36,7 +36,10 @@ function Tidslinje() {
 
   const vaktlagList: any = groupData;
   const groups: any = [];
+  const groupColorList: any = [];
+
   vaktlagList.map((vaktlag: any) => {
+    groupColorList.push({ group: vaktlag.id, color: RandomColor() });
     groups.push({ title: vaktlag.name, id: vaktlag.id });
   });
 
@@ -47,11 +50,12 @@ function Tidslinje() {
 
   const itemList: any = itemData;
   const items: any = [];
+
   itemList.map((itemObj: any) => {
     //console.log(itemObj);
 
-    const itemColor = RandomColor();
-    const borderColor = tinycolor(itemColor).darken(10).toString();
+    const itemColor = setGrpColor(groupColorList, itemObj.group_id);
+    const borderColor = tinycolor(itemColor).darken(5).toString();
     const textColor = tinycolor(itemColor).darken(85).toString();
 
     items.push({

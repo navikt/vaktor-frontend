@@ -26,3 +26,13 @@ export const RandomColor: any = () => {
 export const BorderColor: any = () => {
   return tinycolor(RandomColor()).darken(20).toString();
 };
+
+export const setGrpColor: any = (list: any[], itemId: string) => {
+  var grpColor: string = "#FFFFFF";
+  list.map((listObj: any) => {
+    if (listObj.group === itemId) {
+      grpColor = listObj.color;
+    }
+  });
+  return grpColor;
+};

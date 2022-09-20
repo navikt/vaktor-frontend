@@ -8,7 +8,7 @@ $item-selected-border: 3px solid black;
 $row-background-even: transparent;
 $row-background-odd: rgba(0, 0, 0, 0.05);
 
-$border-color: #bbb;
+$border-color: #bcbcbc;
 $border-width: 1px;
 $thick-border-width: 2px;
 $sidebar-color: #ffffff;
@@ -47,11 +47,13 @@ $weekend: rgba(177, 215, 229, 0.2);
       position: -webkit-sticky;
       left: 0px;
       overflow: hidden;
+      white-space: nowrap;
       display: inline-block;
       border-radius: 2px;
       padding: 0 6px;
-      height: 100%;
-      font-family: 14px;
+      text-overflow: ellipsis;
+
+      font-size: 14px;
     }
   }
 
