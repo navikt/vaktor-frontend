@@ -1,7 +1,7 @@
 import { Modal, Button, Alert, Heading, BodyLong } from "@navikt/ds-react";
 import "@navikt/ds-css";
 import { useEffect, useState } from "react";
-function ModalBox() {
+function GroupDetailsModal() {
   const [openState, setOpen] = useState(false);
   useEffect(() => {
     const appElement =
@@ -40,4 +40,4 @@ function ModalBox() {
     </>
   );
 }
-export default ModalBox;
+export default GroupDetailsModal;
