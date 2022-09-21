@@ -19,12 +19,9 @@ let colors: string[] = [
   "#FFEAEC",
 ];
 
-export const RandomColor: any = () => {
-  return colors[Math.floor(Math.random() * colors.length)];
-};
-
-export const BorderColor: any = () => {
-  return tinycolor(RandomColor()).darken(20).toString();
+export const colorPicker: any = (index: number) => {
+  //return colors[Math.floor(Math.random() * colors.length)];
+  return colors[index % colors.length];
 };
 
 export const setGrpColor: any = (list: any[], itemId: string) => {

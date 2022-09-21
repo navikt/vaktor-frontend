@@ -50,10 +50,11 @@ $weekend: rgba(177, 215, 229, 0.2);
       white-space: nowrap;
       display: inline-block;
       border-radius: 2px;
-      padding: 0 6px;
+      padding-left: 8px;
+      margin-top: -1px;
       text-overflow: ellipsis;
 
-      font-size: 14px;
+      font-size: 16px;
     }
   }
 
@@ -63,7 +64,7 @@ $weekend: rgba(177, 215, 229, 0.2);
     display: inline-block;
     vertical-align: top;
     position: relative;
-    box-sizing: border-box;
+
     border-right: $border-width solid $border-color;
 
     &.rct-sidebar-right {
@@ -76,7 +77,7 @@ $weekend: rgba(177, 215, 229, 0.2);
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      box-sizing: border-box;
+
       margin: 0;
       border-bottom: $border-width solid $border-color;
 

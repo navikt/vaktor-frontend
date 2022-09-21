@@ -1,7 +1,8 @@
 import Timeline from "react-calendar-timeline";
 import { useState, useEffect } from "react";
 import moment from "moment";
-import { RandomColor, setGrpColor } from "./Randomcolor";
+import { colorPicker, setGrpColor } from "./setColors";
+import { InformationColored } from "@navikt/ds-icons";
 
 function Tidslinje() {
   var tinycolor = require("tinycolor2");
@@ -38,9 +39,24 @@ function Tidslinje() {
   const groups: any = [];
   const groupColorList: any = [];
 
-  vaktlagList.map((vaktlag: any) => {
-    groupColorList.push({ group: vaktlag.id, color: RandomColor() });
-    groups.push({ title: vaktlag.name, id: vaktlag.id });
+  const formatSidebar = (grpName: String) => {
+    return (
+      <div style={{ marginLeft: "3px" }}>
+        <InformationColored />
+
+        {grpName}
+      </div>
+    );
+  };
+
+  vaktlagList.map((vaktlag: any, index: number) => {
+    groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
+    let name = vaktlag.name;
+
+    groups.push({
+      title: formatSidebar(vaktlag.name),
+      id: vaktlag.id,
+    });
   });
 
   const date = (timestamp: number) => {
@@ -85,8 +101,11 @@ function Tidslinje() {
       defaultTimeStart={moment().add(-12, "hour")}
       defaultTimeEnd={moment().add(12, "hour")}
       minZoom={86400000}
-      sidebarContent={<>hei</>}
+      sidebarContent="Vaktlag"
       itemHeightRatio={0.85}
+      sidebarWidth={240}
+      lineHeight={45}
+      canMove={false}
     />
   );
 }
