@@ -1,8 +1,12 @@
 import { Modal, Button, Alert, Heading, BodyLong } from "@navikt/ds-react";
 import "@navikt/ds-css";
 import { useEffect, useState } from "react";
-function GroupDetailsModal() {
+
+function GroupDetailsModal(props: { isOpen: boolean }) {
   const [openState, setOpen] = useState(false);
+
+  console.log("props = " + props.isOpen);
+
   useEffect(() => {
     const appElement =
       typeof document !== "undefined"
@@ -12,9 +16,10 @@ function GroupDetailsModal() {
       Modal.setAppElement(appElement);
     }
   }, []);
+  setOpen(props.isOpen);
+  console.log("Modal state is " + openState);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Åpne modal</Button>
       <Modal
         open={openState}
         aria-label="Modal demo"
@@ -22,19 +27,9 @@ function GroupDetailsModal() {
       >
         <Modal.Content>
           <Heading spacing level="1" size="large">
-            Laborum proident id ullamco
+            Clicked Group
           </Heading>
-          <Heading spacing level="2" size="medium">
-            Excepteur labore nostrud incididunt exercitation.
-          </Heading>
-          <BodyLong spacing>
-            Culpa aliquip ut cupidatat laborum minim quis ex in aliqua. Qui
-            incididunt dolor do ad ut. Incididunt eiusmod nostrud deserunt duis
-            laborum. Proident aute culpa qui nostrud velit adipisicing minim.
-            Consequat aliqua aute dolor do sit Lorem nisi mollit velit. Aliqua
-            exercitation non minim minim pariatur sunt laborum ipsum.
-            Exercitation nostrud est laborum magna non non aliqua qui esse.
-          </BodyLong>
+          <BodyLong spacing>Group info. blablabla</BodyLong>
         </Modal.Content>
       </Modal>
     </>
