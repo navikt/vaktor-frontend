@@ -20,12 +20,12 @@ spec:
         application:
             enabled: true
             tenant: nav.no
-        claims:
-            extra:
-                - "NAVident"
-                - "azp_name"
-        sidecar:
-            enabled: true
-            # everything below is optional, defaults shown
-            autoLogin: true
-            errorPath: ""
+            claims:
+                extra:
+                    - "NAVident"
+                    - "azp_name"
+    sidecar:
+        enabled: true
+        # everything below is optional, defaults shown
+        autoLogin: true
+        errorPath: ""
