@@ -17,7 +17,7 @@ function Tidslinje() {
     setLoading(true);
     fetch("api/schedules")
       .then((response) => response.json())
-      .then((data) => console.log(data));
+      .then((data) => "Do smt hereconsole.log(data)");
 
     Promise.all([
       fetch("https://vaktor-plan-api.dev.intern.nav.no/api/v1/groups/"),
@@ -91,10 +91,9 @@ function Tidslinje() {
     });
   });
 
-  console.log(modalOpen);
   return (
     <div>
-      <Button onClick={() => setModalOpen(true)}>Åpne modal</Button>
+      <Button onClick={() => setModalOpen(!modalOpen)}>Åpne modal</Button>
       <Timeline
         groups={groups}
         items={items}
@@ -107,7 +106,9 @@ function Tidslinje() {
         lineHeight={45}
         canMove={false}
       />
-      <GroupDetailsModal isOpen={modalOpen} />
+
+      {modalOpen && <GroupDetailsModal handleClose={() => (setModalOpen(false))} />}
+      
     </div>
   );
 }
