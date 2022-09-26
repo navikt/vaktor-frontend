@@ -11,6 +11,7 @@ function Tidslinje() {
   const [groupData, setGroupData] = useState(null);
   const [itemData, setItemData] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [grpName, setGrpName] = useState("");
   const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -42,13 +43,21 @@ function Tidslinje() {
   const groups: any = [];
   const groupColorList: any = [];
 
+  const updateModal = (groupname: string, modalstate: boolean) => {
+    setModalOpen(modalstate);
+    setGrpName(groupname);
+  };
+
   vaktlagList.map((vaktlag: any, index: number) => {
     groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
     let name = vaktlag.name;
 
     groups.push({
       title: (
-        <div style={{ marginLeft: "3px" }}>
+        <div
+          style={{ marginLeft: "3px" }}
+          onClick={() => updateModal(name, !modalOpen)}
+        >
           <InformationColored />
           {name}
         </div>
@@ -94,7 +103,6 @@ function Tidslinje() {
 
   return (
     <div>
-      <Button onClick={() => setModalOpen(!modalOpen)}>Åpne modal</Button>
       <Timeline
         groups={groups}
         items={items}
@@ -109,7 +117,10 @@ function Tidslinje() {
       />
 
       {modalOpen && (
-        <GroupDetailsModal handleClose={() => setModalOpen(false)} />
+        <GroupDetailsModal
+          handleClose={() => setModalOpen(false)}
+          groupName={grpName}
+        />
       )}
     </div>
   );

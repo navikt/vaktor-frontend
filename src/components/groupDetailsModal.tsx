@@ -2,18 +2,16 @@ import { Modal, Button, Alert, Heading, BodyLong } from "@navikt/ds-react";
 import "@navikt/ds-css";
 import { useEffect, useState } from "react";
 
-
-
-
-const GroupDetailsModal = (props: { handleClose: Function }) => {
+const GroupDetailsModal = (props: {
+  handleClose: Function;
+  groupName: string;
+}) => {
   useEffect(() => {
     if (Modal && Modal.setAppElement) {
       Modal.setAppElement("#__next");
     }
+  }, []);
 
-  },[])
-
-  
   return (
     <>
       <Modal
@@ -23,12 +21,12 @@ const GroupDetailsModal = (props: { handleClose: Function }) => {
       >
         <Modal.Content>
           <Heading spacing level="1" size="large">
-            Clicked Group
+            {props.groupName}
           </Heading>
           <BodyLong spacing>Group info. blablabla</BodyLong>
         </Modal.Content>
       </Modal>
     </>
   );
-}
+};
 export default GroupDetailsModal;
