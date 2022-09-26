@@ -69,8 +69,8 @@ function Tidslinje() {
     //console.log(itemObj);
 
     const itemColor = setGrpColor(groupColorList, itemObj.group_id);
-    const borderColor = tinycolor(itemColor).darken(5).toString();
-    const textColor = tinycolor(itemColor).darken(80).toString();
+    const borderColor = tinycolor(itemColor).darken(6).toString();
+    const textColor = tinycolor(itemColor).darken(85).toString();
 
     items.push({
       id: itemObj.id,
@@ -84,6 +84,7 @@ function Tidslinje() {
           background: itemColor,
           color: textColor,
           borderColor: borderColor,
+          borderWidth: "2px",
           fontSize: "12px",
           borderRadius: "20px",
         },
@@ -101,14 +102,15 @@ function Tidslinje() {
         defaultTimeEnd={moment().add(12, "hour")}
         minZoom={86400000}
         sidebarContent="Vaktlag"
-        itemHeightRatio={0.85}
+        itemHeightRatio={0.8}
         sidebarWidth={240}
         lineHeight={45}
         canMove={false}
       />
 
-      {modalOpen && <GroupDetailsModal handleClose={() => (setModalOpen(false))} />}
-      
+      {modalOpen && (
+        <GroupDetailsModal handleClose={() => setModalOpen(false)} />
+      )}
     </div>
   );
 }
