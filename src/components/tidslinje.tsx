@@ -16,13 +16,10 @@ function Tidslinje() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("api/schedules")
-      .then((response) => response.json())
-      .then((data) => "Do smt hereconsole.log(data)");
 
     Promise.all([
-      fetch("https://vaktor-plan-api.dev.intern.nav.no/api/v1/groups/"),
-      fetch("https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/"),
+      fetch("api/groups"),
+      fetch("api/schedules"),
     ])
       .then(async ([groupRes, scheduleRes]) => {
         const groupjson = await groupRes.json();

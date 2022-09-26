@@ -20,10 +20,10 @@ spec:
         application:
             enabled: true
             tenant: nav.no
-        claims:
-            extra:
-                - "NAVident"
-                - "azp_name"
+            claims:
+                extra:
+                    - "NAVident"
+                    - "azp_name"
         sidecar:
             enabled: true
             # everything below is optional, defaults shown
