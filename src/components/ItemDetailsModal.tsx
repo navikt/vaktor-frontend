@@ -22,7 +22,6 @@ const ItemDetailsModal = (props: {
     }
   }, []);
 
-  console.log(props.userName);
   return (
     <>
       <Modal
