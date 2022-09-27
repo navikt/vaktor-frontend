@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
-import GroupDetailsModal from "../components/groupDetailsModal";
-import Tidslinje from "../components/tidslinje";
+import GroupDetailsModal from "../components/GroupDetailsModal";
+import Tidslinje from "../components/VaktorTimeline";
 
 const Home: NextPage = () => {
   return (

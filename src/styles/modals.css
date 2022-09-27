@@ -1,0 +1,11 @@
+.iconContainer {
+  display: "inline-block";
+  position: "absolute";
+  top: "77px";
+}
+
+.namecont {
+  display: "inline-block";
+  position: "relative";
+  left: "24px";
+}

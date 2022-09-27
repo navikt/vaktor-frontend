@@ -3,8 +3,22 @@ import { useState, useEffect } from "react";
 import moment from "moment";
 import { colorPicker, setGrpColor } from "./setColors";
 import { InformationColored } from "@navikt/ds-icons";
-import GroupDetailsModal from "../components/groupDetailsModal";
-import { Button } from "@navikt/ds-react";
+import GroupDetailsModal from "./GroupDetailsModal";
+import { Button, Label } from "@navikt/ds-react";
+import SidebarRow from "./SidebarRow";
+import styled from "styled-components";
+
+const InfoTextWrapper = styled.div`
+  display: inline-block;
+  position: relative;
+`;
+
+const IconWrapper = styled.div`
+  float: right;
+  position: absolute;
+  top: 4px;
+  left: 207px;
+`;
 
 function Tidslinje() {
   var tinycolor = require("tinycolor2");
@@ -51,12 +65,13 @@ function Tidslinje() {
 
     groups.push({
       title: (
-        <div
-          style={{ marginLeft: "3px" }}
-          onClick={() => updateModal(name, !modalOpen)}
-        >
-          <InformationColored />
-          {name}
+        <div onClick={() => updateModal(name, !modalOpen)}>
+          <InfoTextWrapper>
+            {name}
+            <IconWrapper>
+              <InformationColored />
+            </IconWrapper>
+          </InfoTextWrapper>
         </div>
       ),
       id: vaktlag.id,
