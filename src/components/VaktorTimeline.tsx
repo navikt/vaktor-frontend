@@ -1,7 +1,7 @@
 import Timeline from "react-calendar-timeline";
 import { useState, useEffect } from "react";
 import moment from "moment";
-import { colorPicker, setGrpColor } from "./setColors";
+import { colorPicker, setGrpColor } from "./SetColors";
 import { InformationColored } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import { Button, Label } from "@navikt/ds-react";
@@ -20,7 +20,7 @@ const IconWrapper = styled.div`
   left: 207px;
 `;
 
-function Tidslinje() {
+function VaktorTimeline() {
   var tinycolor = require("tinycolor2");
   const [groupData, setGroupData] = useState(null);
   const [itemData, setItemData] = useState(null);
@@ -31,10 +31,7 @@ function Tidslinje() {
   useEffect(() => {
     setLoading(true);
 
-    Promise.all([
-      fetch("api/groups"),
-      fetch("api/schedules"),
-    ])
+    Promise.all([fetch("api/groups"), fetch("api/schedules")])
       .then(async ([groupRes, scheduleRes]) => {
         const groupjson = await groupRes.json();
         const schedulejson = await scheduleRes.json();
@@ -137,4 +134,4 @@ function Tidslinje() {
     </div>
   );
 }
-export default Tidslinje;
+export default VaktorTimeline;

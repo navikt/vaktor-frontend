@@ -1,11 +1,10 @@
 import type { NextPage } from "next";
-import GroupDetailsModal from "../components/GroupDetailsModal";
-import Tidslinje from "../components/VaktorTimeline";
+import VaktorTimeline from "../components/VaktorTimeline";
 
 const Home: NextPage = () => {
   return (
     <div>
-      <Tidslinje />
+      <VaktorTimeline />
     </div>
   );
 };
