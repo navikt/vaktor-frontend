@@ -1,6 +1,6 @@
 import Timeline from "react-calendar-timeline";
 import { useState, useEffect } from "react";
-import moment from "moment";
+import moment, { Moment } from "moment";
 import { colorPicker, setGrpColor } from "./SetColors";
 import { InformationColored } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
@@ -33,8 +33,8 @@ function VaktorTimeline() {
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [itemUsername, setItemUsername] = useState("");
   const [itemGrpName, setItemGrpName] = useState("");
-  const [itemStartTime, setItemStartTime] = useState(0);
-  const [itemEndTime, setItemEndTime] = useState(0);
+  const [itemStartTime, setItemStartTime] = useState("");
+  const [itemEndTime, setItemEndTime] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -88,12 +88,26 @@ function VaktorTimeline() {
     return formatDate;
   };
 
+  const formattedDate = (date: number | Moment) => {
+    let formattedDate = moment(date).format("DD/MM/YYYY");
+    return formattedDate;
+  };
+
   const itemList: any = itemData;
   const items: any = [];
 
-  const updateItemModal = (modalstate: boolean, name: string) => {
+  const updateItemModal = (
+    modalstate: boolean,
+    name: string,
+    groupName: string,
+    startTime: string,
+    endTime: string
+  ) => {
     setItemModalOpen(modalstate);
     setItemUsername(name);
+    setItemGrpName(groupName);
+    setItemStartTime(startTime);
+    setItemEndTime(endTime);
   };
 
   itemList.map((itemObj: any) => {
@@ -102,18 +116,24 @@ function VaktorTimeline() {
     const itemColor = setGrpColor(groupColorList, itemObj.group_id);
     const borderColor = tinycolor(itemColor).darken(6).toString();
     const textColor = tinycolor(itemColor).darken(85).toString();
+    let itemStart = date(itemObj.start_timestamp);
+    let itemEnd = date(itemObj.end_timestamp);
 
-    console.log(itemObj.start_timestamp);
-    console.log(date(itemObj.start_timestamp));
     items.push({
       id: itemObj.id,
-      start_time: date(itemObj.start_timestamp),
-      end_time: date(itemObj.end_timestamp),
+      start_time: itemStart,
+      end_time: itemEnd,
       title: itemObj.user_name,
       group: itemObj.group_id,
       itemProps: {
         onMouseDown: () => {
-          updateItemModal(!itemModalOpen, itemObj.user_name);
+          updateItemModal(
+            !itemModalOpen,
+            itemObj.user_name,
+            itemObj.group_name,
+            formattedDate(itemStart),
+            formattedDate(itemEnd)
+          );
         },
         style: {
           background: itemColor,
@@ -132,8 +152,8 @@ function VaktorTimeline() {
       <Timeline
         groups={groups}
         items={items}
-        defaultTimeStart={moment().add(-12, "hour")}
-        defaultTimeEnd={moment().add(12, "hour")}
+        defaultTimeStart={moment().startOf("isoWeek")}
+        defaultTimeEnd={moment().endOf("isoWeek")}
         minZoom={86400000}
         sidebarContent="Vaktlag"
         itemHeightRatio={0.8}
@@ -152,6 +172,9 @@ function VaktorTimeline() {
         <ItemDetailsModal
           handleClose={() => setItemModalOpen(false)}
           userName={itemUsername}
+          groupName={itemGrpName}
+          startTime={itemStartTime}
+          endTime={itemEndTime}
         />
       )}
     </div>

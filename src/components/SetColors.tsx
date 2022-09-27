@@ -3,9 +3,10 @@ var tinycolor = require("tinycolor2");
 let colors: string[] = [
   "#EFECF4",
   "#E6F0FF",
-  "#EBFCFF",
-  "#F3FCF5",
-  "#FDFFE6",
+  "#E7F8FF",
+  "#EDFFF8",
+  "#F4FDE8",
+  "#FFFEE4",
   "#FFF6E7",
   "#FDE8E6",
 ];

@@ -27,6 +27,10 @@ export const InfoTextWrapper = styled.div.attrs(
   left: ${(props) => props.leftPosition}px;
 `;
 
+export const Spacer = styled.div.attrs((props: { height: number }) => props)`
+  height: ${(props) => props.height}px;
+`;
+
 const GroupDetailsModal = (props: {
   handleClose: Function;
   groupName: string;
@@ -59,33 +63,37 @@ const GroupDetailsModal = (props: {
         }}
       >
         <Modal.Content>
+          {/*Vaktlag Heading*/}
           <InformationLine>
             <Heading spacing level="1" size="large">
               <IconWrapper topPosition={40}>
                 <InformationColored />
               </IconWrapper>
-              <InfoTextWrapper leftPosition={44}>
+              <InfoTextWrapper leftPosition={47}>
                 {props.groupName}
               </InfoTextWrapper>
             </Heading>
           </InformationLine>
 
           <BodyLong spacing>
+            {/*Vakttelefon*/}
+            <Spacer height={10} />
             <InformationLine>
-              <IconWrapper topPosition={96}>
+              <IconWrapper topPosition={107}>
                 <Telephone />
               </IconWrapper>
-
               <InfoTextWrapper leftPosition={24}>
                 <b>Vakttelefon: </b>
                 {"(+47) 12 34 56 78"}
               </InfoTextWrapper>
             </InformationLine>
+
+            {/*Slack*/}
+            <Spacer height={12} />
             <InformationLine>
-              <IconWrapper topPosition={126}>
+              <IconWrapper topPosition={147}>
                 <Dialog />
               </IconWrapper>
-
               <InfoTextWrapper leftPosition={24}>
                 <b>Slack: </b>
                 {"@slack.name"}

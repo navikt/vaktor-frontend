@@ -1,26 +1,39 @@
-import { Modal, Button, Alert, Heading, BodyLong } from "@navikt/ds-react";
-import { Telephone, Dialog, InformationColored } from "@navikt/ds-icons";
+import { Modal, Heading, BodyLong } from "@navikt/ds-react";
+import {
+  InformationColored,
+  People,
+  CoApplicant,
+  Calender,
+} from "@navikt/ds-icons";
 import "@navikt/ds-css";
-import styled from "styled-components";
 import { useEffect, useState } from "react";
 import {
   IconWrapper,
   InformationLine,
   InfoTextWrapper,
+  Spacer,
 } from "./GroupDetailsModal";
+import moment from "moment";
+
+function formatDate(props: { timestamp: number }) {
+  var formattedDate = moment(props.timestamp).format("DD/MM/YYYY");
+  return formattedDate;
+}
 
 const ItemDetailsModal = (props: {
   handleClose: Function;
   groupName?: string;
   userName?: string;
-  startTime?: number;
-  endTime?: number;
+  startTime?: string;
+  endTime?: string;
 }) => {
   useEffect(() => {
     if (Modal && Modal.setAppElement) {
       Modal.setAppElement("#__next");
     }
   }, []);
+
+  var endTime = props.endTime;
 
   return (
     <>
@@ -42,36 +55,54 @@ const ItemDetailsModal = (props: {
         }}
       >
         <Modal.Content>
+          {/*Vaktperiode Heading*/}
           <InformationLine>
             <Heading spacing level="1" size="large">
               <IconWrapper topPosition={40}>
                 <InformationColored />
               </IconWrapper>
-              <InfoTextWrapper leftPosition={44}>Vaktperiode</InfoTextWrapper>
+              <InfoTextWrapper leftPosition={47}>Vaktperiode</InfoTextWrapper>
             </Heading>
           </InformationLine>
 
           <BodyLong spacing>
+            {/*Vaktlag*/}
+            <Spacer height={10} />
             <InformationLine>
-              <IconWrapper topPosition={96}>
-                <Telephone />
+              <IconWrapper topPosition={106}>
+                <CoApplicant />
               </IconWrapper>
+              <InfoTextWrapper leftPosition={24}>
+                <b>Vaktlag: </b>
+                {props.groupName}
+              </InfoTextWrapper>
+            </InformationLine>
 
+            {/*Vakthaver*/}
+            <Spacer height={12} />
+            <InformationLine>
+              <IconWrapper topPosition={147}>
+                <People />
+              </IconWrapper>
               <InfoTextWrapper leftPosition={24}>
                 <b>Vakthaver: </b>
                 {props.userName}
               </InfoTextWrapper>
             </InformationLine>
-            <InformationLine>
-              <IconWrapper topPosition={126}>
-                <Dialog />
-              </IconWrapper>
 
-              <InfoTextWrapper leftPosition={24}>
-                <b>Vakthaver: </b>
-                {"@slack.name"}
-              </InfoTextWrapper>
+            {/*Varighet på vaktperiode*/}
+            <Spacer height={12} />
+            <InformationLine>
+              <IconWrapper topPosition={187}>
+                <Calender />
+              </IconWrapper>
             </InformationLine>
+            <InfoTextWrapper leftPosition={24}>
+              <b>Varighet: </b>
+              {props.startTime}
+              {" - "}
+              {props.endTime}
+            </InfoTextWrapper>
           </BodyLong>
         </Modal.Content>
       </Modal>
