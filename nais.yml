@@ -10,8 +10,6 @@ spec:
     port: 3000
     ingresses:
         - https://vaktor.nav.no
-    #image: ghcr.io/navikt/myapplication:417dcaa2c839b9da72e0189e2cfdd4e90e9cc6fd
-    #       ^--- interpolated from the ${{ env.docker_image }} variable in the action
     env:
         - name: NPM_CONFIG_CACHE
           value: /tmp
