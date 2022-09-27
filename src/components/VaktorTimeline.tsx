@@ -4,8 +4,8 @@ import moment from "moment";
 import { colorPicker, setGrpColor } from "./SetColors";
 import { InformationColored } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
+import ItemDetailsModal from "./ItemDetailsModal";
 import { Button, Label } from "@navikt/ds-react";
-import SidebarRow from "./SidebarRow";
 import styled from "styled-components";
 
 const InfoTextWrapper = styled.div`
@@ -22,11 +22,19 @@ const IconWrapper = styled.div`
 
 function VaktorTimeline() {
   var tinycolor = require("tinycolor2");
+
   const [groupData, setGroupData] = useState(null);
   const [itemData, setItemData] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [grpName, setGrpName] = useState("");
   const [isLoading, setLoading] = useState(false);
+
+  const [grpModalOpen, setGrpModalOpen] = useState(false);
+  const [grpName, setGrpName] = useState("");
+
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [itemUsername, setItemUsername] = useState("");
+  const [itemGrpName, setItemGrpName] = useState("");
+  const [itemStartTime, setItemStartTime] = useState(0);
+  const [itemEndTime, setItemEndTime] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -51,20 +59,20 @@ function VaktorTimeline() {
   const groups: any = [];
   const groupColorList: any = [];
 
-  const updateModal = (groupname: string, modalstate: boolean) => {
-    setModalOpen(modalstate);
+  const updateGrpModal = (groupname: string, modalstate: boolean) => {
+    setGrpModalOpen(modalstate);
     setGrpName(groupname);
   };
 
   vaktlagList.map((vaktlag: any, index: number) => {
     groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
-    let name = vaktlag.name;
+    let groupName = vaktlag.name;
 
     groups.push({
       title: (
-        <div onClick={() => updateModal(name, !modalOpen)}>
+        <div onClick={() => updateGrpModal(groupName, !grpModalOpen)}>
           <InfoTextWrapper>
-            {name}
+            {groupName}
             <IconWrapper>
               <InformationColored />
             </IconWrapper>
@@ -83,6 +91,11 @@ function VaktorTimeline() {
   const itemList: any = itemData;
   const items: any = [];
 
+  const updateItemModal = (modalstate: boolean, name: string) => {
+    setItemModalOpen(modalstate);
+    setItemUsername(name);
+  };
+
   itemList.map((itemObj: any) => {
     //console.log(itemObj);
 
@@ -90,14 +103,18 @@ function VaktorTimeline() {
     const borderColor = tinycolor(itemColor).darken(6).toString();
     const textColor = tinycolor(itemColor).darken(85).toString();
 
+    console.log(itemObj.start_timestamp);
+    console.log(date(itemObj.start_timestamp));
     items.push({
       id: itemObj.id,
       start_time: date(itemObj.start_timestamp),
       end_time: date(itemObj.end_timestamp),
-      title: itemObj.active_user_name,
+      title: itemObj.user_name,
       group: itemObj.group_id,
       itemProps: {
-        onMouseDown: () => {},
+        onMouseDown: () => {
+          updateItemModal(!itemModalOpen, itemObj.user_name);
+        },
         style: {
           background: itemColor,
           color: textColor,
@@ -125,10 +142,16 @@ function VaktorTimeline() {
         canMove={false}
       />
 
-      {modalOpen && (
+      {grpModalOpen && (
         <GroupDetailsModal
-          handleClose={() => setModalOpen(false)}
+          handleClose={() => setGrpModalOpen(false)}
           groupName={grpName}
+        />
+      )}
+      {itemModalOpen && (
+        <ItemDetailsModal
+          handleClose={() => setItemModalOpen(false)}
+          userName={itemUsername}
         />
       )}
     </div>

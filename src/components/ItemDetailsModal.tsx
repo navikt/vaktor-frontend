@@ -3,35 +3,18 @@ import { Telephone, Dialog, InformationColored } from "@navikt/ds-icons";
 import "@navikt/ds-css";
 import styled from "styled-components";
 import { useEffect, useState } from "react";
+import {
+  IconWrapper,
+  InformationLine,
+  InfoTextWrapper,
+} from "./GroupDetailsModal";
 
-export const InformationLine = styled.div.attrs(
-  (props: { leftPosition?: number }) => props
-)`
-  display: block;
-  padding-left: ${(props) => props.leftPosition}px;
-`;
-
-export const IconWrapper = styled.div.attrs(
-  (props: { topPosition: number }) => props
-)`
-  display: inline-block;
-  position: absolute;
-  top: ${(props) => props.topPosition}px;
-`;
-
-export const InfoTextWrapper = styled.div.attrs(
-  (props: { leftPosition: number }) => props
-)`
-  display: inline-block;
-  position: relative;
-  left: ${(props) => props.leftPosition}px;
-`;
-
-const GroupDetailsModal = (props: {
+const ItemDetailsModal = (props: {
   handleClose: Function;
-  groupName: string;
-  groupTelephone?: string;
-  groupSlack?: string;
+  groupName?: string;
+  userName?: string;
+  startTime?: number;
+  endTime?: number;
 }) => {
   useEffect(() => {
     if (Modal && Modal.setAppElement) {
@@ -39,11 +22,12 @@ const GroupDetailsModal = (props: {
     }
   }, []);
 
+  console.log(props.userName);
   return (
     <>
       <Modal
         open={true}
-        aria-label="Informasjons-modal for vaktlag"
+        aria-label="Informasjons-modal for vaktperiode"
         onClose={() => props.handleClose()}
         style={{
           overlay: {
@@ -64,9 +48,7 @@ const GroupDetailsModal = (props: {
               <IconWrapper topPosition={40}>
                 <InformationColored />
               </IconWrapper>
-              <InfoTextWrapper leftPosition={44}>
-                {props.groupName}
-              </InfoTextWrapper>
+              <InfoTextWrapper leftPosition={44}>Vaktperiode</InfoTextWrapper>
             </Heading>
           </InformationLine>
 
@@ -77,8 +59,8 @@ const GroupDetailsModal = (props: {
               </IconWrapper>
 
               <InfoTextWrapper leftPosition={24}>
-                <b>Vakttelefon: </b>
-                {"(+47) 12 34 56 78"}
+                <b>Vakthaver: </b>
+                {props.userName}
               </InfoTextWrapper>
             </InformationLine>
             <InformationLine>
@@ -87,7 +69,7 @@ const GroupDetailsModal = (props: {
               </IconWrapper>
 
               <InfoTextWrapper leftPosition={24}>
-                <b>Slack: </b>
+                <b>Vakthaver: </b>
                 {"@slack.name"}
               </InfoTextWrapper>
             </InformationLine>
@@ -97,4 +79,4 @@ const GroupDetailsModal = (props: {
     </>
   );
 };
-export default GroupDetailsModal;
+export default ItemDetailsModal;
