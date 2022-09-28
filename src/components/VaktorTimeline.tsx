@@ -1,12 +1,17 @@
-import Timeline from "react-calendar-timeline";
+import Timeline, {
+  TimelineHeaders,
+  SidebarHeader,
+  DateHeader,
+} from "react-calendar-timeline";
 import { useState, useEffect } from "react";
-import moment, { Moment } from "moment";
+import { Moment } from "moment";
 import { colorPicker, setGrpColor } from "./SetColors";
 import { InformationColored } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
 import { Button, Label } from "@navikt/ds-react";
 import styled from "styled-components";
+import moment from "moment";
 
 const InfoTextWrapper = styled.div`
   display: inline-block;
@@ -20,8 +25,16 @@ const IconWrapper = styled.div`
   left: 207px;
 `;
 
+const sideBarHeaderText = styled.div`
+  margin: auto;
+  width: 50%;
+  padding: 10px;
+`;
+
 function VaktorTimeline() {
   var tinycolor = require("tinycolor2");
+  require("moment/min/locales.min");
+  moment.locale("no");
 
   const [groupData, setGroupData] = useState(null);
   const [itemData, setItemData] = useState(null);
@@ -114,8 +127,11 @@ function VaktorTimeline() {
     //console.log(itemObj);
 
     const itemColor = setGrpColor(groupColorList, itemObj.group_id);
-    const borderColor = tinycolor(itemColor).darken(6).toString();
-    const textColor = tinycolor(itemColor).darken(85).toString();
+    const borderColor = tinycolor(itemColor)
+      .darken(70)
+      .setAlpha(0.3)
+      .toString();
+    const textColor = tinycolor(itemColor).darken(82).toString();
     let itemStart = date(itemObj.start_timestamp);
     let itemEnd = date(itemObj.end_timestamp);
 
@@ -123,7 +139,7 @@ function VaktorTimeline() {
       id: itemObj.id,
       start_time: itemStart,
       end_time: itemEnd,
-      title: itemObj.user_name,
+      title: itemObj.user.name,
       group: itemObj.group_id,
       itemProps: {
         onMouseDown: () => {
@@ -139,7 +155,7 @@ function VaktorTimeline() {
           background: itemColor,
           color: textColor,
           borderColor: borderColor,
-          borderWidth: "2px",
+          borderWidth: "2.5px",
           fontSize: "12px",
           borderRadius: "20px",
         },
@@ -160,7 +176,7 @@ function VaktorTimeline() {
         sidebarWidth={240}
         lineHeight={45}
         canMove={false}
-      />
+      ></Timeline>
 
       {grpModalOpen && (
         <GroupDetailsModal

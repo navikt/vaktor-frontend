@@ -13,7 +13,7 @@ $thick-border-width: 2px;
 $sidebar-color: #ffffff;
 $sidebar-background-color: #c52020;
 $list-item-padding: 0 4px;
-$weekend: rgba(177, 215, 229, 0.2);
+$weekend: rgba(177, 216, 229, 0.2);
 
 .react-calendar-timeline {
   * {
@@ -39,6 +39,8 @@ $weekend: rgba(177, 215, 229, 0.2);
   .rct-item {
     &:hover {
       z-index: 88;
+      font-weight: bold;
+      padding-left: -3px;
     }
 
     .rct-item-content {
@@ -49,8 +51,9 @@ $weekend: rgba(177, 215, 229, 0.2);
       white-space: nowrap;
       display: inline-block;
       border-radius: 2px;
-      padding-left: 8px;
-      margin-top: -1px;
+      padding-left: 15px;
+      margin-top: -2px;
+      margin-left: 5px;
       text-overflow: ellipsis;
 
       font-size: 16px;
@@ -63,7 +66,7 @@ $weekend: rgba(177, 215, 229, 0.2);
     display: inline-block;
     vertical-align: top;
     position: relative;
-
+    font-size: 18px;
     border-right: $border-width solid $border-color;
 
     &.rct-sidebar-right {
@@ -137,12 +140,13 @@ $weekend: rgba(177, 215, 229, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    border-bottom: 1px solid #bbb;
+    height: 50px;
+    border-bottom: 0px solid #bbb;
     cursor: pointer;
-    font-size: 14px;
+    margin: auto;
+    font-size: 15px;
     background-color: #e4e4e4;
-    border-left: 2px solid #bbb;
+    border-left: 1px solid #bbb;
   }
 
   .rct-dateHeader-primary {
@@ -150,16 +154,23 @@ $weekend: rgba(177, 215, 229, 0.2);
     border-left: 1px solid #bbb;
     border-right: 1px solid #bbb;
     color: #010101;
-    font-size: 18px;
-    font-weight: 500;
+    vertical-align: top;
+    font-size: 17px;
+    height: 100%;
+    font-weight: bold;
   }
 
   .rct-header-root {
-    background: #c8c8c8;
+    height: 80px;
+    margin: auto;
+    background: #e4e4e4;
     border-bottom: 1px solid #bbb;
   }
 
   .rct-calendar-header {
+    margin: auto;
+    height: 100%;
+
     border: 1px solid #bbb;
   }
 }

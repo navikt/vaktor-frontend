@@ -15,11 +15,6 @@ import {
 } from "./GroupDetailsModal";
 import moment from "moment";
 
-function formatDate(props: { timestamp: number }) {
-  var formattedDate = moment(props.timestamp).format("DD/MM/YYYY");
-  return formattedDate;
-}
-
 const ItemDetailsModal = (props: {
   handleClose: Function;
   groupName?: string;
