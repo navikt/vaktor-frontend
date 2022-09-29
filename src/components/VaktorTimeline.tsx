@@ -13,6 +13,16 @@ import { Loader } from "@navikt/ds-react";
 import styled from "styled-components";
 import moment from "moment";
 
+const SidebarHeaderText = styled.div`
+  padding-top: 25px;
+
+  margin: auto;
+  font-weight: bold;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 20px;
+`;
+
 export const SidebarText = styled.div`
   display: inline-block;
   position: relative;
@@ -209,7 +219,21 @@ function VaktorTimeline() {
         sidebarWidth={240}
         lineHeight={45}
         canMove={false}
-      ></Timeline>
+      >
+        <TimelineHeaders>
+          <SidebarHeader>
+            {({ getRootProps }) => {
+              return (
+                <div {...getRootProps()}>
+                  <SidebarHeaderText>Vaktlag:</SidebarHeaderText>
+                </div>
+              );
+            }}
+          </SidebarHeader>
+          <DateHeader unit="primaryHeader" />
+          <DateHeader />
+        </TimelineHeaders>
+      </Timeline>
 
       {grpModalOpen && (
         <GroupDetailsModal
