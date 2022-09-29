@@ -13,7 +13,7 @@ $thick-border-width: 2px;
 $sidebar-color: #ffffff;
 $sidebar-background-color: #c52020;
 $list-item-padding: 0 4px;
-$weekend: rgba(177, 216, 229, 0.2);
+$weekend: rgba(254, 169, 149, 0.1);
 
 .react-calendar-timeline {
   * {
@@ -52,8 +52,9 @@ $weekend: rgba(177, 216, 229, 0.2);
       display: inline-block;
       border-radius: 2px;
       padding-left: 15px;
+      padding-right: 15px;
       margin-top: -2px;
-      margin-left: 5px;
+
       text-overflow: ellipsis;
 
       font-size: 16px;

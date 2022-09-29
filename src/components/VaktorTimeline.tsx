@@ -9,26 +9,28 @@ import { colorPicker, setGrpColor } from "./SetColors";
 import { InformationColored } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
-import { Button, Label } from "@navikt/ds-react";
+import { Loader } from "@navikt/ds-react";
 import styled from "styled-components";
 import moment from "moment";
 
-const InfoTextWrapper = styled.div`
+export const SidebarText = styled.div`
   display: inline-block;
   position: relative;
+  left: 6px;
 `;
 
-const IconWrapper = styled.div`
-  float: right;
+const SidebarIcon = styled.div`
   position: absolute;
   top: 4px;
-  left: 207px;
+  left: 200px;
 `;
 
-const sideBarHeaderText = styled.div`
-  margin: auto;
-  width: 50%;
-  padding: 10px;
+const LoadingWrapper = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
 `;
 
 function VaktorTimeline() {
@@ -42,10 +44,14 @@ function VaktorTimeline() {
 
   const [grpModalOpen, setGrpModalOpen] = useState(false);
   const [grpName, setGrpName] = useState("");
+  const [grpType, setGrpType] = useState("");
+  const [grpPhone, setGrpPhone] = useState("");
 
   const [itemModalOpen, setItemModalOpen] = useState(false);
-  const [itemUsername, setItemUsername] = useState("");
+  const [itemUserName, setItemUserName] = useState("");
   const [itemGrpName, setItemGrpName] = useState("");
+  const [itemDescription, setItemDescription] = useState("");
+  const [itemTelephone, setItemTelephone] = useState("");
   const [itemStartTime, setItemStartTime] = useState("");
   const [itemEndTime, setItemEndTime] = useState("");
 
@@ -65,31 +71,50 @@ function VaktorTimeline() {
       });
   }, []);
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading)
+    return (
+      <LoadingWrapper>
+        <Loader variant="neutral" size="3xlarge" title="venter..." />
+      </LoadingWrapper>
+    );
   if (!groupData) return <p>No profile data</p>;
 
   const vaktlagList: any = groupData;
   const groups: any = [];
   const groupColorList: any = [];
 
-  const updateGrpModal = (groupname: string, modalstate: boolean) => {
+  const updateGrpModal = (
+    modalstate: boolean,
+    groupname: string,
+    grouptype: string,
+    groupPhone: string
+  ) => {
     setGrpModalOpen(modalstate);
     setGrpName(groupname);
+    setGrpType(grouptype);
+    setGrpPhone(groupPhone);
   };
 
   vaktlagList.map((vaktlag: any, index: number) => {
     groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
     let groupName = vaktlag.name;
+    let groupType = vaktlag.type;
+    let groupPhone = vaktlag.phone;
 
     groups.push({
       title: (
-        <div onClick={() => updateGrpModal(groupName, !grpModalOpen)}>
-          <InfoTextWrapper>
+        <div
+          onClick={() =>
+            updateGrpModal(!grpModalOpen, groupName, groupType, groupPhone)
+          }
+        >
+          <SidebarText>
             {groupName}
-            <IconWrapper>
+
+            <SidebarIcon>
               <InformationColored />
-            </IconWrapper>
-          </InfoTextWrapper>
+            </SidebarIcon>
+          </SidebarText>
         </div>
       ),
       id: vaktlag.id,
@@ -102,7 +127,7 @@ function VaktorTimeline() {
   };
 
   const formattedDate = (date: number | Moment) => {
-    let formattedDate = moment(date).format("DD/MM/YYYY");
+    let formattedDate = moment(date).format("DD/MM/YY");
     return formattedDate;
   };
 
@@ -113,12 +138,16 @@ function VaktorTimeline() {
     modalstate: boolean,
     name: string,
     groupName: string,
+    description: string,
+    telephone: string,
     startTime: string,
     endTime: string
   ) => {
     setItemModalOpen(modalstate);
-    setItemUsername(name);
+    setItemUserName(name);
     setItemGrpName(groupName);
+    setItemDescription(description);
+    setItemTelephone(telephone);
     setItemStartTime(startTime);
     setItemEndTime(endTime);
   };
@@ -134,6 +163,8 @@ function VaktorTimeline() {
     const textColor = tinycolor(itemColor).darken(82).toString();
     let itemStart = date(itemObj.start_timestamp);
     let itemEnd = date(itemObj.end_timestamp);
+    let itemDescription = itemObj.user.description;
+    let itemPhone = itemObj.group.phone;
 
     items.push({
       id: itemObj.id,
@@ -145,8 +176,10 @@ function VaktorTimeline() {
         onMouseDown: () => {
           updateItemModal(
             !itemModalOpen,
-            itemObj.user_name,
-            itemObj.group_name,
+            itemObj.user.name,
+            itemObj.group.name,
+            itemDescription,
+            itemPhone,
             formattedDate(itemStart),
             formattedDate(itemEnd)
           );
@@ -182,13 +215,17 @@ function VaktorTimeline() {
         <GroupDetailsModal
           handleClose={() => setGrpModalOpen(false)}
           groupName={grpName}
+          groupType={grpType}
+          groupTelephone={grpPhone}
         />
       )}
       {itemModalOpen && (
         <ItemDetailsModal
           handleClose={() => setItemModalOpen(false)}
-          userName={itemUsername}
+          userName={itemUserName}
           groupName={itemGrpName}
+          description={itemDescription}
+          telephone={itemTelephone}
           startTime={itemStartTime}
           endTime={itemEndTime}
         />
