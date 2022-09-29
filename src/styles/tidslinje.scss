@@ -7,7 +7,7 @@ $item-selected-background: #ffc107;
 $row-background-even: transparent;
 $row-background-odd: rgba(0, 0, 0, 0.05);
 
-$border-color: #bcbcbc;
+$border-color: #b9bfc7;
 $border-width: 1px;
 $thick-border-width: 2px;
 $sidebar-color: #ffffff;
@@ -39,8 +39,6 @@ $weekend: rgba(254, 169, 149, 0.1);
   .rct-item {
     &:hover {
       z-index: 88;
-      font-weight: bold;
-      padding-left: -3px;
     }
 
     .rct-item-content {
@@ -53,11 +51,11 @@ $weekend: rgba(254, 169, 149, 0.1);
       border-radius: 2px;
       padding-left: 15px;
       padding-right: 15px;
-      margin-top: -2px;
+      margin-top: 5px;
 
       text-overflow: ellipsis;
 
-      font-size: 16px;
+      font-size: 1px;
     }
   }
 
@@ -85,10 +83,10 @@ $weekend: rgba(254, 169, 149, 0.1);
       border-bottom: $border-width solid $border-color;
 
       &.rct-sidebar-row-odd {
-        background: #e4e4e4;
+        background: #dadde1;
       }
       &.rct-sidebar-row-even {
-        background: #e4e4e4;
+        background: #dadde1;
       }
     }
   }
@@ -98,7 +96,7 @@ $weekend: rgba(254, 169, 149, 0.1);
   .rct-vertical-lines {
     .rct-vl {
       position: absolute;
-      border-left: 1px solid $border-color;
+      border-left: 1px solid #cdd0d3;
       z-index: 30;
       &.rct-vl-first {
         border-left-width: 2px;
@@ -118,15 +116,15 @@ $weekend: rgba(254, 169, 149, 0.1);
 
     .rct-hl-even,
     .rct-hl-odd {
-      border-bottom: $border-width solid $border-color;
+      border-bottom: $border-width solid #cdd0d3;
       box-sizing: border-box;
       z-index: 40;
     }
     .rct-hl-odd {
-      background: #f7f7f7;
+      background: #fafbfd;
     }
     .rct-hl-even {
-      background: $row-background-even;
+      background: #ffffff;
     }
   }
 
@@ -146,12 +144,12 @@ $weekend: rgba(254, 169, 149, 0.1);
     cursor: pointer;
     margin: auto;
     font-size: 15px;
-    background-color: #e4e4e4;
+    background-color: #dadde1;
     border-left: 1px solid #bbb;
   }
 
   .rct-dateHeader-primary {
-    background-color: #c8c8c8;
+    background-color: #c2c8cf;
     border-left: 1px solid #bbb;
     border-right: 1px solid #bbb;
     color: #010101;
@@ -164,7 +162,7 @@ $weekend: rgba(254, 169, 149, 0.1);
   .rct-header-root {
     height: 80px;
     margin: auto;
-    background: #e4e4e4;
+    background: #dadde1;
     border-bottom: 1px solid #bbb;
   }
 

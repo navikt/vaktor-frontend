@@ -6,10 +6,10 @@ import Timeline, {
 import { useState, useEffect } from "react";
 import { Moment } from "moment";
 import { colorPicker, setGrpColor } from "./SetColors";
-import { InformationColored } from "@navikt/ds-icons";
+import { InformationColored, InformationFilled } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
-import { Loader } from "@navikt/ds-react";
+import { BodyShort, Label, Loader } from "@navikt/ds-react";
 import styled from "styled-components";
 import moment from "moment";
 
@@ -119,8 +119,7 @@ function VaktorTimeline() {
           }
         >
           <SidebarText>
-            {groupName}
-
+            <Label>{groupName}</Label>
             <SidebarIcon>
               <InformationColored />
             </SidebarIcon>
@@ -165,12 +164,12 @@ function VaktorTimeline() {
   itemList.map((itemObj: any) => {
     //console.log(itemObj);
 
-    const itemColor = setGrpColor(groupColorList, itemObj.group_id);
+    let itemColor = setGrpColor(groupColorList, itemObj.group_id);
     const borderColor = tinycolor(itemColor)
       .darken(70)
-      .setAlpha(0.3)
+      .setAlpha(0.22)
       .toString();
-    const textColor = tinycolor(itemColor).darken(82).toString();
+    const textColor = tinycolor(itemColor).darken(80).toString();
     let itemStart = date(itemObj.start_timestamp);
     let itemEnd = date(itemObj.end_timestamp);
     let itemDescription = itemObj.user.description;
@@ -180,7 +179,7 @@ function VaktorTimeline() {
       id: itemObj.id,
       start_time: itemStart,
       end_time: itemEnd,
-      title: itemObj.user.name,
+      title: <BodyShort>{itemObj.user.name}</BodyShort>,
       group: itemObj.group_id,
       itemProps: {
         onMouseDown: () => {
@@ -194,6 +193,7 @@ function VaktorTimeline() {
             formattedDate(itemEnd)
           );
         },
+
         style: {
           background: itemColor,
           color: textColor,
