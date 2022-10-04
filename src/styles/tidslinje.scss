@@ -83,10 +83,10 @@ $weekend: rgba(254, 169, 149, 0.1);
       border-bottom: $border-width solid $border-color;
 
       &.rct-sidebar-row-odd {
-        background: #dadde1;
+        background: #e0e3e8;
       }
       &.rct-sidebar-row-even {
-        background: #dadde1;
+        background: #e0e3e8;
       }
     }
   }
@@ -144,12 +144,12 @@ $weekend: rgba(254, 169, 149, 0.1);
     cursor: pointer;
     margin: auto;
     font-size: 15px;
-    background-color: #dadde1;
+    background-color: #e0e3e8;
     border-left: 1px solid #bbb;
   }
 
   .rct-dateHeader-primary {
-    background-color: #c2c8cf;
+    background-color: #c9ced6;
     border-left: 1px solid #bbb;
     border-right: 1px solid #bbb;
     color: #010101;
@@ -162,14 +162,15 @@ $weekend: rgba(254, 169, 149, 0.1);
   .rct-header-root {
     height: 80px;
     margin: auto;
-    background: #dadde1;
-    border-bottom: 1px solid #bbb;
+
+    background: #e0e3e8;
+    border-bottom: 1px solid #b9bfc7;
   }
 
   .rct-calendar-header {
     margin: auto;
     height: 100%;
 
-    border: 1px solid #bbb;
+    border: 1px solid #b9bfc7;
   }
 }

@@ -2,16 +2,35 @@ import Timeline, {
   TimelineHeaders,
   SidebarHeader,
   DateHeader,
+  TodayMarker,
 } from "react-calendar-timeline";
 import { useState, useEffect } from "react";
 import { Moment } from "moment";
 import { colorPicker, setGrpColor } from "./SetColors";
-import { InformationColored, InformationFilled } from "@navikt/ds-icons";
+import { InformationColored, Left, Right } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
-import { BodyShort, Label, Loader } from "@navikt/ds-react";
+import { BodyShort, Label, Loader, Button } from "@navikt/ds-react";
 import styled from "styled-components";
 import moment from "moment";
+
+const NavigateBtn = styled.div`
+  position: absolute;
+  display: inline-block;
+  z-index: 2;
+  margin-right: 1px;
+  right: 0px;
+  background-color: #0067c5;
+  height: 31.5px;
+  top: 0px;
+`;
+
+const Timeframebtns = styled.div`
+  display: inline-block;
+  margin-top: -10px;
+  position: relative;
+  top: -5px;
+`;
 
 const SidebarHeaderText = styled.div`
   padding-top: 25px;
@@ -64,6 +83,118 @@ function VaktorTimeline() {
   const [itemTelephone, setItemTelephone] = useState("");
   const [itemStartTime, setItemStartTime] = useState("");
   const [itemEndTime, setItemEndTime] = useState("");
+
+  const [visibleTimeStart, setVisibleTimeStart] = useState(
+    moment().startOf("isoWeek").valueOf()
+  );
+  const [visibleTimeEnd, setVisibleTimeEnd] = useState(
+    moment().startOf("isoWeek").add(7, "day").valueOf()
+  );
+  const [timeUnit, setTimeUnit] = useState("week");
+  const [scrolling, setScrolling] = useState();
+
+  const onPrevClick = () => {
+    if (timeUnit === "week") {
+      let newVisibleTimeStart = moment(visibleTimeStart)
+        .add(-1, "week")
+        .startOf("week")
+        .valueOf();
+      let newVisibleTimeEnd = moment(visibleTimeStart)
+        .add(-1, "week")
+        .endOf("week")
+        .valueOf();
+      setVisibleTimeStart(newVisibleTimeStart);
+      setVisibleTimeEnd(newVisibleTimeEnd);
+    }
+    if (timeUnit === "month") {
+      let newVisibleTimeStart = moment(visibleTimeStart)
+        .add(-1, "month")
+        .startOf("month")
+        .valueOf();
+      let newVisibleTimeEnd = moment(visibleTimeStart)
+        .add(-1, "month")
+        .endOf("month")
+        .valueOf();
+      setVisibleTimeStart(newVisibleTimeStart);
+      setVisibleTimeEnd(newVisibleTimeEnd);
+    }
+    if (timeUnit === "year") {
+      let newVisibleTimeStart = moment(visibleTimeStart)
+        .add(-1, "year")
+        .startOf("year")
+        .valueOf();
+      let newVisibleTimeEnd = moment(visibleTimeStart)
+        .add(-1, "year")
+        .endOf("year")
+        .valueOf();
+      setVisibleTimeStart(newVisibleTimeStart);
+      setVisibleTimeEnd(newVisibleTimeEnd);
+    }
+  };
+
+  const onNextClick = () => {
+    if (timeUnit === "week") {
+      let newVisibleTimeStart = moment(visibleTimeStart)
+        .add(1, "week")
+        .startOf("week")
+        .valueOf();
+      let newVisibleTimeEnd = moment(visibleTimeStart)
+        .add(1, "week")
+        .endOf("week")
+        .valueOf();
+      setVisibleTimeStart(newVisibleTimeStart);
+      setVisibleTimeEnd(newVisibleTimeEnd);
+    }
+    if (timeUnit === "month") {
+      let newVisibleTimeStart = moment(visibleTimeStart)
+        .add(1, "month")
+        .startOf("month")
+        .valueOf();
+      let newVisibleTimeEnd = moment(visibleTimeStart)
+        .add(1, "month")
+        .endOf("month")
+        .valueOf();
+      setVisibleTimeStart(newVisibleTimeStart);
+      setVisibleTimeEnd(newVisibleTimeEnd);
+    }
+    if (timeUnit === "year") {
+      let newVisibleTimeStart = moment(visibleTimeStart)
+        .add(1, "year")
+        .startOf("year")
+        .valueOf();
+      let newVisibleTimeEnd = moment(visibleTimeStart)
+        .add(1, "year")
+        .endOf("year")
+        .valueOf();
+      setVisibleTimeStart(newVisibleTimeStart);
+      setVisibleTimeEnd(newVisibleTimeEnd);
+    }
+  };
+
+  const handleTimeChange = (
+    visibleTimeStart: number,
+    visibleTimeEnd: number
+  ) => {
+    setVisibleTimeStart(visibleTimeStart);
+    setVisibleTimeEnd(visibleTimeEnd);
+    scrolling;
+  };
+
+  const handleTimeHeaderChange = (unit: string) => {
+    setTimeUnit(unit);
+    if (timeUnit === "week") {
+      setVisibleTimeStart(moment().startOf("week").valueOf());
+      setVisibleTimeEnd(moment().endOf("week").valueOf());
+    }
+    if (timeUnit === "month") {
+      setVisibleTimeStart(moment().startOf("month").valueOf());
+      setVisibleTimeEnd(moment().endOf("month").valueOf());
+    }
+    if (timeUnit === "year") {
+      setVisibleTimeStart(moment().startOf("year").valueOf());
+      setVisibleTimeEnd(moment().endOf("year").valueOf());
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -211,14 +342,14 @@ function VaktorTimeline() {
       <Timeline
         groups={groups}
         items={items}
-        defaultTimeStart={moment().startOf("isoWeek")}
-        defaultTimeEnd={moment().endOf("isoWeek")}
         minZoom={86400000}
         sidebarContent="Vaktlag"
         itemHeightRatio={0.8}
         sidebarWidth={240}
         lineHeight={45}
         canMove={false}
+        defaultTimeStart={moment().startOf("isoWeek")}
+        defaultTimeEnd={moment().endOf("isoWeek")}
       >
         <TimelineHeaders>
           <SidebarHeader>
