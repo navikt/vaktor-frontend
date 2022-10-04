@@ -4,6 +4,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req : NextApiRequest, res: NextApiResponse) {
   
+  console.log("groups api")
 
   let authorizationHeader = req.headers && req.headers.authorization?  req.headers.authorization: "No Authorization header"
 
