@@ -9,7 +9,7 @@ spec:
     image: {{ image }}
     port: 3000
     ingresses:
-        - https://vaktor.intern.nav.no
+        - https://status.nav.no/vaktor
     env:
         - name: NPM_CONFIG_CACHE
           value: /tmp
