@@ -7,30 +7,13 @@ import Timeline, {
 import { useState, useEffect } from "react";
 import { Moment } from "moment";
 import { colorPicker, setGrpColor } from "./SetColors";
-import { InformationColored, Left, Right } from "@navikt/ds-icons";
+import { InformationColored } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
 import { BodyShort, Label, Loader, Button } from "@navikt/ds-react";
 import styled from "styled-components";
 import moment from "moment";
-
-const NavigateBtn = styled.div`
-  position: absolute;
-  display: inline-block;
-  z-index: 2;
-  margin-right: 1px;
-  right: 0px;
-  background-color: #0067c5;
-  height: 31.5px;
-  top: 0px;
-`;
-
-const Timeframebtns = styled.div`
-  display: inline-block;
-  margin-top: -10px;
-  position: relative;
-  top: -5px;
-`;
+import { NavigationButtons } from "./NavigationButtons";
 
 const SidebarHeaderText = styled.div`
   padding-top: 25px;
@@ -64,8 +47,9 @@ const LoadingWrapper = styled.div`
 
 function VaktorTimeline() {
   var tinycolor = require("tinycolor2");
-  require("moment/min/locales.min");
-  moment.locale("no");
+
+  const [isTouched, setIsTouched] = useState(false);
+  const [color, setColor] = useState("");
 
   const [groupData, setGroupData] = useState(null);
   const [itemData, setItemData] = useState(null);
@@ -93,83 +77,7 @@ function VaktorTimeline() {
   const [timeUnit, setTimeUnit] = useState("week");
   const [scrolling, setScrolling] = useState();
 
-  const onPrevClick = () => {
-    if (timeUnit === "week") {
-      let newVisibleTimeStart = moment(visibleTimeStart)
-        .add(-1, "week")
-        .startOf("week")
-        .valueOf();
-      let newVisibleTimeEnd = moment(visibleTimeStart)
-        .add(-1, "week")
-        .endOf("week")
-        .valueOf();
-      setVisibleTimeStart(newVisibleTimeStart);
-      setVisibleTimeEnd(newVisibleTimeEnd);
-    }
-    if (timeUnit === "month") {
-      let newVisibleTimeStart = moment(visibleTimeStart)
-        .add(-1, "month")
-        .startOf("month")
-        .valueOf();
-      let newVisibleTimeEnd = moment(visibleTimeStart)
-        .add(-1, "month")
-        .endOf("month")
-        .valueOf();
-      setVisibleTimeStart(newVisibleTimeStart);
-      setVisibleTimeEnd(newVisibleTimeEnd);
-    }
-    if (timeUnit === "year") {
-      let newVisibleTimeStart = moment(visibleTimeStart)
-        .add(-1, "year")
-        .startOf("year")
-        .valueOf();
-      let newVisibleTimeEnd = moment(visibleTimeStart)
-        .add(-1, "year")
-        .endOf("year")
-        .valueOf();
-      setVisibleTimeStart(newVisibleTimeStart);
-      setVisibleTimeEnd(newVisibleTimeEnd);
-    }
-  };
-
-  const onNextClick = () => {
-    if (timeUnit === "week") {
-      let newVisibleTimeStart = moment(visibleTimeStart)
-        .add(1, "week")
-        .startOf("week")
-        .valueOf();
-      let newVisibleTimeEnd = moment(visibleTimeStart)
-        .add(1, "week")
-        .endOf("week")
-        .valueOf();
-      setVisibleTimeStart(newVisibleTimeStart);
-      setVisibleTimeEnd(newVisibleTimeEnd);
-    }
-    if (timeUnit === "month") {
-      let newVisibleTimeStart = moment(visibleTimeStart)
-        .add(1, "month")
-        .startOf("month")
-        .valueOf();
-      let newVisibleTimeEnd = moment(visibleTimeStart)
-        .add(1, "month")
-        .endOf("month")
-        .valueOf();
-      setVisibleTimeStart(newVisibleTimeStart);
-      setVisibleTimeEnd(newVisibleTimeEnd);
-    }
-    if (timeUnit === "year") {
-      let newVisibleTimeStart = moment(visibleTimeStart)
-        .add(1, "year")
-        .startOf("year")
-        .valueOf();
-      let newVisibleTimeEnd = moment(visibleTimeStart)
-        .add(1, "year")
-        .endOf("year")
-        .valueOf();
-      setVisibleTimeStart(newVisibleTimeStart);
-      setVisibleTimeEnd(newVisibleTimeEnd);
-    }
-  };
+  const toggleHover = () => {};
 
   const handleTimeChange = (
     visibleTimeStart: number,
@@ -178,22 +86,6 @@ function VaktorTimeline() {
     setVisibleTimeStart(visibleTimeStart);
     setVisibleTimeEnd(visibleTimeEnd);
     scrolling;
-  };
-
-  const handleTimeHeaderChange = (unit: string) => {
-    setTimeUnit(unit);
-    if (timeUnit === "week") {
-      setVisibleTimeStart(moment().startOf("week").valueOf());
-      setVisibleTimeEnd(moment().endOf("week").valueOf());
-    }
-    if (timeUnit === "month") {
-      setVisibleTimeStart(moment().startOf("month").valueOf());
-      setVisibleTimeEnd(moment().endOf("month").valueOf());
-    }
-    if (timeUnit === "year") {
-      setVisibleTimeStart(moment().startOf("year").valueOf());
-      setVisibleTimeEnd(moment().endOf("year").valueOf());
-    }
   };
 
   useEffect(() => {
@@ -220,7 +112,13 @@ function VaktorTimeline() {
     );
   if (!groupData) return <p>No profile data</p>;
 
-  const vaktlagList: any = groupData;
+  const groupDataList: any = groupData;
+
+  const groupsSorted = [...groupDataList].sort((a, b) =>
+    a.name > b.name ? 1 : -1
+  );
+  console.log(groupsSorted);
+
   const groups: any = [];
   const groupColorList: any = [];
 
@@ -236,7 +134,7 @@ function VaktorTimeline() {
     setGrpPhone(groupPhone);
   };
 
-  vaktlagList.map((vaktlag: any, index: number) => {
+  groupsSorted.map((vaktlag: any, index: number) => {
     groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
     let groupName = vaktlag.name;
     let groupType = vaktlag.type;
@@ -245,6 +143,7 @@ function VaktorTimeline() {
     groups.push({
       title: (
         <div
+          className="groupsClickable"
           onClick={() =>
             updateGrpModal(!grpModalOpen, groupName, groupType, groupPhone)
           }
@@ -296,6 +195,7 @@ function VaktorTimeline() {
     //console.log(itemObj);
 
     let itemColor = setGrpColor(groupColorList, itemObj.group_id);
+    let hoverColor = tinycolor(itemColor).darken(10).toString();
     const borderColor = tinycolor(itemColor)
       .darken(70)
       .setAlpha(0.22)
@@ -339,6 +239,14 @@ function VaktorTimeline() {
 
   return (
     <div>
+      <NavigationButtons
+        timeStart={visibleTimeStart}
+        timeUnit={timeUnit}
+        setVisibleTimeStart={setVisibleTimeStart}
+        setVisibleTimeEnd={setVisibleTimeEnd}
+        setTimeUnit={setTimeUnit}
+      />
+
       <Timeline
         groups={groups}
         items={items}
@@ -348,8 +256,9 @@ function VaktorTimeline() {
         sidebarWidth={240}
         lineHeight={45}
         canMove={false}
-        defaultTimeStart={moment().startOf("isoWeek")}
-        defaultTimeEnd={moment().endOf("isoWeek")}
+        visibleTimeStart={visibleTimeStart}
+        visibleTimeEnd={visibleTimeEnd}
+        onTimeChange={() => handleTimeChange(visibleTimeStart, visibleTimeEnd)}
       >
         <TimelineHeaders>
           <SidebarHeader>
