@@ -18,6 +18,8 @@
     "react": "18.2.0",
     "react-calendar-timeline": "^0.28.0",
     "react-dom": "18.2.0",
+    "react-is": "^18.2.0",
+    "react-spring": "^9.5.5",
     "sass": "^1.54.9",
     "styled": "^1.0.0",
     "styled-components": "^5.3.5",

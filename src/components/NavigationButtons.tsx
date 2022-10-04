@@ -8,7 +8,7 @@ import { useState, useEffect, Dispatch, SetStateAction } from "react";
 const NavigateBtn = styled.div`
   position: absolute;
   display: inline-block;
-  z-index: 2;
+  z-index: 2001;
   margin-right: 1px;
   right: 0px;
   background-color: #0067c5;
