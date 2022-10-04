@@ -15,6 +15,10 @@ $sidebar-background-color: #c52020;
 $list-item-padding: 0 4px;
 $weekend: rgba(254, 169, 149, 0.1);
 
+.groupsClickable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
 .react-calendar-timeline {
   * {
     box-sizing: border-box;
@@ -51,7 +55,7 @@ $weekend: rgba(254, 169, 149, 0.1);
       border-radius: 2px;
       padding-left: 15px;
       padding-right: 15px;
-      margin-top: 5px;
+      margin-top: 4px;
 
       text-overflow: ellipsis;
 
