@@ -32,6 +32,18 @@ export const NavigationButtons = (props: {
   setTimeUnit: Dispatch<SetStateAction<string>>;
 }) => {
   const onPrevClick = () => {
+    if (props.timeUnit === "day") {
+      let newVisibleTimeStart = moment(props.timeStart)
+        .add(-1, "day")
+        .startOf("day")
+        .valueOf();
+      let newVisibleTimeEnd = moment(props.timeStart)
+        .add(-1, "day")
+        .endOf("day")
+        .valueOf();
+      props.setVisibleTimeStart(newVisibleTimeStart);
+      props.setVisibleTimeEnd(newVisibleTimeEnd);
+    }
     if (props.timeUnit === "week") {
       let newVisibleTimeStart = moment(props.timeStart)
         .add(-1, "week")
@@ -71,6 +83,18 @@ export const NavigationButtons = (props: {
   };
 
   const onNextClick = () => {
+    if (props.timeUnit === "day") {
+      let newVisibleTimeStart = moment(props.timeStart)
+        .add(1, "day")
+        .startOf("day")
+        .valueOf();
+      let newVisibleTimeEnd = moment(props.timeStart)
+        .add(1, "day")
+        .endOf("day")
+        .valueOf();
+      props.setVisibleTimeStart(newVisibleTimeStart);
+      props.setVisibleTimeEnd(newVisibleTimeEnd);
+    }
     if (props.timeUnit === "week") {
       let newVisibleTimeStart = moment(props.timeStart)
         .add(1, "week")
