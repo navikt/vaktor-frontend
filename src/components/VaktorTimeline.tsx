@@ -199,7 +199,7 @@ function VaktorTimeline() {
   useEffect(() => {
     setLoading(true);
 
-    Promise.all([fetch("api/groups"), fetch("api/schedules")])
+    Promise.all([fetch("vaktor/api/groups"), fetch("vaktor/api/schedules")])
       .then(async ([groupRes, scheduleRes]) => {
         const groupjson = await groupRes.json();
         const schedulejson = await scheduleRes.json();
