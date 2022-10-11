@@ -123,6 +123,7 @@ function VaktorTimeline() {
   const groupsSorted = [...groupDataList].sort((a, b) =>
     a.name > b.name ? 1 : -1
   );
+  
   console.log(groupsSorted);
 
   const groups: any = [];
