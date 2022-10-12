@@ -1,0 +1,15 @@
+.AdminGuideContainer{
+    width: 70vw;
+    min-width: 600px;
+    max-width: 1200px;
+    margin: 2vh auto 2vh auto;
+}
+
+.AdminGuidePanel p{
+    text-align: center;
+    width: 100%;
+}
+
+.Container{
+  margin: 0 200px 0 200px;
+}
