@@ -13,3 +13,13 @@
 .Container{
   margin: 0 200px 0 200px;
 }
+
+.DatePicker_Custom{
+  margin-left: 15px;
+  height: 35px;
+}
+
+.DatePicker_Label{
+  height: 35px;
+  margin-top: 5px;
+}
