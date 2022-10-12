@@ -1,6 +1,37 @@
 import { Button, Table } from "@navikt/ds-react";
 import { useEffect, useState } from "react";
 
+const mapApproveStatus = (status: number) => {
+    let statusText = "";
+    let statusColor = "";
+    switch (status) {
+        case 1:
+            statusText = "Godkjent av ansatt";
+            statusColor = "#66CBEC";
+            break;
+        case 2:
+            statusText = "Godkjent av vaktsjef";
+            statusColor = "#99DEAD";
+            break;
+        case 3:
+            statusText = "Overført til lønn";
+            statusColor = "#E18071";
+            break;
+        default:
+            statusText = "Trenger godkjenning";
+            statusColor = "#FFFFFF";
+            break;
+    }
+
+    return (
+        <Table.DataCell
+            style={{ backgroundColor: statusColor, maxWidth: "90px" }}
+        >
+            {statusText}
+        </Table.DataCell>
+    );
+};
+
 const Admin = () => {
     const [itemData, setItemData] = useState();
 
@@ -88,9 +119,7 @@ const Admin = () => {
                                             </Button>
                                         </div>
                                     </Table.DataCell>
-                                    <Table.DataCell>
-                                        {approve_level}
-                                    </Table.DataCell>
+                                    {mapApproveStatus(approve_level)}
                                 </Table.Row>
                             );
                         }
