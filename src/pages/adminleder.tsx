@@ -14,8 +14,7 @@ const Home: NextPage = () => {
                 <div className="AdminGuideContainer">
                     <GuidePanel className="AdminGuidePanel">
                         <p>
-                            Under er listen over perioder du er registrert med
-                            bereskapsvakt som du må ta stilling til.{" "}
+                            Under er listen over personer som har vaktperioder du må ta stilling til.{" "}
                         </p>
                     </GuidePanel>
                 </div>
