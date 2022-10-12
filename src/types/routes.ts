@@ -7,13 +7,13 @@ export enum RouterVaktor {
 
 // Admin
 export enum RouterAdmin {
-    NAME = "Admin",
+    NAME = "Admin - Ansattgodkjenning",
     PATH = "/admin"
 }
 
 export enum RouterLedergodkjenning {
     NAME = "Admin - Ledergodkjenning",
-    PATH = "/Admin?tab=Ledergodkjenning"
+    PATH = "/adminleder"
 }
 // ---
 

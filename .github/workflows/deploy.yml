@@ -1,0 +1,50 @@
+name: Build, push, and deploy
+
+on: [push]
+
+env:
+  docker_image: ghcr.io/navikt/${{ github.repository }}:${{ github.sha }}
+
+jobs:
+  build-and-run-tests:
+    name: Build and push Docker container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build and publish Docker image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${GITHUB_TOKEN} | docker login ghcr.io --username ${GITHUB_REPOSITORY} --password-stdin
+          docker build --tag ${docker_image} .
+          docker push ${docker_image}
+
+  deploy-test:
+    name: Deploy application to test env
+    needs: build-and-run-tests
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: nais-test.yml
+          VAR: image=${{ env.docker_image }}
+  deploy-prod:
+    name: Deploy application to prod
+    needs: build-and-run-tests
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: prod-gcp
+          RESOURCE: nais.yml
+          VAR: image=${{ env.docker_image }}
+
+
+
