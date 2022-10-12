@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { BodyShort } from '@navikt/ds-react';
 
-import { RouterArbeidsgiver, RouterInternt, RouterPrivatperson, RouterSamarbeidspartner } from '../types/routes';
+import { RouterVaktor, RouterAdmin } from '../types/routes';
 
 const Nav = styled.nav `
 	height: 2.75rem;
@@ -82,51 +82,30 @@ export default function Navbar() {
 	return (
 		<Nav>
 			<ul role="tablist">
-                <li role="tab" onClick={() => router.push(RouterInternt.PATH)}>
-                    <Link href={RouterInternt.PATH}>
+                <li role="tab" onClick={() => router.push(RouterVaktor.PATH)}>
+                    <Link href={RouterVaktor.PATH}>
                         <a>
-                            <LenkeSpacer className={`${(router.asPath === RouterInternt.PATH) ? "active" : "inactive"}`}>
-                                <BodyShort size="small" className={`${router.pathname === "/Internt" ? "active" : ""}`}>{RouterInternt.NAME}</BodyShort>
+                            <LenkeSpacer className={`${(router.asPath === RouterVaktor.PATH) ? "active" : "inactive"}`}>
+                                <BodyShort size="small" className={`${router.pathname === "/" ? "active" : ""}`}>{RouterVaktor.NAME}</BodyShort>
                             </LenkeSpacer>
                         </a>
                     </Link>
                 </li>
-				<li role="tab" onClick={() => router.push(RouterPrivatperson.PATH)}>
-					<Link href={RouterPrivatperson.PATH}>
+				<li role="tab" onClick={() => router.push(RouterAdmin.PATH)}>
+					<Link href={RouterAdmin.PATH}>
 						<a>
-							<LenkeSpacer className={`${(router.asPath === RouterPrivatperson.PATH) ? "active" : "inactive"}`}>
-								<BodyShort size="small" className={`${router.pathname === "/Privatperson" ? "active" : ""}`}>{RouterPrivatperson.NAME}</BodyShort>
+							<LenkeSpacer className={`${(router.asPath === RouterAdmin.PATH) ? "active" : "inactive"}`}>
+								<BodyShort size="small" className={`${router.pathname === "/admin" ? "active" : ""}`}>{RouterAdmin.NAME}</BodyShort>
 							</LenkeSpacer>
 						</a>
 					</Link>
 				</li>
-
-				<li role="tab" onClick={() => router.push(RouterArbeidsgiver.PATH)}>
-					<Link href={RouterArbeidsgiver.PATH}>
-						<a>
-							<LenkeSpacer className={`${(router.asPath === RouterArbeidsgiver.PATH) ? "active" : "inactive"}`}>
-								<BodyShort size="small" className={`${router.pathname === "/Arbeidsgiver" ? "active" : ""}`}>{RouterArbeidsgiver.NAME}</BodyShort>
-							</LenkeSpacer>
-						</a>
-					</Link>
-				</li>
-
-				<li role="tab" onClick={() => router.push(RouterSamarbeidspartner.PATH)}>
-					<Link href={RouterSamarbeidspartner.PATH}>
-						<a>
-							<LenkeSpacer className={`${(router.asPath === RouterSamarbeidspartner.PATH) ? "active" : "inactive"}`}>
-								<BodyShort size="small" className={`${router.pathname === "/Samarbeidspartner" ? "active" : ""}`}>{RouterSamarbeidspartner.NAME}</BodyShort>
-							</LenkeSpacer>
-						</a>
-					</Link>
-				</li>
-
 				
 				<li role="tab" >
 					<Link href={"https://status.nav.no/vaktor"}>
 						<a>
 						<LenkeSpacer className="inactive" >
-							<BodyShort size="small" >Vaktor</BodyShort>
+							<BodyShort size="small" >Vaktor (prod)</BodyShort>
 						</LenkeSpacer>
 						</a>
 					</Link>

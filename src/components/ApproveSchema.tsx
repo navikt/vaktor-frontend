@@ -1,12 +1,12 @@
 import { Button, Table } from "@navikt/ds-react";
 import { useEffect,useState } from "react";
 
-const Example = () => {
+const Admin = () => {
     const [itemData, setItemData] = useState();
 
     useEffect(() => {
 
-        Promise.all([fetch("vaktor/api/schedules")])
+        Promise.all([fetch("/vaktor/api/schedules")])
             .then(async ([scheduleRes]) => {
             const schedulejson = await scheduleRes.json();
             return [schedulejson];
@@ -26,8 +26,8 @@ const Example = () => {
           <Table.HeaderCell scope="col">start</Table.HeaderCell>
           <Table.HeaderCell scope="col">slutt</Table.HeaderCell>
           <Table.HeaderCell scope="col">gruppe</Table.HeaderCell>
-          <Table.HeaderCell scope="col">status</Table.HeaderCell>
           <Table.HeaderCell scope="col">actions</Table.HeaderCell>
+          <Table.HeaderCell scope="col">status</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -43,12 +43,13 @@ const Example = () => {
                 {group.name}
               </Table.DataCell>
               <Table.DataCell>
-                {approve_level}
+                <Button onClick={() => console.log(user)}> Godkjenn </Button>
+                <Button style={{"backgroundColor": "#f96c6c", "marginLeft" : "5px", "marginRight" : "5px"}} onClick={() => console.log(user)}> Avvis </Button>
               </Table.DataCell>
               <Table.DataCell>
-                <Button onClick={() => console.log(user)}> Godkjenn </Button>
-                <Button style={{"backgroundColor": "#f96c6c", "marginLeft" : "5px"}} onClick={() => console.log(user)}> Avvis </Button>
+                {approve_level}
               </Table.DataCell>
+
             </Table.Row>
           );
         })}
@@ -57,4 +58,4 @@ const Example = () => {
   );
 };
 
-export default Example
+export default Admin
