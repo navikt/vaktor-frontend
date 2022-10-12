@@ -90,11 +90,7 @@ const AdminLeder = () => {
 								{ user, group, start_timestamp, end_timestamp, approve_level },
 								i
 							) => {
-								console.log(
-									"start: ",
-									new Date(start_timestamp * 1000).getMonth()
-								);
-								console.log("selecetedmiont: ", selectedMonth?.getMonth());
+								approve_level = 1;
 								return (
 									<Table.Row key={i}>
 										<Table.HeaderCell scope="row">{user.name}</Table.HeaderCell>
@@ -118,17 +114,19 @@ const AdminLeder = () => {
 													{" "}
 													Godkjenn{" "}
 												</Button>
-												<Button
-													style={{
-														backgroundColor: "#f96c6c",
-														marginLeft: "5px",
-														height: "35px",
-													}}
-													onClick={() => console.log(user)}
-												>
-													{" "}
-													Avvis{" "}
-												</Button>
+												{(approve_level === 1 || approve_level === 2) && (
+													<Button
+														style={{
+															backgroundColor: "#f96c6c",
+															marginLeft: "5px",
+															height: "35px",
+														}}
+														onClick={() => console.log(user)}
+													>
+														{" "}
+														Avvis{" "}
+													</Button>
+												)}
 											</div>
 										</Table.DataCell>
 										{mapApproveStatus(approve_level)}
