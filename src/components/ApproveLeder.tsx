@@ -1,9 +1,4 @@
-import {
-	Button,
-	Table,
-	UNSAFE_MonthPicker,
-	UNSAFE_useMonthpicker,
-} from "@navikt/ds-react";
+import { Button, Table, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, } from "@navikt/ds-react";
 import { useEffect, useState } from "react";
 
 const mapApproveStatus = (status: number) => {
@@ -90,7 +85,7 @@ const AdminLeder = () => {
 								{ user, group, start_timestamp, end_timestamp, approve_level },
 								i
 							) => {
-								approve_level = 1;
+								//approve_level = 1;
 								return (
 									<Table.Row key={i}>
 										<Table.HeaderCell scope="row">{user.name}</Table.HeaderCell>

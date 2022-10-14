@@ -1,25 +1,21 @@
-.AdminGuideContainer{
-    width: 70vw;
-    min-width: 600px;
-    max-width: 1200px;
-    margin: 2vh auto 2vh auto;
+.AdminGuideContainer {
+  width: 70vw;
+  min-width: 600px;
+  max-width: 1200px;
+  margin: 2vh auto 2vh auto;
 }
 
-.AdminGuidePanel p{
-    text-align: center;
-    width: 100%;
+.AdminGuidePanel p {
+  text-align: center;
+  width: 100%;
 }
 
-.Container{
-  margin: 0 200px 0 200px;
-}
-
-.DatePicker_Custom{
+.DatePicker_Custom {
   margin-left: 15px;
   height: 35px;
 }
 
-.DatePicker_Label{
+.DatePicker_Label {
   height: 35px;
   margin-top: 5px;
 }

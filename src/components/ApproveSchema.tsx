@@ -61,10 +61,12 @@ const Admin = () => {
 				{itemData
 					.filter((value) => value.user.name == "Christer Gabrielsen")
 					.map(
+
 						(
-							{ user, group, start_timestamp, end_timestamp, approve_level },
+							{ id, user, group, start_timestamp, end_timestamp, approve_level },
 							i
 						) => {
+							//approve_level = 2;
 							return (
 								<Table.Row key={i}>
 									<Table.HeaderCell scope="row">{user.name}</Table.HeaderCell>
@@ -79,14 +81,16 @@ const Admin = () => {
 									<Table.DataCell>{group.name}</Table.DataCell>
 									<Table.DataCell style={{ maxWidth: "150px" }}>
 										<div>
-											<Button
+											{(approve_level === 0) && (<Button
 												style={{ height: "35px" }}
-												onClick={() => console.log(user)}
+												onClick={() => console.log(id, approve_level)}
 											>
 												{" "}
 												Godkjenn{" "}
 											</Button>
-											<Button
+											)}
+
+											{(approve_level === 1) && (<Button
 												style={{
 													backgroundColor: "#f96c6c",
 													marginLeft: "5px",
@@ -95,8 +99,9 @@ const Admin = () => {
 												onClick={() => console.log(user)}
 											>
 												{" "}
-												Avvis{" "}
+												Avgodkjenn{" "}
 											</Button>
+											)}
 										</div>
 									</Table.DataCell>
 									{mapApproveStatus(approve_level)}
