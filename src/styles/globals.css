@@ -29,6 +29,7 @@ a.link {
 .content {
   max-width: 70vw;
   margin: 0 auto;
+  overflow: auto;
 }
 
 nav {
@@ -39,6 +40,7 @@ nav {
   align-items: flex-end;
   border-bottom: 1px solid #ddd;
 }
+
 
 nav .logo {
   margin-right: auto;

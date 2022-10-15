@@ -19,13 +19,11 @@ export default function Navbar() {
 				marginLeft: "5px",
 				marginRight: "5px",
 				height: "35px",
-				color: "#FAEBD7",
 			}}><a className="link">{RouterVaktor.NAME}</a></Button></Link>
 			<Link href="/admin"><Button variant="tertiary" style={{
 				marginLeft: "5px",
 				marginRight: "5px",
 				height: "35px",
-				color: "red"
 			}}><a className="link">{RouterAdmin.NAME}</a></Button></Link>
 			<Link href="/adminleder"><Button variant="tertiary" style={{
 				marginLeft: "5px",
