@@ -66,7 +66,6 @@ const mapApproveStatus = (status: number) => {
 const AdminLeder = () => {
 	const [itemData, setItemData] = useState<Schedules[]>([]);
 	const [response, setResponse] = useState();
-	const [buttonLoading, setButtonLoading] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker(
 		{
@@ -118,7 +117,7 @@ const AdminLeder = () => {
 				</Table.Header>
 				<Table.Body>
 					{itemData
-						.filter((value: Schedules) => value.group.name == "Mellomvare/ATOM")
+						.filter((value: Schedules) => value.group.name == "")
 						.filter(
 							(value: Schedules) =>
 								new Date(value.start_timestamp * 1000).getMonth() ===
@@ -146,7 +145,7 @@ const AdminLeder = () => {
 										<Table.DataCell>{group.name}</Table.DataCell>
 										<Table.DataCell style={{ maxWidth: "150px" }}>
 											<div>
-												{(approve_level === 3 || end_timestamp > today) && !buttonLoading && (
+												{(approve_level === 3 || end_timestamp > today) && (
 													< Button disabled
 														style={{
 															height: "35px"
@@ -157,14 +156,14 @@ const AdminLeder = () => {
 													</Button>
 												)}
 
-												{approve_level < 3 && end_timestamp < today && !buttonLoading && (
+												{approve_level < 3 && end_timestamp < today && (
 													<Button
 														style={{
 															height: "35px"
 														}}
 														onClick={() => {
 															console.log(id, approve_level);
-															confirm_schedule(id, setResponse, setButtonLoading);
+															confirm_schedule(id, setResponse, setLoading);
 														}}
 													>
 														{" "}
@@ -172,15 +171,14 @@ const AdminLeder = () => {
 													</Button>
 												)}
 
-												{(approve_level === 1 || approve_level === 2) && !buttonLoading && (
+												{(approve_level === 1 || approve_level === 2) && (
 													<Button
 														style={{
 															backgroundColor: "#f96c6c",
-															marginLeft: "5px",
 															height: "35px",
 														}}
 														onClick={() =>
-															disprove_schedule(id, setResponse, setButtonLoading)
+															disprove_schedule(id, setResponse, setLoading)
 														}
 													>
 														{" "}
@@ -188,11 +186,10 @@ const AdminLeder = () => {
 													</Button>
 												)}
 
-												{(approve_level === 0 || approve_level === 3) && !buttonLoading && (
+												{(approve_level === 0 || approve_level === 3) && (
 													<Button disabled
 														style={{
 															backgroundColor: "#f96c6c",
-															marginLeft: "5px",
 															height: "35px",
 														}}
 													>
