@@ -68,7 +68,7 @@ const AdminLeder = () => {
 	const [response, setResponse] = useState();
 	const [buttonLoading, setButtonLoading] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const { monthpickerProps, inputProps, selectedMonth } = UNSAFE_useMonthpicker(
+	const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker(
 		{
 			fromDate: new Date("Oct 01 2022"),
 			toDate: new Date("Aug 23 2025"),
@@ -95,6 +95,7 @@ const AdminLeder = () => {
 	if (loading === true) return <Loader></Loader>;
 
 	if (itemData === undefined) return <></>;
+	if (selectedMonth === undefined) setSelected(new Date())
 	return (
 		<>
 			<div className="min-h-96">
@@ -117,9 +118,9 @@ const AdminLeder = () => {
 				</Table.Header>
 				<Table.Body>
 					{itemData
-						.filter((value: any) => value.group.name == "Mellomvare/ATOM")
+						.filter((value: Schedules) => value.group.name == "Mellomvare/ATOM")
 						.filter(
-							(value: any) =>
+							(value: Schedules) =>
 								new Date(value.start_timestamp * 1000).getMonth() ===
 								selectedMonth.getMonth()
 						)
