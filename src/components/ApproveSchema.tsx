@@ -2,8 +2,8 @@ import { Button, Table, Loader } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch } from "react";
 import { Schedules } from "../types/types";
 
-let today = Date.now() / 1000
-//let today = 1668470400  // 15. November 2022 00:00:00
+//let today = Date.now() / 1000
+let today = 1668470400  // 15. November 2022 00:00:00
 
 const confirm_schedule = async (
 	schedule_id: string,
