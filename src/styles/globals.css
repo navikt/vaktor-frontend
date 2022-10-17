@@ -11,6 +11,11 @@ a {
   text-decoration: none;
 }
 
+a.link {
+  color: rgb(0, 0, 0);
+  text-decoration: none;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -21,6 +26,27 @@ a {
   z-index: 2000;
 }
 
+.content {
+  max-width: 70vw;
+  margin: 0 auto;
+  overflow: auto;
+}
+
+nav {
+  margin: 10px auto 80px;
+  padding: 20px 2;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  border-bottom: 1px solid #ddd;
+}
+
+
+nav .logo {
+  margin-right: auto;
+}
+
+/*
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
@@ -30,3 +56,4 @@ a {
     background: black;
   }
 }
+*/
