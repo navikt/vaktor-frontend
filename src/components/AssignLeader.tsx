@@ -118,9 +118,9 @@ const AssignLeder = () => {
 
                                         <Button
                                             style={{
-                                                'height': "35px",
-                                                'margin-bottom': "10px",
-                                                'min-width': "210px",
+                                                height: "30px",
+                                                marginBottom: "10px",
+                                                minWidth: "210px",
                                             }}
                                             onClick={() => {
                                                 assign_leader(id, setResponse, setLoading);
@@ -134,8 +134,8 @@ const AssignLeder = () => {
                                         <Button
                                             style={{
                                                 backgroundColor: "#f96c6c",
-                                                height: "35px",
-                                                'min-width': "210px",
+                                                height: "30px",
+                                                minWidth: "210px",
                                             }}
                                             onClick={() =>
                                                 remove_leader(id, setResponse, setLoading)

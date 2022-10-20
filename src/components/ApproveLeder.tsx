@@ -143,9 +143,9 @@ const AdminLeder = () => {
 												{(approve_level === 3 || end_timestamp > today) && (
 													< Button disabled
 														style={{
-															height: "35px",
-															'margin-bottom': "5px",
-															'min-width': "210px",
+															height: "30px",
+															marginBottom: "5px",
+															minWidth: "210px",
 														}}
 													>
 														{" "}
@@ -156,9 +156,9 @@ const AdminLeder = () => {
 												{approve_level < 3 && end_timestamp < today && (
 													<Button
 														style={{
-															height: "35px",
-															'margin-bottom': "5px",
-															'min-width': "210px",
+															height: "30px",
+															marginBottom: "5px",
+															minWidth: "210px",
 														}}
 														onClick={() => {
 															console.log(id, approve_level);
@@ -174,8 +174,8 @@ const AdminLeder = () => {
 													<Button
 														style={{
 															backgroundColor: "#f96c6c",
-															height: "35px",
-															'min-width': "210px",
+															height: "30px",
+															minWidth: "210px",
 														}}
 														onClick={() =>
 															disprove_schedule(id, setResponse, setLoading)
@@ -190,8 +190,8 @@ const AdminLeder = () => {
 													<Button disabled
 														style={{
 															backgroundColor: "#f96c6c",
-															height: "35px",
-															'min-width': "210px",
+															height: "30px",
+															minWidth: "210px",
 														}}
 													>
 														{" "}

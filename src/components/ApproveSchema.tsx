@@ -120,7 +120,9 @@ const Admin = () => {
 										{(approve_level != 0 || end_timestamp > today) && (
 											< Button disabled
 												style={{
-													height: "35px"
+													height: "30px",
+													marginBottom: "5px",
+													minWidth: "210px",
 												}}
 											>
 												{" "}
@@ -131,7 +133,9 @@ const Admin = () => {
 										{approve_level === 0 && end_timestamp < today && (
 											<Button
 												style={{
-													height: "35px"
+													height: "30px",
+													marginBottom: "5px",
+													minWidth: "210px",
 												}}
 												onClick={() => {
 													console.log(id, approve_level);
@@ -147,7 +151,8 @@ const Admin = () => {
 											<Button
 												style={{
 													backgroundColor: "#f96c6c",
-													height: "35px",
+													height: "30px",
+													minWidth: "210px",
 												}}
 												onClick={() =>
 													disprove_schedule(id, setResponse, setLoading)
@@ -162,7 +167,8 @@ const Admin = () => {
 											<Button disabled
 												style={{
 													backgroundColor: "#f96c6c",
-													height: "35px",
+													height: "30px",
+													minWidth: "210px",
 												}}
 											>
 												{" "}
