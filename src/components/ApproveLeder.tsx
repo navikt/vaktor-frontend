@@ -2,8 +2,8 @@ import { Button, Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker } from
 import { useEffect, useState, Dispatch } from "react";
 import { Schedules } from "../types/types";
 
-let today = Date.now() / 1000
-//let today = 1668470400  // 15. November 2022 00:00:00
+//let today = Date.now() / 1000
+let today = 1668470400  // 15. November 2022 00:00:00
 
 const confirm_schedule = async (
 	schedule_id: string,
@@ -77,7 +77,7 @@ const AdminLeder = () => {
 
 	useEffect(() => {
 		setLoading(true);
-		Promise.all([fetch("/vaktor/api/schedules")])
+		Promise.all([fetch("/vaktor/api/leader_schedules")])
 			.then(async ([scheduleRes]) => {
 				const schedulejson = await scheduleRes.json();
 				return [schedulejson];
@@ -117,7 +117,6 @@ const AdminLeder = () => {
 				</Table.Header>
 				<Table.Body>
 					{itemData
-						.filter((value: Schedules) => value.group.name == "")
 						.filter(
 							(value: Schedules) =>
 								new Date(value.start_timestamp * 1000).getMonth() ===
@@ -128,19 +127,15 @@ const AdminLeder = () => {
 								{ id, user, group, start_timestamp, end_timestamp, approve_level },
 								i
 							) => {
-								approve_level = 0;
+								//approve_level = 0;
 								return (
 									<Table.Row key={i}>
 										<Table.HeaderCell scope="row">{user.name}</Table.HeaderCell>
 										<Table.DataCell>
-											{new Date(start_timestamp * 1000).toLocaleDateString(
-												"en-NO"
-											)}
+											{new Date(start_timestamp * 1000).toLocaleDateString()}
 										</Table.DataCell>
 										<Table.DataCell>
-											{new Date(end_timestamp * 1000).toLocaleDateString(
-												"en-NO"
-											)}
+											{new Date(end_timestamp * 1000).toLocaleDateString()}
 										</Table.DataCell>
 										<Table.DataCell>{group.name}</Table.DataCell>
 										<Table.DataCell style={{ maxWidth: "150px" }}>
@@ -148,7 +143,9 @@ const AdminLeder = () => {
 												{(approve_level === 3 || end_timestamp > today) && (
 													< Button disabled
 														style={{
-															height: "35px"
+															height: "35px",
+															'margin-bottom': "5px",
+															'min-width': "210px",
 														}}
 													>
 														{" "}
@@ -159,7 +156,9 @@ const AdminLeder = () => {
 												{approve_level < 3 && end_timestamp < today && (
 													<Button
 														style={{
-															height: "35px"
+															height: "35px",
+															'margin-bottom': "5px",
+															'min-width': "210px",
 														}}
 														onClick={() => {
 															console.log(id, approve_level);
@@ -176,6 +175,7 @@ const AdminLeder = () => {
 														style={{
 															backgroundColor: "#f96c6c",
 															height: "35px",
+															'min-width': "210px",
 														}}
 														onClick={() =>
 															disprove_schedule(id, setResponse, setLoading)
@@ -191,6 +191,7 @@ const AdminLeder = () => {
 														style={{
 															backgroundColor: "#f96c6c",
 															height: "35px",
+															'min-width': "210px",
 														}}
 													>
 														{" "}

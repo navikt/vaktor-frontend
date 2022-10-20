@@ -4,12 +4,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
-    console.log("schedules api")
+    console.log("users api")
 
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
     //let authorizationHeader = process.env.FAKE_TOKEN
 
-    let path = "https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/"
+    let path = "https://vaktor-plan-api.dev.intern.nav.no/api/v1/users/"
     const backendResponse = await fetch(
         path,
         {

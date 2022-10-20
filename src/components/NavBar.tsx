@@ -2,7 +2,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { Button } from "@navikt/ds-react";
 
-import { RouterVaktor, RouterAdmin, RouterLedergodkjenning } from '../types/routes';
+import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder } from '../types/routes';
 
 export default function Navbar() {
 	const router = useRouter()
@@ -20,16 +20,24 @@ export default function Navbar() {
 				marginRight: "5px",
 				height: "35px",
 			}}><a className="link">{RouterVaktor.NAME}</a></Button></Link>
+
 			<Link href="/admin"><Button variant="tertiary" style={{
 				marginLeft: "5px",
 				marginRight: "5px",
 				height: "35px",
 			}}><a className="link">{RouterAdmin.NAME}</a></Button></Link>
+
 			<Link href="/adminleder"><Button variant="tertiary" style={{
 				marginLeft: "5px",
 				marginRight: "5px",
 				height: "35px",
 			}}><a className="link">{RouterLedergodkjenning.NAME}</a></Button></Link>
+
+			<Link href="/assignleder"><Button variant="tertiary" style={{
+				marginLeft: "5px",
+				marginRight: "5px",
+				height: "35px",
+			}}><a className="link">{RouterAssignLeder.NAME}</a></Button></Link>
 
 		</nav >
 	)

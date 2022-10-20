@@ -15,6 +15,11 @@ export enum RouterLedergodkjenning {
     NAME = "Admin - Ledergodkjenning",
     PATH = "/adminleder"
 }
+
+export enum RouterAssignLeder {
+    NAME = "Admin - Leveranseleder",
+    PATH = "/assignleder"
+}
 // ---
 
 

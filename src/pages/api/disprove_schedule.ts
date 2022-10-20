@@ -8,9 +8,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // for local testing
     //let authorizationHeader = process.env.FAKE_TOKEN
+
     let schedule_id = req.query.schedule_id
     let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/${schedule_id}/disprove`
-
 
     const backendResponse = await fetch(
         path,

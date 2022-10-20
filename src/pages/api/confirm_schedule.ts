@@ -3,11 +3,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
-    // for prod
+    // for prod / dev
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
 
     // for local testing
     //let authorizationHeader = process.env.FAKE_TOKEN
+
     let schedule_id = req.query.schedule_id
     console.log("req", schedule_id)
     let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/${schedule_id}/confirm`

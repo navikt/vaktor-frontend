@@ -8,6 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // for local testing
     //let authorizationHeader = process.env.FAKE_TOKEN
+
     let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/users/me/schedules`
     //let path = `http://localhost:8000/api/v1/users/me/schedules`
 
