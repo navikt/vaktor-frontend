@@ -43,10 +43,14 @@ const mapApproveStatus = (status: number) => {
 			statusColor = "#66CBEC";
 			break;
 		case 2:
-			statusText = "Godkjent av vaktsjef";
+			statusText = "Venter på utregning";
 			statusColor = "#99DEAD";
 			break;
 		case 3:
+			statusText = "Godkjent av vaktsjef";
+			statusColor = "#99DEAD";
+			break;
+		case 4:
 			statusText = "Overført til lønn";
 			statusColor = "#E18071";
 			break;
@@ -57,7 +61,7 @@ const mapApproveStatus = (status: number) => {
 	}
 
 	return (
-		<Table.DataCell style={{ backgroundColor: statusColor, maxWidth: "90px" }}>
+		<Table.DataCell style={{ backgroundColor: statusColor, maxWidth: "110px", minWidth: "100px" }}>
 			{statusText}
 		</Table.DataCell>
 	);
@@ -104,7 +108,7 @@ const Admin = () => {
 						{ id, user, group, start_timestamp, end_timestamp, approve_level },
 						i
 					) => {
-						//approve_level = 0;
+						//approve_level = 2;
 						return (
 							<Table.Row key={i}>
 								<Table.HeaderCell scope="row">{user.name}</Table.HeaderCell>
@@ -115,66 +119,33 @@ const Admin = () => {
 									{new Date(end_timestamp * 1000).toLocaleDateString()}
 								</Table.DataCell>
 								<Table.DataCell>{group.name}</Table.DataCell>
-								<Table.DataCell style={{ maxWidth: "150px" }}>
+								<Table.DataCell style={{ maxWidth: "230px" }}>
 									<div>
-										{(approve_level != 0 || end_timestamp > today) && (
-											< Button disabled
-												style={{
-													height: "30px",
-													marginBottom: "5px",
-													minWidth: "210px",
-												}}
-											>
-												{" "}
-												Godkjenn{" "}
-											</Button>
-										)}
+										< Button disabled={(approve_level != 0 || end_timestamp > today)}
+											style={{
+												height: "30px",
+												marginBottom: "5px",
+												minWidth: "210px",
+											}}
+										>
+											{" "}
+											Godkjenn{" "}
+										</Button>
 
-										{approve_level === 0 && end_timestamp < today && (
-											<Button
-												style={{
-													height: "30px",
-													marginBottom: "5px",
-													minWidth: "210px",
-												}}
-												onClick={() => {
-													console.log(id, approve_level);
-													confirm_schedule(id, setResponse, setLoading);
-												}}
-											>
-												{" "}
-												Godkjenn{" "}
-											</Button>
-										)}
+										<Button disabled={(approve_level != 1)}
+											style={{
+												backgroundColor: "#f96c6c",
+												height: "30px",
+												minWidth: "210px",
+											}}
+											onClick={() =>
+												disprove_schedule(id, setResponse, setLoading)
+											}
+										>
+											{" "}
+											Avgodkjenn{" "}
+										</Button>
 
-										{approve_level === 1 && (
-											<Button
-												style={{
-													backgroundColor: "#f96c6c",
-													height: "30px",
-													minWidth: "210px",
-												}}
-												onClick={() =>
-													disprove_schedule(id, setResponse, setLoading)
-												}
-											>
-												{" "}
-												Avgodkjenn{" "}
-											</Button>
-										)}
-
-										{approve_level != 1 && (
-											<Button disabled
-												style={{
-													backgroundColor: "#f96c6c",
-													height: "30px",
-													minWidth: "210px",
-												}}
-											>
-												{" "}
-												Avgodkjenn{" "}
-											</Button>
-										)}
 									</div>
 								</Table.DataCell>
 								{mapApproveStatus(approve_level)}

@@ -49,9 +49,11 @@ export interface Vaktlag { //groups
     name: string,
     phone: string,
     slack: string,
-    id: number | string,
+    id: string,
     description: string,
-    type: string
+    type: string,
+    members: User[],
+    leaders: Leader[]
 }
 
 export interface Schedules {
@@ -74,6 +76,13 @@ export interface User {
     ressursnummer: string,
     description: string,
     groups: Vaktlag[] | undefined,
+}
+
+export interface Leader {
+    id: string,
+    name: string,
+    role: string,
+    email: string | undefined,
 }
 
 export interface Artskoder {
