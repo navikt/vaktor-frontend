@@ -117,7 +117,6 @@ const UpdateSchedule = () => {
                         minWidth: "210px",
                       }}
                       onClick={() => {
-                        console.log(id, approve_level);
                         confirm_schedule(id, setResponse, setLoading);
                       }}
                     >

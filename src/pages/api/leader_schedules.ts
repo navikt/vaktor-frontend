@@ -3,9 +3,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-
-    console.log("leader user schedules api")
-
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
     //let authorizationHeader = process.env.FAKE_TOKEN
 

@@ -123,7 +123,6 @@ function VaktorTimeline() {
   const groupsSorted = [...groupDataList].sort((a, b) =>
     a.name > b.name ? 1 : -1
   );
-  console.log(groupsSorted);
 
   const groups: any = [];
   const groupColorList: any = [];
@@ -198,7 +197,6 @@ function VaktorTimeline() {
   };
 
   itemList.map((itemObj: any) => {
-    //console.log(itemObj);
 
     let itemColor = setGrpColor(groupColorList, itemObj.group_id);
     let hoverColor = tinycolor(itemColor).darken(10).toString();

@@ -10,7 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     //let authorizationHeader = process.env.FAKE_TOKEN
 
     let schedule_id = req.query.schedule_id
-    console.log("req", schedule_id)
     let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/${schedule_id}/confirm`
 
     const backendResponse = await fetch(
