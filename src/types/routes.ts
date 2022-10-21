@@ -11,6 +11,11 @@ export enum RouterAdmin {
     PATH = "/admin"
 }
 
+export enum RouterAdminSchedule {
+    NAME = "Admin - Endre vakt",
+    PATH = "/adminschedule"
+}
+
 export enum RouterLedergodkjenning {
     NAME = "Admin - Ledergodkjenning",
     PATH = "/adminleder"
@@ -21,7 +26,6 @@ export enum RouterAssignLeder {
     PATH = "/assignleder"
 }
 // ---
-
 
 // Error
 export enum RouterError {

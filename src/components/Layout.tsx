@@ -4,7 +4,7 @@ import { User } from "../types/types";
 
 const Layout = ({ children }) => {
 
-    const [userData, setUserData] = useState<User>();
+    const [userData, setUserData] = useState<User>({} as User);
     useEffect(() => {
         Promise.all([fetch("/vaktor/api/get_me")])
             .then(async ([current_user]) => {
@@ -15,7 +15,6 @@ const Layout = ({ children }) => {
                 setUserData(userData);
             });
     },);
-    if (!userData) return userData === "";
     return (
 
         <div className="content" >

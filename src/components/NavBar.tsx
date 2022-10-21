@@ -4,12 +4,10 @@ import { Button } from "@navikt/ds-react";
 import { useEffect, useState } from 'react';
 import { User } from "../types/types";
 
-import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder } from '../types/routes';
+import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder, RouterAdminSchedule } from '../types/routes';
 
 export default function Navbar() {
-	const router = useRouter()
-	const [userData, setUserData] = useState<User>();
-	const [response, setResponse] = useState();
+	const [userData, setUserData] = useState<User>({} as User);
 
 	useEffect(() => {
 		Promise.all([fetch("/vaktor/api/get_me")])
@@ -20,13 +18,12 @@ export default function Navbar() {
 			.then(([userData]) => {
 				setUserData(userData);
 			});
-	}, [response]);
+	}, []);
 
 	//const user = useContext<UserData>(UserStateContext
 	//userData.role = "leveranseleder"
 	{
 		//approve_level = 2;
-		if (!userData) return userData === "";
 		return (
 
 			< nav >
@@ -42,6 +39,15 @@ export default function Navbar() {
 						}}><a className="link">{RouterVaktor.NAME}</a></Button></Link>
 
 					)
+				}
+
+				{
+					(userData.role === "vakthaver" || userData.role === "vaktsjef" || userData.role === "leveranseleder" || userData.role === "personalsjef") && (
+						<Link href="/adminschedule"><Button variant="tertiary" style={{
+							marginLeft: "5px",
+							marginRight: "5px",
+							height: "35px",
+						}}><a className="link">{RouterAdminSchedule.NAME}</a></Button></Link>)
 				}
 
 				{
