@@ -31,7 +31,7 @@ export default function Navbar() {
 					<h1>Vaktor</h1>
 				</div>
 				{
-					(userData.role === "vakthaver" || userData.role === "vaktsjef" || userData.role === "leveranseleder" || userData.role === "personalsjef") && (
+					(["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
 						<Link href="/"><Button variant="tertiary" style={{
 							marginLeft: "5px",
 							marginRight: "5px",
@@ -42,7 +42,7 @@ export default function Navbar() {
 				}
 
 				{
-					(userData.role === "vakthaver" || userData.role === "vaktsjef" || userData.role === "leveranseleder" || userData.role === "personalsjef") && (
+					(["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
 						<Link href="/adminschedule"><Button variant="tertiary" style={{
 							marginLeft: "5px",
 							marginRight: "5px",
@@ -51,7 +51,7 @@ export default function Navbar() {
 				}
 
 				{
-					(userData.role === "vakthaver" || userData.role === "vaktsjef" || userData.role === "leveranseleder" || userData.role === "personalsjef") && (
+					(["vakthaver", "vaktsjef", "leveranseleder"].includes(userData.role)) && (
 						<Link href="/admin"><Button variant="tertiary" style={{
 							marginLeft: "5px",
 							marginRight: "5px",
@@ -61,7 +61,7 @@ export default function Navbar() {
 				}
 
 				{
-					(userData.role === "vaktsjef" || userData.role === "leveranseleder" || userData.role === "personalsjef") && (
+					(["vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
 						<Link href="/adminleder"><Button variant="tertiary" style={{
 							marginLeft: "5px",
 							marginRight: "5px",

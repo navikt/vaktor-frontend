@@ -14,12 +14,17 @@ const Layout = ({ children }) => {
             .then(([userData]) => {
                 setUserData(userData);
             });
-    },);
+    }, []);
     return (
 
         <div className="content" >
             <Navbar />
-            <h3>Hei, {userData.name}</h3>
+            {
+                (userData.role in ["vakthaver", "vaktsjef", "leveranseleder", "personalleder"]) && (
+                    <h3>Hei, {userData.name}</h3>
+                )
+            }
+
             {children}
         </div >
     );
