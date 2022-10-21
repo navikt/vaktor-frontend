@@ -4,10 +4,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // for prod / dev
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
+    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
 
     // for local testing
-    let authorizationHeader: string = process.env.FAKE_TOKEN!
+    //let authorizationHeader: string = process.env.FAKE_TOKEN!
     let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/users/me`
 
     const getCurrentUser = await fetch(
