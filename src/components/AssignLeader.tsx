@@ -28,7 +28,7 @@ const assign_vaktsjef = async (
 ) => {
     setLoading(true);
 
-    await fetch(`/vaktor/api/assign_vaktsjef/?group_id=${group_id}`)
+    await fetch(`/vaktor/api/assign_vaktsjef/?group_id=${group_id}&user_id=${vaktsjef_id}`)
         .then((r) => r.json())
         .then((data) => {
             setLoading(false);
@@ -163,7 +163,7 @@ const AssignLeder = () => {
                                             backgroundColor: "#00803e"
                                         }}
                                         onClick={() => {
-                                            //  assign_vaktsjef(selectedVaktsjef, id, setResponse, setLoading);
+                                            assign_vaktsjef(selectedVaktsjef, id, setResponse, setLoading);
                                         }}
                                     >
                                         {" "}
