@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
         <div className="content" >
             <Navbar />
             {
-                (userData.role in ["vakthaver", "vaktsjef", "leveranseleder", "personalleder"]) && (
+                (["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
                     <h3>Hei, {userData.name}</h3>
                 )
             }
