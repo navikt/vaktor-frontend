@@ -12,7 +12,7 @@ const Home: NextPage = () => {
                 <div className="AdminGuideContainer">
                     <GuidePanel className="AdminGuidePanel">
                         <p>
-                            Et eller annet med å tildele roller/leder{" "}
+                            Her kan leveranseleder påta seg ansvaret som leder for et vaktlag og tildele vaktsjef{" "}
                         </p>
                     </GuidePanel>
                 </div>

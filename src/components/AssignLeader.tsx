@@ -28,7 +28,7 @@ const assign_vaktsjef = async (
 ) => {
     setLoading(true);
 
-    await fetch(`/vaktor/api/assign_vaktsjef/?group_id=${group_id}&user_id=${vaktsjef_id}`)
+    await fetch(`/vaktor/api/assign_vaktsjef/?group_id=${group_id}&user_id=${vaktsjef_id}`, { method: "POST" })
         .then((r) => r.json())
         .then((data) => {
             setLoading(false);
@@ -39,9 +39,8 @@ const assign_vaktsjef = async (
 
 const mapGroupOptions = (members: User[]) => {
     return (
-        members.map((user: User) => (
-            <option value={user.id}>{user.name}</option>
-
+        members.map((user: User, index) => (
+            <option key={index} value={user.id}>{user.name}</option>
         )))
 }
 
@@ -96,6 +95,7 @@ const AssignLeder = () => {
                         { name, id, leaders, members },
                         i
                     ) => {
+                        var currentselect = ""
                         //approve_level = 0;
                         return (
                             <Table.Row key={i}>
@@ -154,8 +154,17 @@ const AssignLeder = () => {
                                     </div>
                                 </Table.DataCell>
                                 <Table.DataCell>
-                                    <Select label="vaktsjef" hideLabel children={mapGroupOptions(members)} onChange={(e) => setVaktsjef(e.target.value)} size="small" style={{ maxWidth: "210px" }} />
-                                    <Button
+
+                                    <Select label="vaktsjef" hideLabel onChange={(e) => {
+                                        currentselect = e.target.value
+                                        setVaktsjef(e.target.value)
+                                    }} size="small" style={{ maxWidth: "210px" }}
+                                    >
+                                        <option value="">Velg vaktsjef</option>
+                                        {mapGroupOptions(members)}
+                                    </Select>
+
+                                    <Button id={id} disabled={(false)}
                                         style={{
                                             height: "30px",
                                             marginTop: "10px",
