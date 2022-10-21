@@ -8,7 +8,7 @@ import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder } 
 
 export default function Navbar() {
 	const router = useRouter()
-	const [userData, setUserData] = useState<User[]>([]);
+	const [userData, setUserData] = useState<User>();
 	const [response, setResponse] = useState();
 
 	useEffect(() => {
@@ -26,6 +26,7 @@ export default function Navbar() {
 	//userData.role = "leveranseleder"
 	{
 		//approve_level = 2;
+		if (!userData) return userData === "";
 		return (
 
 			< nav >
