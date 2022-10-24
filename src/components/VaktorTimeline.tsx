@@ -8,7 +8,13 @@ import Timeline, {
 } from "react-calendar-timeline";
 import { useState, useEffect } from "react";
 import { Moment } from "moment";
-import { colorPicker, setGrpColor } from "./SetColors";
+import {
+  colorPicker,
+  setGrpColor,
+  setBorderColor,
+  setTextColor,
+  setInterruptionColor,
+} from "./SetColors";
 import { Information } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
@@ -162,6 +168,7 @@ function VaktorTimeline() {
         </div>
       ),
       id: vaktlag.id,
+      stackItems: true,
     });
   });
 
@@ -197,18 +204,11 @@ function VaktorTimeline() {
   };
 
   itemList.map((itemObj: any) => {
-
     let itemColor = setGrpColor(groupColorList, itemObj.group_id);
-    let hoverColor = tinycolor(itemColor).darken(10).toString();
-    const borderColor = tinycolor(itemColor)
-      .darken(70)
-      .setAlpha(0.22)
-      .toString();
-    const textColor = tinycolor(itemColor).darken(80).toString();
+    let borderColor = setBorderColor(itemColor);
+    let textColor = setTextColor(itemColor);
     let itemStart = date(itemObj.start_timestamp);
     let itemEnd = date(itemObj.end_timestamp);
-    let itemDescription = itemObj.user.description;
-    let itemPhone = itemObj.group.phone;
 
     items.push({
       id: itemObj.id,
@@ -222,8 +222,8 @@ function VaktorTimeline() {
             !itemModalOpen,
             itemObj.user.name,
             itemObj.group.name,
-            itemDescription,
-            itemPhone,
+            itemObj.user.description,
+            itemObj.group.phone,
             formattedDate(itemStart),
             formattedDate(itemEnd)
           );
@@ -236,9 +236,55 @@ function VaktorTimeline() {
           borderWidth: "2.5px",
           fontSize: "12px",
           borderRadius: "20px",
+          zIndex: 80,
         },
       },
     });
+    let itemInterruptions = itemObj.interruptions;
+
+    if (itemInterruptions.length > 0) {
+      itemInterruptions.map((interruptionObj: any) => {
+        let interruptionColor = setInterruptionColor(
+          groupColorList,
+          interruptionObj.group_id
+        );
+        let textColor = setTextColor(interruptionColor);
+        let borderColor = setBorderColor(interruptionColor);
+        let interruptionStart = date(interruptionObj.start_timestamp);
+        let interruptionEnd = date(interruptionObj.end_timestamp);
+
+        items.push({
+          id: interruptionObj.id,
+          start_time: interruptionStart,
+          end_time: interruptionEnd,
+          title: <BodyShort>{interruptionObj.user.name}</BodyShort>,
+          group: interruptionObj.group_id,
+          itemProps: {
+            onMouseDown: () => {
+              updateItemModal(
+                !itemModalOpen,
+                interruptionObj.user.name,
+                interruptionObj.group.name,
+                interruptionObj.user.description,
+                interruptionObj.group.phone,
+                formattedDate(interruptionStart),
+                formattedDate(interruptionEnd)
+              );
+            },
+
+            style: {
+              background: interruptionColor,
+              color: textColor,
+              borderColor: borderColor,
+              borderWidth: "2.5px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              zIndex: 100,
+            },
+          },
+        });
+      });
+    }
   });
 
   const AnimatedTimeline = animated(

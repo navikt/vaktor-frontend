@@ -25,3 +25,26 @@ export const setGrpColor: any = (list: any[], itemId: string) => {
   });
   return grpColor;
 };
+
+export const setTextColor: any = (color: string) => {
+  let textColor = tinycolor(color).darken(80).toString();
+  return textColor;
+};
+
+export const setBorderColor: any = (color: string) => {
+  let borderColor = tinycolor(color).darken(70).setAlpha(0.22).toString();
+  return borderColor;
+};
+
+export const setInterruptionColor: any = (list: any[], itemId: string) => {
+  var interruptionColor: string = "#FFFFFF";
+  list.map((listObj: any) => {
+    if (listObj.group === itemId) {
+      interruptionColor = tinycolor(listObj.color)
+        .darken(20)
+        .setAlpha(0.8)
+        .toString();
+    }
+  });
+  return interruptionColor;
+};

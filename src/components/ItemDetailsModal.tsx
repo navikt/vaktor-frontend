@@ -36,6 +36,9 @@ const ItemDetailsModal = (props: {
 
   var endTime = props.endTime;
 
+  const phonetext =
+    props.telephone == "??" ? "n/a" : "(+47) " + props.telephone;
+
   return (
     <>
       <Modal
@@ -98,8 +101,7 @@ const ItemDetailsModal = (props: {
               <InfoTextWrapper>
                 <b>Vakttelefon:&nbsp; </b>
 
-                {"(+47) "}
-                {props.telephone}
+                {phonetext}
               </InfoTextWrapper>
             </InformationLine>
 
