@@ -11,7 +11,7 @@ const Home: NextPage = () => {
       <div className="Container">
         <div className="AdminGuideContainer">
           <GuidePanel className="AdminGuidePanel">
-            <p>Et eller annet med å tildele roller/leder </p>
+            <p>Her kan du endre vaktperioder i vaktlag du er medlem av </p>
           </GuidePanel>
         </div>
         <UpdateSchedule></UpdateSchedule>

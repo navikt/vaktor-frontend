@@ -65,7 +65,8 @@ export interface Schedules {
     approve_level: number,
     group: Vaktlag,
     user: User,
-    interruptions: Period[]
+    interruptions: Period[],
+    bakvakter: Period[],
 }
 
 export interface User {

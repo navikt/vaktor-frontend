@@ -127,6 +127,9 @@ const Admin = () => {
 												marginBottom: "5px",
 												minWidth: "210px",
 											}}
+											onClick={() =>
+												confirm_schedule(id, setResponse, setLoading)
+											}
 										>
 											{" "}
 											Godkjenn{" "}

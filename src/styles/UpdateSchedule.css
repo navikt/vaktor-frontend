@@ -1,0 +1,23 @@
+.contentEndring {
+  width: 60%;
+  min-width: 600px;
+  max-width: 1200px;
+  margin: 2vh 20vh 2vh 40vh;
+
+}
+
+.contentEndringBox {
+  display: flex;
+  align-items: center;
+}
+
+.contentDate {
+  width: 200px;
+
+  float: right;
+}
+
+.buttonConfirm {
+  width: 380px;
+
+}
