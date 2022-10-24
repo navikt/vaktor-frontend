@@ -10,8 +10,8 @@ const update_schedule = async (
   bakvakt: boolean,
   selectedVakthaver: string,
   group_id: string,
-  dateFrom: number,
-  dateTo: number,
+  dateFrom: any,
+  dateTo: any,
   setResponse: Dispatch<any>,
   //setLoading: Dispatch<any>,
 ) => {
@@ -110,6 +110,15 @@ const UpdateSchedule = () => {
           <UNSAFE_DatePicker.Input {...toInputProps} label="Til" className="contentDate" />
 
         </UNSAFE_DatePicker >
+        {selectedRange && (
+          <div className="pt-4">
+            <div>
+              {selectedRange?.from && Date.parse(selectedRange.from.toDateString())}
+            </div>
+            <div>{selectedRange?.to && selectedRange.to.toDateString()}</div>
+          </div>
+        )}
+
         <br />
         <Button ref={buttonRef} className="buttonConfirm"
           disabled={((selectedPeriode === "") && (selectedVakthaver === ""))}
@@ -120,7 +129,7 @@ const UpdateSchedule = () => {
             minWidth: "300px",
           }}
           onClick={() => { //add_schedule(id, setResponse, setLoading);
-            update_schedule(selectedPeriode, bakvakt, selectedVakthaver, scheduleData[0].group_id, (Date.parse(selectedRange?.from) / 1000), (Date.parse(selectedRange?.to) / 1000), setResponse);
+            update_schedule(selectedPeriode, bakvakt, selectedVakthaver, scheduleData[0].group_id, (Date.parse(selectedRange.from.toDateString()) / 1000), (Date.parse(selectedRange.to.toDateString()) / 1000), setResponse);
             setOpenState(true);
           }}
 
