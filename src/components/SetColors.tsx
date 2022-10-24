@@ -12,7 +12,6 @@ let colors: string[] = [
 ];
 
 export const colorPicker: any = (index: number) => {
-  //return colors[Math.floor(Math.random() * colors.length)];
   return colors[index % colors.length];
 };
 
@@ -40,10 +39,7 @@ export const setInterruptionColor: any = (list: any[], itemId: string) => {
   var interruptionColor: string = "#FFFFFF";
   list.map((listObj: any) => {
     if (listObj.group === itemId) {
-      interruptionColor = tinycolor(listObj.color)
-        .darken(20)
-        .setAlpha(0.8)
-        .toString();
+      interruptionColor = tinycolor(listObj.color).darken(10).toString();
     }
   });
   return interruptionColor;

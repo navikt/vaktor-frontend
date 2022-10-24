@@ -89,6 +89,15 @@ function VaktorTimeline() {
     moment().startOf("isoWeek").add(7, "day").valueOf()
   );
   const [timeUnit, setTimeUnit] = useState("week");
+  const date = (timestamp: number) => {
+    let formatDate = moment.unix(timestamp);
+    return formatDate;
+  };
+
+  const formattedDate = (date: number | Moment) => {
+    let formattedDate = moment(date).format("DD/MM/YY");
+    return formattedDate;
+  };
   const [scrolling, setScrolling] = useState();
 
   const handleTimeChange = (
@@ -124,12 +133,14 @@ function VaktorTimeline() {
     );
   if (!groupData) return <p>No profile data</p>;
 
-  const groupDataList: any = groupData;
+  /*
+  --  Generating groups (vaktlag) -- 
+  */
 
+  const groupDataList: any = groupData;
   const groupsSorted = [...groupDataList].sort((a, b) =>
     a.name > b.name ? 1 : -1
   );
-
   const groups: any = [];
   const groupColorList: any = [];
 
@@ -168,19 +179,13 @@ function VaktorTimeline() {
         </div>
       ),
       id: vaktlag.id,
-      stackItems: true,
+      stackItems: false,
     });
   });
 
-  const date = (timestamp: number) => {
-    let formatDate = moment.unix(timestamp);
-    return formatDate;
-  };
-
-  const formattedDate = (date: number | Moment) => {
-    let formattedDate = moment(date).format("DD/MM/YY");
-    return formattedDate;
-  };
+  /*
+  --  Generating items (vaktplaner) from schedules -- 
+  */
 
   const itemList: any = itemData;
   const items: any = [];
@@ -236,10 +241,14 @@ function VaktorTimeline() {
           borderWidth: "2.5px",
           fontSize: "12px",
           borderRadius: "20px",
-          zIndex: 80,
         },
       },
     });
+
+    /*
+  --  Generating items (vaktplaner) from interruptions in schedules -- 
+  */
+
     let itemInterruptions = itemObj.interruptions;
 
     if (itemInterruptions.length > 0) {
@@ -286,6 +295,10 @@ function VaktorTimeline() {
       });
     }
   });
+
+  /*
+  --  Returning timeline component -- 
+  */
 
   const AnimatedTimeline = animated(
     ({
