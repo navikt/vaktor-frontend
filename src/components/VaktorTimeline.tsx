@@ -24,6 +24,7 @@ import moment from "moment";
 import { Spring, animated, AnimatedProps } from "react-spring";
 import { NavigationButtons } from "./NavigationButtons";
 import { FluidValue } from "@react-spring/shared";
+import { Period } from "../types/types";
 
 const SidebarHeaderText = styled.div`
   padding-top: 25px;
@@ -251,8 +252,8 @@ function VaktorTimeline() {
 
     let itemInterruptions = itemObj.interruptions;
 
-    if (itemInterruptions.length > 0) {
-      itemInterruptions.map((interruptionObj: any) => {
+    if (itemInterruptions) {
+      itemInterruptions.map((interruptionObj: Period) => {
         let interruptionColor = setInterruptionColor(
           groupColorList,
           interruptionObj.group_id
