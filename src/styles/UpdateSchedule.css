@@ -2,8 +2,9 @@
   width: 60%;
   min-width: 600px;
   max-width: 1200px;
-  margin: 2vh 20vh 2vh 40vh;
-
+  margin: auto;
+  justify-content: center;
+  align-items: center;
 }
 
 .contentEndringBox {
@@ -14,7 +15,6 @@
 .contentDate {
   width: 200px;
 
-  float: right;
 }
 
 .buttonConfirm {

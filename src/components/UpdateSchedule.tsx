@@ -1,183 +1,66 @@
 import {
-  Button, Table, Loader, UNSAFE_useRangeDatepicker, UNSAFE_DatePicker, Select, RadioGroup, Radio, Popover
+  Button,
+  Table,
+  Loader,
+  UNSAFE_useRangeDatepicker,
+  UNSAFE_DatePicker,
+  Select,
+  RadioGroup,
+  Radio,
+  Popover,
+  TextField,
 } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch, useRef } from "react";
-import { Schedules, User, Vaktlag } from "../types/types";
+import { Schedules, User, Vaktlag, Period } from "../types/types";
 import moment from "moment";
-import TextField from '@mui/material/TextField';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import ScheduleModal from "./schedule_modal";
 
-
-
-const update_schedule = async (
-  schedule_id: string,
-  bakvakt: boolean,
-  selectedVakthaver: string,
-  group_id: string,
-  dateFrom: any,
-  dateTo: any,
-  setResponse: Dispatch<any>,
-  //setLoading: Dispatch<any>,
-) => {
-  //setLoading(true);
-  console.log(schedule_id, bakvakt, selectedVakthaver, group_id, dateFrom, dateTo)
-  await fetch(`/vaktor/api/update_schedule?schedule_id=${schedule_id}&bakvakt=${bakvakt}&selectedVakthaver=${selectedVakthaver}&group_id=${group_id}&dateFrom=${dateFrom}&dateTo=${dateTo}`)
-    .then((r) => r.json())
-    .then((data) => {
-      //setLoading(false);
-      setResponse(data);
-      console.log(data)
-    });
-};
-
-const mapGroupOptions = (members: User[]) => {
-  return (
-    members.map((user: User, index) => (
-      <option key={index} value={user.id}>{user.name}</option>
-    )))
-}
-
-const get_week_number = (start_timestamp: number) => {
-  const today = new Date(start_timestamp * 1000);
-  const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
-  const pastDaysOfYear =
-    (today.valueOf() - firstDayOfYear.valueOf()) / 86400000;
-  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-};
-
-const onChangeTime = (data: any) => { console.log(data) }
+const mapPeriods = (periods: Period[]) =>
+  periods.map((bakvakter, index) => (
+    <div key={index}>
+      {bakvakter.user_id} -{" "}
+      {new Date(bakvakter.start_timestamp * 1000).toLocaleDateString()} -{" "}
+      {new Date(bakvakter.end_timestamp * 1000).toLocaleDateString()}
+    </div>
+  ));
 
 const UpdateSchedule = () => {
   const [scheduleData, setScheduleData] = useState<Schedules[]>([]);
-  const [groupData, setgroupData] = useState<User[]>([]);
-  const [selectedVakthaver, setVakthaver] = useState("");
-  const [selectedPeriode, setPeriode] = useState("");
-  const [bakvakt, setBakvakt] = useState(true);
+  const [selectedSchedule, setSchedule] = useState<Schedules>();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const [response, setResponse] = useState();
-  //const [loading, setLoading] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [openState, setOpenState] = useState(false);
-  const [value, onChangeTime] = useState(new Date().setHours(12, 0));
-  const { datepickerProps, toInputProps, fromInputProps, selectedRange, setSelected } =
-    UNSAFE_useRangeDatepicker({
-      fromDate: new Date("Oct 01 2022"),
-    });
 
   useEffect(() => {
-    //setLoading(true);
-    Promise.all([fetch("/vaktor/api/group_schedules"), fetch("/vaktor/api/get_my_groupmembers")])
-      .then(async ([scheduleRes, membersRes]) => {
+    Promise.all([fetch("/vaktor/api/group_schedules")])
+      .then(async ([scheduleRes]) => {
         const scheduleData = await scheduleRes.json();
-        const groupData = await membersRes.json();
-        return [scheduleData, groupData];
+        return [scheduleData];
       })
-      .then(([scheduleData, groupData]) => {
+      .then(([scheduleData]) => {
         scheduleData.sort(
           (a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
         );
         setScheduleData(scheduleData);
-        setVakthaver(selectedVakthaver);
-        setgroupData(groupData);
-        setPeriode(selectedPeriode);
-        setBakvakt(bakvakt);
-        //setLoading(false);
       });
   }, [response]);
 
-  //if (loading === true) return <Loader></Loader>;
-  var currentselect = ""
   return (
     <>
-      <div className="contentEndring">
-
-        <p>Du har valgt periode: <b>{selectedPeriode && (selectedPeriode)} {!selectedPeriode && ("Du har ikke valgt en periode")}</b></p>
-
-
-        <Select label="vaktsjef" hideLabel className="buttonConfirm" onChange={(e) => {
-          currentselect = e.target.value
-          setVakthaver(e.target.value)
-          console.log(e.target.value)
-        }} size="medium" style={{
-          marginBottom: "20px",
+      {selectedSchedule ? (
+        <ScheduleModal
+          schedule={selectedSchedule}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          setResponse={setResponse}
+        />
+      ) : (
+        <></>
+      )}
+      <Table
+        style={{
+          minWidth: "900px",
         }}
-        >
-          <option value="">Velg vakthaver</option>
-          {mapGroupOptions(groupData)}
-
-        </Select>
-
-        <RadioGroup legend="Hva skal gjøres med opprinnelig plan" onChange={(valg: any) => setBakvakt(valg)}>
-          <Radio value="true">Legg eksisterende person som bakvakt (f.eks ved sykdom)</Radio>
-          <Radio value="false">Erstatt eksisterende vakt (f.eks ved bytte)</Radio>
-        </RadioGroup>
-
-        <UNSAFE_DatePicker {...datepickerProps}>
-          <UNSAFE_DatePicker.Input {...fromInputProps} label="Fra" className="contentDate" />
-
-          <UNSAFE_DatePicker.Input {...toInputProps} label="Til" className="contentDate" />
-
-        </UNSAFE_DatePicker >
-
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <TimePicker ampm={false} disableOpenPicker={true}
-            label="Fra tid"
-            value={value}
-            onChange={(newValue) => {
-              console.log(new Date(String(newValue)).getHours(), new Date(String(newValue)).getMinutes());
-            }}
-            renderInput={(params) => <TextField {...params} />}
-          />
-        </LocalizationProvider>
-
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <TimePicker ampm={false} disableOpenPicker={true}
-            label="Til tid"
-            value={value}
-            onChange={(newValue) => {
-              console.log(new Date(String(newValue)).getHours(), new Date(String(newValue)).getMinutes());
-            }}
-            renderInput={(params) => <TextField {...params} />}
-          />
-        </LocalizationProvider>
-
-        <br />
-        <Button ref={buttonRef} className="buttonConfirm"
-          disabled={((selectedPeriode === "") || (selectedVakthaver === ""))}
-          style={{
-            height: "50px",
-            marginTop: "25px",
-            marginBottom: "25px",
-            minWidth: "300px",
-          }}
-          onClick={() => { //add_schedule(id, setResponse, setLoading);
-            update_schedule(selectedPeriode, bakvakt, selectedVakthaver, scheduleData[0].group_id, (Date.parse(selectedRange!.from!.toDateString()) / 1000), (Date.parse(selectedRange!.to!.toDateString()) / 1000), setResponse);
-            setOpenState(true);
-            setPeriode("");
-            setSelected(undefined);
-          }}
-
-        >Legg til endring</Button>
-        <Popover
-          open={openState}
-          onClose={() => {
-            setOpenState(false);
-
-          }
-          }
-          anchorEl={buttonRef.current}
-        >
-          <Popover.Content>Du har lagt til endring i vaktperiode!</Popover.Content>
-        </Popover>
-
-
-      </div >
-
-
-      <Table style={{
-        minWidth: "900px",
-      }}>
+      >
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
@@ -185,84 +68,66 @@ const UpdateSchedule = () => {
             <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
             <Table.HeaderCell scope="col">Vaktbytter</Table.HeaderCell>
             <Table.HeaderCell scope="col">Bakvakter</Table.HeaderCell>
-
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {scheduleData.map(
-            (
-              {
-                id,
-                user,
-                start_timestamp,
-                end_timestamp,
-                interruptions,
-                bakvakter,
-              },
-              i
-            ) => {
-              //approve_level = 0;
-              return (
-                <Table.Row key={i}>
-                  <Table.HeaderCell scope="row">{user.name}</Table.HeaderCell>
+          {scheduleData.map((schedule: Schedules, i) => {
+            //approve_level = 0;
+            return (
+              <Table.Row key={i}>
+                <Table.HeaderCell scope="row">
+                  {schedule.user.name}
+                </Table.HeaderCell>
 
-                  <Table.DataCell>
-                    {moment(start_timestamp * 1000).week()}
-                  </Table.DataCell>
+                <Table.DataCell>
+                  {moment(schedule.start_timestamp * 1000).week()}
+                </Table.DataCell>
 
-                  <Table.DataCell>
-                    {new Date(start_timestamp * 1000).toLocaleDateString()} -{" "}
-                    {new Date(end_timestamp * 1000).toLocaleDateString()}
-                    <br />
-                    <Button
-                      style={{
-                        height: "30px",
-                        marginTop: "10px",
-                        marginBottom: "5px",
-                        minWidth: "210px",
-                      }}
-                      onClick={() => {
-                        setPeriode(id);
-                        console.log(id);
-                      }}
-                    >
-                      Velg periode
-                    </Button>
-
-                  </Table.DataCell>
-                  <Table.DataCell style={{
+                <Table.DataCell>
+                  {new Date(
+                    schedule.start_timestamp * 1000
+                  ).toLocaleDateString()}{" "}
+                  -{" "}
+                  {new Date(schedule.end_timestamp * 1000).toLocaleDateString()}
+                  <br />
+                  <Button
+                    style={{
+                      height: "30px",
+                      marginTop: "10px",
+                      marginBottom: "5px",
+                      minWidth: "210px",
+                    }}
+                    onClick={() => {
+                      setSchedule(schedule);
+                      setIsOpen(true);
+                    }}
+                  >
+                    Legg til endringer
+                  </Button>
+                </Table.DataCell>
+                <Table.DataCell
+                  style={{
                     maxWidth: "210px",
-                  }}>
-                    {
-                      // Map out innterruptions (vaktbytter)
-                      interruptions.map((interruptions, index) => {
-                        return (
-                          <div key={index}>
-                            {interruptions.user_id} - {new Date(interruptions.start_timestamp * 1000).toLocaleDateString()} - {new Date(interruptions.end_timestamp * 1000).toLocaleDateString()}
-                          </div>
-                        );
-                      })
-                    }
-
-                  </Table.DataCell>
-                  <Table.DataCell style={{
+                  }}
+                >
+                  {
+                    // Map out innterruptions (vaktbytter)
+                    mapPeriods(schedule.interruptions)
+                  }
+                </Table.DataCell>
+                <Table.DataCell
+                  style={{
                     maxWidth: "210px",
-                  }}>
-                    {
-                      // Map out bakvakter
-                      bakvakter.map((bakvakter, index) => {
-                        return (
-                          <div key={index}>
-                            {bakvakter.user_id} - {new Date(bakvakter.start_timestamp * 1000).toLocaleDateString()} - {new Date(bakvakter.end_timestamp * 1000).toLocaleDateString()}
-                          </div>
-                        );
-                      })
-                    }
-                  </Table.DataCell>
-                </Table.Row>
-              );
-            }
-          )}
+                  }}
+                >
+                  {
+                    // Map out bakvakter
+                    mapPeriods(schedule.bakvakter)
+                  }
+                </Table.DataCell>
+              </Table.Row>
+            );
+          })}
         </Table.Body>
       </Table>
     </>
