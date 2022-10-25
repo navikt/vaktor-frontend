@@ -4,6 +4,12 @@ import {
 import { useEffect, useState, Dispatch, useRef } from "react";
 import { Schedules, User, Vaktlag } from "../types/types";
 import moment from "moment";
+import TextField from '@mui/material/TextField';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+
+
 
 const update_schedule = async (
   schedule_id: string,
@@ -41,6 +47,8 @@ const get_week_number = (start_timestamp: number) => {
   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 };
 
+const onChangeTime = (data: any) => { console.log(data) }
+
 const UpdateSchedule = () => {
   const [scheduleData, setScheduleData] = useState<Schedules[]>([]);
   const [groupData, setgroupData] = useState<User[]>([]);
@@ -51,7 +59,8 @@ const UpdateSchedule = () => {
   //const [loading, setLoading] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [openState, setOpenState] = useState(false);
-  const { datepickerProps, toInputProps, fromInputProps, selectedRange } =
+  const [value, onChangeTime] = useState(new Date().setHours(12, 0));
+  const { datepickerProps, toInputProps, fromInputProps, selectedRange, setSelected } =
     UNSAFE_useRangeDatepicker({
       fromDate: new Date("Oct 01 2022"),
     });
@@ -110,18 +119,32 @@ const UpdateSchedule = () => {
           <UNSAFE_DatePicker.Input {...toInputProps} label="Til" className="contentDate" />
 
         </UNSAFE_DatePicker >
-        {selectedRange && (
-          <div className="pt-4">
-            <div>
-              {selectedRange?.from && Date.parse(selectedRange.from.toDateString())}
-            </div>
-            <div>{selectedRange?.to && selectedRange.to.toDateString()}</div>
-          </div>
-        )}
+
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <TimePicker ampm={false} disableOpenPicker={true}
+            label="Fra tid"
+            value={value}
+            onChange={(newValue) => {
+              console.log(new Date(String(newValue)).getHours(), new Date(String(newValue)).getMinutes());
+            }}
+            renderInput={(params) => <TextField {...params} />}
+          />
+        </LocalizationProvider>
+
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <TimePicker ampm={false} disableOpenPicker={true}
+            label="Til tid"
+            value={value}
+            onChange={(newValue) => {
+              console.log(new Date(String(newValue)).getHours(), new Date(String(newValue)).getMinutes());
+            }}
+            renderInput={(params) => <TextField {...params} />}
+          />
+        </LocalizationProvider>
 
         <br />
         <Button ref={buttonRef} className="buttonConfirm"
-          disabled={((selectedPeriode === "") && (selectedVakthaver === ""))}
+          disabled={((selectedPeriode === "") || (selectedVakthaver === ""))}
           style={{
             height: "50px",
             marginTop: "25px",
@@ -129,15 +152,18 @@ const UpdateSchedule = () => {
             minWidth: "300px",
           }}
           onClick={() => { //add_schedule(id, setResponse, setLoading);
-            update_schedule(selectedPeriode, bakvakt, selectedVakthaver, scheduleData[0].group_id, (Date.parse(selectedRange.from.toDateString()) / 1000), (Date.parse(selectedRange.to.toDateString()) / 1000), setResponse);
+            update_schedule(selectedPeriode, bakvakt, selectedVakthaver, scheduleData[0].group_id, (Date.parse(selectedRange!.from!.toDateString()) / 1000), (Date.parse(selectedRange!.to!.toDateString()) / 1000), setResponse);
             setOpenState(true);
+            setPeriode("");
+            setSelected(undefined);
           }}
 
         >Legg til endring</Button>
         <Popover
           open={openState}
           onClose={() => {
-            setOpenState(false)
+            setOpenState(false);
+
           }
           }
           anchorEl={buttonRef.current}

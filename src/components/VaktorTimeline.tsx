@@ -290,6 +290,7 @@ function VaktorTimeline() {
               fontSize: "12px",
               borderRadius: "20px",
               zIndex: 100,
+              overflow: "hidden",
             },
           },
         });
