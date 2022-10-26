@@ -99,7 +99,6 @@ function VaktorTimeline() {
     let formattedDate = moment(date).format("DD/MM/YY");
     return formattedDate;
   };
-  const [scrolling, setScrolling] = useState();
 
   const handleTimeChange = (
     visibleTimeStart: number,
@@ -107,7 +106,6 @@ function VaktorTimeline() {
   ) => {
     setVisibleTimeStart(visibleTimeStart);
     setVisibleTimeEnd(visibleTimeEnd);
-    scrolling;
   };
 
   useEffect(() => {
@@ -145,6 +143,10 @@ function VaktorTimeline() {
   const groups: any = [];
   const groupColorList: any = [];
 
+  const groupTitle = (title: string) => {
+    return title.length > 22 ? <>{title.substring(0, 21)}&hellip;</> : title;
+  };
+
   const updateGrpModal = (
     modalstate: boolean,
     groupname: string,
@@ -172,7 +174,7 @@ function VaktorTimeline() {
           }
         >
           <SidebarText>
-            <Label>{groupName}</Label>
+            <Label>{groupTitle(groupName)}</Label>
             <SidebarIcon>
               <Information />
             </SidebarIcon>
@@ -190,6 +192,9 @@ function VaktorTimeline() {
 
   const itemList: any = itemData;
   const items: any = [];
+  const itemTitle = (name: string) => {
+    return timeUnit === "year" ? "" : name;
+  };
 
   const updateItemModal = (
     modalstate: boolean,
@@ -220,7 +225,7 @@ function VaktorTimeline() {
       id: itemObj.id,
       start_time: itemStart,
       end_time: itemEnd,
-      title: <BodyShort>{itemObj.user.name}</BodyShort>,
+      title: <BodyShort>{itemTitle(itemObj.user.name)}</BodyShort>,
       group: itemObj.group_id,
       itemProps: {
         onMouseDown: () => {
@@ -267,10 +272,12 @@ function VaktorTimeline() {
           id: interruptionObj.id,
           start_time: interruptionStart,
           end_time: interruptionEnd,
-          title: <BodyShort>{interruptionObj.user.name}</BodyShort>,
+          title: " ",
+          //title:<BodyShort>{interruptionObj.user.name}</BodyShort>,
           group: interruptionObj.group_id,
           itemProps: {
-            onMouseDown: () => {
+            //fjernet til innholdet i interruptions er likt som schedule
+            /*onMouseDown: () => {
               updateItemModal(
                 !itemModalOpen,
                 interruptionObj.user.name,
@@ -280,7 +287,7 @@ function VaktorTimeline() {
                 formattedDate(interruptionStart),
                 formattedDate(interruptionEnd)
               );
-            },
+            },*/
 
             style: {
               background: interruptionColor,
