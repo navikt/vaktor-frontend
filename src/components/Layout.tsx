@@ -16,7 +16,7 @@ const Layout = ({ children }) => {
       });
   }, []);
   return (
-    <>
+    <div className="mainContainer">
       <Header imageURL="vaktor/assets/navblack.png" />
       <div className="content">
         <Navbar />
@@ -27,7 +27,7 @@ const Layout = ({ children }) => {
         {children}
       </div>
       <Footer imageURL="vaktor/assets/navblack.png" />
-    </>
+    </div>
   );
 };
 

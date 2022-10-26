@@ -3,6 +3,7 @@ body {
   padding: 0;
   margin: 0;
   background-color: var(--navds-semantic-color-canvas-background);
+
   font-family: "Source Sans Pro", sans-serif;
 }
 
@@ -25,11 +26,14 @@ a.link {
   top: 0;
   z-index: 2000;
 }
-
+.mainContainer {
+  background-color: var(--navds-semantic-color-canvas-background);
+}
 .content {
   max-width: 85vw;
   margin: 0 auto;
   overflow: auto;
+  background-color: var(--navds-semantic-color-canvas-background);
 }
 
 nav {
