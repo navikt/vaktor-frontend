@@ -11,12 +11,13 @@ ENV NPM_TOKEN=$NPM_TOKEN
 # Copy package.json and package-lock.json before other files
 # Utilise Docker cache to save re-installing dependencies if unchanged
 COPY package*.json ./
+COPY .npmrc .npmrc
 
 # Install dependencies
 RUN npm install
 
 # Copy all files
-COPY .npmrc .npmrc
+
 COPY src/ src/
 COPY public/ public/
 COPY next.config.js next.config.js
