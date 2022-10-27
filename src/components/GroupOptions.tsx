@@ -57,6 +57,7 @@ const GroupOptions = (props: any) => {
           }}
           onClick={() => {
             assign_vaktsjef(item.id, props.group_id, props.setLoading);
+            props.setVaksjef(item.id)
           }}
         >
           {" "}

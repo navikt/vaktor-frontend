@@ -1,6 +1,6 @@
 import { Button, Table, Loader } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch } from "react";
-import { Vaktlag } from "../types/types";
+import { Vaktlag, User } from "../types/types";
 import GroupOptions from "./GroupOptions";
 
 let today = Date.now() / 1000;
@@ -35,10 +35,18 @@ const remove_leader = async (
         });
 };
 
+const mapLeaders = (leder: User[]) =>
+    leder.map((leader, index) => (
+        <div key={index}>
+            {leader.name} - {leader.role}
+        </div>
+    ));
+
 const AssignLeder = () => {
     const [groupData, setgroupData] = useState<Vaktlag[]>([]);
     const [response, setResponse] = useState();
     const [loading, setLoading] = useState(false);
+    const [vaktsjef, setVaktsjef] = useState();
 
     useEffect(() => {
         setLoading(true);
@@ -47,11 +55,11 @@ const AssignLeder = () => {
                 const groupsjson = await groupsRes.json();
                 return [groupsjson];
             })
-            .then(([groupData, roleData]) => {
+            .then(([groupData]) => {
                 setgroupData(groupData);
                 setLoading(false);
             });
-    }, [response]);
+    }, [response, vaktsjef]);
 
     if (loading === true) return <Loader></Loader>;
 
@@ -66,27 +74,25 @@ const AssignLeder = () => {
                 </Table.Row>
             </Table.Header>
             <Table.Body>
-                {groupData.map(({ name, id, leaders, members }, i) => {
+                {groupData.map((vaktlag: Vaktlag, i) => {
                     var currentselect = "";
                     //approve_level = 0;
                     return (
                         <Table.Row key={i}>
                             <Table.HeaderCell scope="row" style={{ maxWidth: "150px" }}>
-                                {name}
+                                {vaktlag.name}
                             </Table.HeaderCell>
 
                             <Table.DataCell>
                                 {
-                                    // Map out current leaders
-
-                                    leaders.map((leaders, index) => {
-                                        return (
-                                            <div key={index}>
-                                                {leaders.name} - {leaders.role}
-                                            </div>
-                                        );
-                                    })
+                                    // Map out innterruptions (vaktbytter)
+                                    mapLeaders(vaktlag.vaktsjef)
                                 }
+                                {
+                                    // Map out innterruptions (vaktbytter)
+                                    mapLeaders(vaktlag.leveranseleder)
+                                }
+
                             </Table.DataCell>
 
                             <Table.DataCell style={{ maxWidth: "150px" }}>
@@ -98,7 +104,7 @@ const AssignLeder = () => {
                                             minWidth: "210px",
                                         }}
                                         onClick={() => {
-                                            assign_leader(id, setResponse, setLoading);
+                                            assign_leader(vaktlag.id, setResponse, setLoading);
                                         }}
                                     >
                                         Sett meg som leder
@@ -111,17 +117,18 @@ const AssignLeder = () => {
                                             height: "30px",
                                             minWidth: "210px",
                                         }}
-                                        onClick={() => remove_leader(id, setResponse, setLoading)}
+                                        onClick={() => remove_leader(vaktlag.id, setResponse, setLoading)}
                                     >
-                                        Fjern meg som Leder
+                                        Fjern alle ledere
                                     </Button>
                                 </div>
                             </Table.DataCell>
                             <Table.DataCell style={{ maxWidth: "200px", margin: "50px" }}>
                                 <GroupOptions
-                                    user_list={members}
-                                    group_id={id}
+                                    user_list={vaktlag.members}
+                                    group_id={vaktlag.id}
                                     setLoading={setLoading}
+                                    setVaksjef={setVaktsjef}
                                 />
                             </Table.DataCell>
                         </Table.Row>

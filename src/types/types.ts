@@ -40,7 +40,7 @@ export interface Period {
     group_id: string,
     user_id: string,
     user: User,
-    group: Vaktlag, 
+    group: Vaktlag,
     start_timestamp: number,
     end_timestamp: number,
     approve_level: number,
@@ -54,7 +54,8 @@ export interface Vaktlag { //groups
     description: string,
     type: string,
     members: User[],
-    leaders: Leader[]
+    leveranseleder: User[],
+    vaktsjef: User[],
 }
 
 export interface Schedules {
@@ -78,13 +79,6 @@ export interface User {
     ressursnummer: string,
     description: string,
     groups: Vaktlag[] | undefined,
-}
-
-export interface Leader {
-    id: string,
-    name: string,
-    role: string,
-    email: string | undefined,
 }
 
 export interface Artskoder {
