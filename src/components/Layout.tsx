@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { User } from "../types/types";
 import { Header, Footer } from "@navikt/status-components-react";
 
-const Layout = ({ children }) => {
+const Layout = ({ children }: any) => {
   const [userData, setUserData] = useState<User>({} as User);
   useEffect(() => {
     Promise.all([fetch("/vaktor/api/get_me")])

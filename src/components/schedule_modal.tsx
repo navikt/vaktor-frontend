@@ -1,4 +1,5 @@
 import { useEffect, useState, Dispatch } from "react";
+import React from "react";
 import {
   Button,
   Select,
@@ -9,6 +10,7 @@ import {
 } from "@navikt/ds-react";
 import { Schedules, User, Period } from "../types/types";
 import moment from "moment";
+//import TextField from "./testComp";
 
 const update_schedule = async (
   period: Period,
@@ -69,6 +71,30 @@ const ScheduleModal = (props: props) => {
       });
   }, [props]);
 
+  const tilComp = React.cloneElement(
+    <TextField
+      onChange={(e) => setTimeTo(new Date(e.target.value).getTime() / 1000)}
+      label="Til"
+      min={removeMilliFromISO(props.schedule.start_timestamp)}
+      max={removeMilliFromISO(props.schedule.end_timestamp)}
+    />,
+    {
+      type: "datetime-local",
+    }
+  );
+
+  const fraComp = React.cloneElement(
+    <TextField
+      onChange={(e) => setTimeTo(new Date(e.target.value).getTime() / 1000)}
+      label="Fra"
+      min={removeMilliFromISO(props.schedule.start_timestamp)}
+      max={removeMilliFromISO(props.schedule.end_timestamp)}
+    />,
+    {
+      type: "datetime-local",
+    }
+  );
+
   return (
     <>
       <Modal
@@ -107,24 +133,8 @@ const ScheduleModal = (props: props) => {
               </Radio>
             </RadioGroup>
             <div style={{ display: "flex" }}>
-              <TextField
-                onChange={(e) =>
-                  setTimeFrom(new Date(e.target.value).getTime() / 1000)
-                }
-                label="Fra"
-                type="datetime-local"
-                min={removeMilliFromISO(props.schedule.start_timestamp)}
-                max={removeMilliFromISO(props.schedule.end_timestamp)}
-              />
-              <TextField
-                onChange={(e) =>
-                  setTimeTo(new Date(e.target.value).getTime() / 1000)
-                }
-                label="Til"
-                type="datetime-local"
-                min={removeMilliFromISO(props.schedule.start_timestamp)}
-                max={removeMilliFromISO(props.schedule.end_timestamp)}
-              />
+              {fraComp}
+              {tilComp}
             </div>
 
             <br />
