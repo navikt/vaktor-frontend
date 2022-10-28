@@ -1,28 +1,28 @@
 // Landing page
 export enum RouterVaktor {
-    NAME = "Vaktor",
+    NAME = "Oversikt",
     PATH = "/"
 }
 // ---
 
 // Admin
 export enum RouterAdmin {
-    NAME = "Admin - Ansattgodkjenning",
+    NAME = "Dine Vakter",
     PATH = "/admin"
 }
 
 export enum RouterAdminSchedule {
-    NAME = "Admin - Endre vakt",
+    NAME = "Vaktlagets vakter",
     PATH = "/adminschedule"
 }
 
 export enum RouterLedergodkjenning {
-    NAME = "Admin - Ledergodkjenning",
+    NAME = "Ledergodkjenning",
     PATH = "/adminleder"
 }
 
 export enum RouterAssignLeder {
-    NAME = "Admin - Leveranseleder",
+    NAME = "Leveranseleder",
     PATH = "/assignleder"
 }
 // ---
