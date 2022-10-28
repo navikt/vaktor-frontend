@@ -1,6 +1,6 @@
 import { Button, Table, Loader } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch } from "react";
-import { Schedules } from "../types/types";
+import { MySchedule, Period, Schedules } from "../types/types";
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -68,9 +68,58 @@ const mapApproveStatus = (status: number) => {
 };
 
 const Admin = () => {
-	const [itemData, setItemData] = useState<Schedules[]>([]);
+	const [itemData, setItemData] = useState<MySchedule>({} as MySchedule);
 	const [response, setResponse] = useState();
 	const [loading, setLoading] = useState(false);
+
+	const mapVakter = (vaktliste: any[], type: string) => vaktliste.map((vakter: Schedules, i: number) => (
+		//approve_level = 2;
+
+		<Table.Row key={vakter.id}>
+			<Table.HeaderCell scope="row">{vakter.group.name}</Table.HeaderCell>
+			<Table.DataCell>{type}</Table.DataCell>
+
+			<Table.DataCell>
+				{new Date(vakter.start_timestamp * 1000).toLocaleDateString()}
+			</Table.DataCell>
+			<Table.DataCell>
+				{new Date(vakter.end_timestamp * 1000).toLocaleDateString()}
+			</Table.DataCell>
+			<Table.DataCell style={{ maxWidth: "230px" }}>
+				<div>
+					< Button disabled={(vakter.approve_level != 0 || vakter.end_timestamp > today)}
+						style={{
+							height: "30px",
+							marginBottom: "5px",
+							minWidth: "210px",
+						}}
+						onClick={() =>
+							confirm_schedule(vakter.id, setResponse, setLoading)
+						}
+					>
+						{" "}
+						Godkjenn{" "}
+					</Button>
+
+					<Button disabled={(vakter.approve_level != 1)}
+						style={{
+							backgroundColor: "#f96c6c",
+							height: "30px",
+							minWidth: "210px",
+						}}
+						onClick={() =>
+							disprove_schedule(vakter.id, setResponse, setLoading)
+						}
+					>
+						{" "}
+						Avgodkjenn{" "}
+					</Button>
+
+				</div>
+			</Table.DataCell>
+			{mapApproveStatus(vakter.approve_level)}
+		</Table.Row>
+	));
 
 	useEffect(() => {
 		setLoading(true);
@@ -80,7 +129,13 @@ const Admin = () => {
 				return [schedulejson];
 			})
 			.then(([itemData]) => {
-				itemData.sort(
+				itemData.vakter.sort(
+					(a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
+				);
+				itemData.bakvakter.sort(
+					(a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
+				);
+				itemData.interruptions.sort(
 					(a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
 				);
 				setItemData(itemData);
@@ -94,68 +149,20 @@ const Admin = () => {
 		<Table>
 			<Table.Header>
 				<Table.Row>
-					<Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
 					<Table.HeaderCell scope="col">start</Table.HeaderCell>
 					<Table.HeaderCell scope="col">slutt</Table.HeaderCell>
-					<Table.HeaderCell scope="col">gruppe</Table.HeaderCell>
 					<Table.HeaderCell scope="col">actions</Table.HeaderCell>
 					<Table.HeaderCell scope="col">status</Table.HeaderCell>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{itemData.map(
-					(
-						{ id, user, group, start_timestamp, end_timestamp, approve_level },
-						i
-					) => {
-						//approve_level = 2;
-						return (
-							<Table.Row key={i}>
-								<Table.HeaderCell scope="row">{user.name}</Table.HeaderCell>
-								<Table.DataCell>
-									{new Date(start_timestamp * 1000).toLocaleDateString()}
-								</Table.DataCell>
-								<Table.DataCell>
-									{new Date(end_timestamp * 1000).toLocaleDateString()}
-								</Table.DataCell>
-								<Table.DataCell>{group.name}</Table.DataCell>
-								<Table.DataCell style={{ maxWidth: "230px" }}>
-									<div>
-										< Button disabled={(approve_level != 0 || end_timestamp > today)}
-											style={{
-												height: "30px",
-												marginBottom: "5px",
-												minWidth: "210px",
-											}}
-											onClick={() =>
-												confirm_schedule(id, setResponse, setLoading)
-											}
-										>
-											{" "}
-											Godkjenn{" "}
-										</Button>
 
-										<Button disabled={(approve_level != 1)}
-											style={{
-												backgroundColor: "#f96c6c",
-												height: "30px",
-												minWidth: "210px",
-											}}
-											onClick={() =>
-												disprove_schedule(id, setResponse, setLoading)
-											}
-										>
-											{" "}
-											Avgodkjenn{" "}
-										</Button>
+				{itemData.vakter ? mapVakter(itemData.vakter, "Normal vakt") : <Table.Row></Table.Row>}
+				{itemData.bakvakter ? mapVakter(itemData.bakvakter, "Bakvakt") : <Table.Row></Table.Row>}
+				{itemData.bakvakter ? mapVakter(itemData.bakvakter, "Vaktbytte") : <Table.Row></Table.Row>}
 
-									</div>
-								</Table.DataCell>
-								{mapApproveStatus(approve_level)}
-							</Table.Row>
-						);
-					}
-				)}
 			</Table.Body>
 		</Table >
 	);

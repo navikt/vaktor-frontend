@@ -46,6 +46,12 @@ export interface Period {
     approve_level: number,
 }
 
+export interface MySchedule {
+    vakter: Schedules[],
+    bakvakter: Period[],
+    interruptions: Period[],
+}
+
 export interface Vaktlag { //groups
     name: string,
     phone: string,
