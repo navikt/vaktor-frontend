@@ -5,17 +5,15 @@ import { Button } from "@navikt/ds-react";
 const assign_vaktsjef = async (
   vaktsjef_id: string,
   group_id: string,
-  setLoading: Dispatch<any>
+  setVaktsjef: Dispatch<any>
 ) => {
-  setLoading(true);
-
   await fetch(
     `/vaktor/api/assign_vaktsjef/?group_id=${group_id}&user_id=${vaktsjef_id}`,
     { method: "POST" }
   )
     .then((r) => r.json())
     .then((data) => {
-      setLoading(false);
+      setVaktsjef(data);
     });
 };
 
@@ -26,6 +24,9 @@ const GroupOptions = (props: any) => {
     var newItem = props.user_list.find((x: User) => x.id === user_id);
     if (newItem) {
       setItem(newItem);
+
+    } else {
+      setItem({ name: "Velg Vaktsjef", id: "10" })
     }
   };
 
@@ -38,7 +39,7 @@ const GroupOptions = (props: any) => {
           style={{ width: 200 }}
           onChange={(e) => findItem(e.target.value)}
         >
-          <option value={item.id}>{item.name}</option>
+          <option value={"10"}>Velg Vaktsjef</option>
           {props.user_list.map((x: User) => {
             return (
               <option key={x.id} value={x.id}>
@@ -56,8 +57,8 @@ const GroupOptions = (props: any) => {
             backgroundColor: "#00803e",
           }}
           onClick={() => {
-            assign_vaktsjef(item.id, props.group_id, props.setLoading);
-            props.setVaksjef(item.id)
+            assign_vaktsjef(item.id, props.group_id, props.setVaksjef);
+
           }}
         >
           {" "}

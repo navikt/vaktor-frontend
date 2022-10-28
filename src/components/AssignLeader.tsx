@@ -9,14 +9,14 @@ let today = Date.now() / 1000;
 const assign_leader = async (
     group_id: string,
     setResponse: Dispatch<any>,
-    setLoading: Dispatch<any>
+    //setLoading: Dispatch<any>
 ) => {
-    setLoading(true);
+    //setLoading(true);
 
     await fetch(`/vaktor/api/assign_leader/?group_id=${group_id}`)
         .then((r) => r.json())
         .then((data) => {
-            setLoading(false);
+            //setLoading(false);
             setResponse(data);
         });
 };
@@ -24,13 +24,13 @@ const assign_leader = async (
 const remove_leader = async (
     group_id: string,
     setResponse: Dispatch<any>,
-    setLoading: Dispatch<any>
+    //setLoading: Dispatch<any>
 ) => {
-    setLoading(true);
+    //setLoading(true);
     await fetch(`/vaktor/api/remove_leader/?group_id=${group_id}`)
         .then((r) => r.json())
         .then((data) => {
-            setLoading(false);
+            //setLoading(false);
             setResponse(data);
         });
 };
@@ -104,7 +104,8 @@ const AssignLeder = () => {
                                             minWidth: "210px",
                                         }}
                                         onClick={() => {
-                                            assign_leader(vaktlag.id, setResponse, setLoading);
+                                            assign_leader(vaktlag.id, setResponse,// setLoading
+                                            );
                                         }}
                                     >
                                         Sett meg som leder
@@ -117,9 +118,10 @@ const AssignLeder = () => {
                                             height: "30px",
                                             minWidth: "210px",
                                         }}
-                                        onClick={() => remove_leader(vaktlag.id, setResponse, setLoading)}
+                                        onClick={() => remove_leader(vaktlag.id, setResponse,//setLoading
+                                        )}
                                     >
-                                        Fjern alle ledere
+                                        Fjern meg som leder
                                     </Button>
                                 </div>
                             </Table.DataCell>
@@ -127,7 +129,7 @@ const AssignLeder = () => {
                                 <GroupOptions
                                     user_list={vaktlag.members}
                                     group_id={vaktlag.id}
-                                    setLoading={setLoading}
+                                    //setLoading={setLoading}
                                     setVaksjef={setVaktsjef}
                                 />
                             </Table.DataCell>

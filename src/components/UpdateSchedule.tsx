@@ -1,26 +1,18 @@
 import {
   Button,
   Table,
-  Loader,
-  UNSAFE_useRangeDatepicker,
-  UNSAFE_DatePicker,
-  Select,
-  RadioGroup,
-  Radio,
-  Popover,
-  TextField,
 } from "@navikt/ds-react";
-import { useEffect, useState, Dispatch, useRef } from "react";
-import { Schedules, User, Vaktlag, Period } from "../types/types";
+import { useEffect, useState } from "react";
+import { Schedules, Period } from "../types/types";
 import moment from "moment";
 import ScheduleModal from "./schedule_modal";
 
 const mapPeriods = (periods: Period[]) =>
   periods.map((bakvakter, index) => (
     <div key={index}>
-      {bakvakter.user_id} -{" "}
-      {new Date(bakvakter.start_timestamp * 1000).toLocaleDateString()} -{" "}
-      {new Date(bakvakter.end_timestamp * 1000).toLocaleDateString()}
+      {bakvakter.user.name} -{" "}<br />
+      {new Date(bakvakter.start_timestamp * 1000).toLocaleString().slice(0, -3)} -{" "}
+      {new Date(bakvakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}
     </div>
   ));
 
@@ -29,6 +21,7 @@ const UpdateSchedule = () => {
   const [selectedSchedule, setSchedule] = useState<Schedules>();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [response, setResponse] = useState();
+  const [Vakt, addVakt] = useState()
 
   useEffect(() => {
     Promise.all([fetch("/vaktor/api/group_schedules")])
@@ -42,7 +35,7 @@ const UpdateSchedule = () => {
         );
         setScheduleData(scheduleData);
       });
-  }, [response]);
+  }, [response, Vakt]);
 
   return (
     <>
@@ -52,6 +45,7 @@ const UpdateSchedule = () => {
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           setResponse={setResponse}
+          addVakt={addVakt}
         />
       ) : (
         <></>

@@ -272,12 +272,11 @@ function VaktorTimeline() {
           id: interruptionObj.id,
           start_time: interruptionStart,
           end_time: interruptionEnd,
-          title: " ",
-          //title:<BodyShort>{interruptionObj.user.name}</BodyShort>,
+          title: <BodyShort>{interruptionObj.user.name}</BodyShort>,
           group: interruptionObj.group_id,
           itemProps: {
             //fjernet til innholdet i interruptions er likt som schedule
-            /*onMouseDown: () => {
+            onMouseDown: () => {
               updateItemModal(
                 !itemModalOpen,
                 interruptionObj.user.name,
@@ -287,7 +286,7 @@ function VaktorTimeline() {
                 formattedDate(interruptionStart),
                 formattedDate(interruptionEnd)
               );
-            },*/
+            },
 
             style: {
               background: interruptionColor,

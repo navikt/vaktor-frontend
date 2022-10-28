@@ -15,14 +15,15 @@ import moment from "moment";
 const update_schedule = async (
   period: Period,
   isBakvakt: boolean,
-  selectedVakthaver: string
+  selectedVakthaver: string,
+  addVakt: Dispatch<any>,
 ) => {
   await fetch(
     `/vaktor/api/update_schedule?schedule_id=${period.schedule_id}&bakvakt=${isBakvakt}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
   )
     .then((r) => r.json())
     .then((data) => {
-      console.log(data);
+      addVakt(data);
     });
 };
 
@@ -39,6 +40,7 @@ type props = {
   isOpen: boolean;
   setIsOpen: Dispatch<boolean>;
   setResponse: Dispatch<any>;
+  addVakt: Dispatch<any>;
 };
 
 const removeMilliFromISO = (timestamp: number) => {
@@ -55,12 +57,14 @@ const ScheduleModal = (props: props) => {
   const [selectedVakthaver, setVakthaver] = useState("");
   const [bakvakt, setBakvakt] = useState(true);
   const [timeFrom, setTimeFrom] = useState(new Date().setHours(12, 0));
-  const [timeTo, setTimeTo] = useState(new Date().setHours(12, 0));
-
-  console.log("props: ", removeMilliFromISO(props.schedule.start_timestamp));
+  const [timeTo, setTimeTo] = useState(new Date().setHours(12, 0))
 
   useEffect(() => {
+    if (Modal && Modal.setAppElement) {
+      Modal.setAppElement("#__next");
+    }
     Promise.all([fetch("/vaktor/api/get_my_groupmembers")])
+
       .then(async ([membersRes]) => {
         props.setResponse(membersRes.status);
         const groupData = await membersRes.json();
@@ -85,7 +89,7 @@ const ScheduleModal = (props: props) => {
 
   const fraComp = React.cloneElement(
     <TextField
-      onChange={(e) => setTimeTo(new Date(e.target.value).getTime() / 1000)}
+      onChange={(e) => setTimeFrom(new Date(e.target.value).getTime() / 1000)}
       label="Fra"
       min={removeMilliFromISO(props.schedule.start_timestamp)}
       max={removeMilliFromISO(props.schedule.end_timestamp)}
@@ -154,7 +158,7 @@ const ScheduleModal = (props: props) => {
                   end_timestamp: timeTo,
                   schedule_id: props.schedule.id,
                 };
-                update_schedule(period, bakvakt, selectedVakthaver);
+                update_schedule(period, bakvakt, selectedVakthaver, props.addVakt);
                 props.setIsOpen(false);
               }}
             >
