@@ -193,7 +193,7 @@ const AdminLeder = () => {
             let bytter = interruptions.filter((value) => new Date(value.start_timestamp * 1000).getMonth() ===
               selectedMonth!.getMonth())
 
-            let combined = [mapVakter(v, "Ordinær vakt"), mapVakter(bv, "Bakvakt"), mapVakter(v, "Vaktbytte")]
+            let combined = [mapVakter(v, "Ordinær vakt"), mapVakter(bv, "Bakvakt"), mapVakter(bytter, "Vaktbytte")]
 
 
             return (
