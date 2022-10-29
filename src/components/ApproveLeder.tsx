@@ -43,7 +43,9 @@ const disprove_schedule = async (
 const mapAudit = (audit: Audit[]) => {
   return audit.map((audit: Audit, index) => (
     <div key={audit.id}>
-      {audit.timestamp.slice(0, -10).replace("T", " ")} - {audit.action} - {audit.user.name}
+      {audit.timestamp.slice(0, -10).replace("T", " ")} <br />
+      {audit.action} - {audit.user.name}
+      <hr />
     </div>
   ));
 };
@@ -75,7 +77,7 @@ const mapApproveStatus = (status: number) => {
   }
 
   return (
-    <Table.DataCell style={{ backgroundColor: statusColor, maxWidth: "90px" }}>
+    <Table.DataCell style={{ backgroundColor: statusColor, maxWidth: "150", minWidth: "150" }}>
       {statusText}
     </Table.DataCell>
   );
@@ -104,7 +106,7 @@ const AdminLeder = () => {
         {new Date(vakter.end_timestamp * 1000).toLocaleDateString()}
       </Table.DataCell>
       <Table.DataCell>{vakter.group.name}</Table.DataCell>
-      <Table.DataCell style={{ maxWidth: "150px" }}>
+      <Table.DataCell style={{ maxWidth: "250px", minWidth: "250px" }}>
         <div>
           <Button
             disabled={
@@ -146,8 +148,8 @@ const AdminLeder = () => {
         </div>
       </Table.DataCell>
       {mapApproveStatus(vakter.approve_level)}
-      {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.DataCell scope="row">{vakter.cost}</Table.DataCell>}
-      <Table.DataCell scope="row">{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : "Ingen hendelser"}</Table.DataCell>
+      {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.DataCell scope="row" style={{ maxWidth: "200px", minWidth: "150px" }}>{vakter.cost}</Table.DataCell>}
+      <Table.DataCell scope="row" style={{ maxWidth: "250px", minWidth: "200px" }}>{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : "Ingen hendelser"}</Table.DataCell>
     </Table.Row>
   ));
 
