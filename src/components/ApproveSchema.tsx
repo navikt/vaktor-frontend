@@ -1,6 +1,6 @@
 import { Button, Table, Loader } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch } from "react";
-import { MySchedule, Period, Schedules } from "../types/types";
+import { Schedules } from "../types/types";
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -68,16 +68,17 @@ const mapApproveStatus = (status: number) => {
 };
 
 const Admin = () => {
-	const [itemData, setItemData] = useState<MySchedule>({} as MySchedule);
+	const [itemData, setItemData] = useState();
 	const [response, setResponse] = useState();
 	const [loading, setLoading] = useState(false);
 
-	const mapVakter = (vaktliste: any[], type: string) => vaktliste.map((vakter: Schedules, i: number) => (
-		//approve_level = 2;
 
-		<Table.Row key={vakter.id}>
+
+	const mapVakter = (vaktliste: Schedules[]) => vaktliste.map((vakter, index) => (
+		//approve_level = 2;
+		< Table.Row key={vakter.id} >
 			<Table.HeaderCell scope="row">{vakter.group.name}</Table.HeaderCell>
-			<Table.DataCell>{type}</Table.DataCell>
+			<Table.DataCell>{vakter.type}</Table.DataCell>
 
 			<Table.DataCell>
 				{new Date(vakter.start_timestamp * 1000).toLocaleDateString()}
@@ -117,8 +118,9 @@ const Admin = () => {
 
 				</div>
 			</Table.DataCell>
-			{mapApproveStatus(vakter.approve_level)}
-		</Table.Row>
+			{mapApproveStatus(vakter.approve_level)
+			}
+		</Table.Row >
 	));
 
 	useEffect(() => {
@@ -129,15 +131,10 @@ const Admin = () => {
 				return [schedulejson];
 			})
 			.then(([itemData]) => {
-				itemData.vakter.sort(
+				itemData.sort(
 					(a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
 				);
-				itemData.bakvakter.sort(
-					(a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
-				);
-				itemData.interruptions.sort(
-					(a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
-				);
+
 				setItemData(itemData);
 				setLoading(false);
 			});
@@ -159,9 +156,7 @@ const Admin = () => {
 			</Table.Header>
 			<Table.Body>
 
-				{itemData.vakter ? mapVakter(itemData.vakter, "Normal vakt") : <Table.Row></Table.Row>}
-				{itemData.bakvakter ? mapVakter(itemData.bakvakter, "Bakvakt") : <Table.Row></Table.Row>}
-				{itemData.bakvakter ? mapVakter(itemData.bakvakter, "Vaktbytte") : <Table.Row></Table.Row>}
+				{itemData ? mapVakter(itemData) : <Table.Row></Table.Row>}
 
 			</Table.Body>
 		</Table >

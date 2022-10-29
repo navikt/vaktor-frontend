@@ -8,18 +8,18 @@ import {
   TextField,
   Modal,
 } from "@navikt/ds-react";
-import { Schedules, User, Period } from "../types/types";
+import { Schedules, User } from "../types/types";
 import moment from "moment";
 //import TextField from "./testComp";
 
 const update_schedule = async (
-  period: Period,
-  isBakvakt: boolean,
+  period: Schedules,
+  action: string,
   selectedVakthaver: string,
   addVakt: Dispatch<any>,
 ) => {
   await fetch(
-    `/vaktor/api/update_schedule?schedule_id=${period.schedule_id}&bakvakt=${isBakvakt}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
+    `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&type=${period.type}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
   )
     .then((r) => r.json())
     .then((data) => {
@@ -55,7 +55,7 @@ const removeMilliFromISO = (timestamp: number) => {
 const ScheduleModal = (props: props) => {
   const [groupData, setgroupData] = useState<User[]>([]);
   const [selectedVakthaver, setVakthaver] = useState("");
-  const [bakvakt, setBakvakt] = useState(true);
+  const [action, setAction] = useState("");
   const [timeFrom, setTimeFrom] = useState(new Date().setHours(12, 0));
   const [timeTo, setTimeTo] = useState(new Date().setHours(12, 0))
 
@@ -77,7 +77,7 @@ const ScheduleModal = (props: props) => {
 
   const tilComp = React.cloneElement(
     <TextField
-      onChange={(e) => setTimeTo(new Date(e.target.value).getTime() / 1000)}
+      onChange={(e) => setTimeTo(new Date(e.target.value).getTime())}
       label="Til"
       min={removeMilliFromISO(props.schedule.start_timestamp)}
       max={removeMilliFromISO(props.schedule.end_timestamp)}
@@ -89,7 +89,7 @@ const ScheduleModal = (props: props) => {
 
   const fraComp = React.cloneElement(
     <TextField
-      onChange={(e) => setTimeFrom(new Date(e.target.value).getTime() / 1000)}
+      onChange={(e) => setTimeFrom(new Date(e.target.value).getTime())}
       label="Fra"
       min={removeMilliFromISO(props.schedule.start_timestamp)}
       max={removeMilliFromISO(props.schedule.end_timestamp)}
@@ -122,25 +122,32 @@ const ScheduleModal = (props: props) => {
               }}
             >
               <option value="">Velg vakthaver</option>
-              {mapGroupOptions(groupData)}
+              {mapGroupOptions(groupData.filter((user: User) => user.id.toUpperCase() !== props.schedule.user_id.toUpperCase()))}
             </Select>
 
             <RadioGroup
               legend="Hva skal gjøres med opprinnelig plan"
-              onChange={(valg: any) => setBakvakt(valg)}
+              onChange={(valg: any) => setAction(valg)}
             >
-              <Radio value="true">
-                Legg eksisterende person som bakvakt (f.eks ved sykdom)
+              <Radio value="bakvakt">
+                Legg til som bakvakt
               </Radio>
-              <Radio value="false">
+              <Radio value="bytte">
                 Erstatt eksisterende vakt (f.eks ved bytte)
               </Radio>
+              <Radio value="bistand">
+                Sett eksisterede person som bakvakt og bistå (f.eks ved sykdom for opprinnelig vakthaver)
+              </Radio>
+              <Radio value="replace">
+                Bytt hele vaktperioden med en annen
+              </Radio>
             </RadioGroup>
-            <div style={{ display: "flex" }}>
-              {fraComp}
-              {tilComp}
-            </div>
-
+            {action !== "replace" &&
+              <div style={{ display: "flex" }}>
+                {fraComp}
+                {tilComp}
+              </div>
+            }
             <br />
             <Button
               className="buttonConfirm"
@@ -154,11 +161,11 @@ const ScheduleModal = (props: props) => {
               onClick={() => {
                 let period = {
                   ...props.schedule,
-                  start_timestamp: timeFrom,
-                  end_timestamp: timeTo,
+                  start_timestamp: action === "replace" ? props.schedule.start_timestamp : timeFrom / 1000,
+                  end_timestamp: action === "replace" ? props.schedule.end_timestamp : timeTo / 1000,
                   schedule_id: props.schedule.id,
                 };
-                update_schedule(period, bakvakt, selectedVakthaver, props.addVakt);
+                update_schedule(period, action, selectedVakthaver, props.addVakt);
                 props.setIsOpen(false);
               }}
             >

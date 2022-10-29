@@ -24,7 +24,7 @@ import moment from "moment";
 import { Spring, animated, AnimatedProps } from "react-spring";
 import { NavigationButtons } from "./NavigationButtons";
 import { FluidValue } from "@react-spring/shared";
-import { Period } from "../types/types";
+import { Schedules } from "../types/types";
 
 const SidebarHeaderText = styled.div`
   padding-top: 25px;
@@ -214,7 +214,7 @@ function VaktorTimeline() {
     setItemEndTime(endTime);
   };
 
-  itemList.map((itemObj: any) => {
+  itemList.filter((vakt: Schedules) => vakt.type === "ordinær vakt").map((itemObj: Schedules) => {
     let itemColor = setGrpColor(groupColorList, itemObj.group_id);
     let borderColor = setBorderColor(itemColor);
     let textColor = setTextColor(itemColor);
@@ -255,10 +255,10 @@ function VaktorTimeline() {
   --  Generating items (vaktplaner) from interruptions in schedules -- 
   */
 
-    let itemInterruptions = itemObj.interruptions;
+    let itemInterruptions = itemObj.vakter.filter((vakt: Schedules) => ["bytte", "bistand"].includes(vakt.type));
 
     if (itemInterruptions) {
-      itemInterruptions.map((interruptionObj: Period) => {
+      itemInterruptions.map((interruptionObj: Schedules) => {
         let interruptionColor = setInterruptionColor(
           groupColorList,
           interruptionObj.group_id

@@ -3,11 +3,11 @@ import {
   Table,
 } from "@navikt/ds-react";
 import { useEffect, useState } from "react";
-import { Schedules, Period } from "../types/types";
+import { Schedules } from "../types/types";
 import moment from "moment";
 import ScheduleModal from "./schedule_modal";
 
-const mapPeriods = (periods: Period[]) =>
+const mapPeriods = (periods: Schedules[]) =>
   periods.map((bakvakter, index) => (
     <div key={index}>
       {bakvakter.user.name} -{" "}<br />
@@ -60,17 +60,19 @@ const UpdateSchedule = () => {
             <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
             <Table.HeaderCell scope="col">Ukenummer</Table.HeaderCell>
             <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Vaktbistand</Table.HeaderCell>
             <Table.HeaderCell scope="col">Vaktbytter</Table.HeaderCell>
             <Table.HeaderCell scope="col">Bakvakter</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {scheduleData.map((schedule: Schedules, i) => {
+          {scheduleData.filter((schedule: Schedules) => schedule.type === "ordinær vakt").map((schedule: Schedules, i) => {
             //approve_level = 0;
             return (
               <Table.Row key={i}>
                 <Table.HeaderCell scope="row">
-                  {schedule.user.name}
+                  {schedule.user.name}<br />
+                  {schedule.type}
                 </Table.HeaderCell>
 
                 <Table.DataCell>
@@ -105,8 +107,18 @@ const UpdateSchedule = () => {
                   }}
                 >
                   {
+                    // Map out bakvakter
+                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bistand"))
+                  }
+                </Table.DataCell>
+                <Table.DataCell
+                  style={{
+                    maxWidth: "210px",
+                  }}
+                >
+                  {
                     // Map out innterruptions (vaktbytter)
-                    mapPeriods(schedule.interruptions)
+                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bytte"))
                   }
                 </Table.DataCell>
                 <Table.DataCell
@@ -116,7 +128,7 @@ const UpdateSchedule = () => {
                 >
                   {
                     // Map out bakvakter
-                    mapPeriods(schedule.bakvakter)
+                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bakvakt"))
                   }
                 </Table.DataCell>
               </Table.Row>

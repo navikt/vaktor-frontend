@@ -6,7 +6,7 @@ import {
   UNSAFE_useMonthpicker,
 } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch } from "react";
-import { Schedules, MySchedule } from "../types/types";
+import { Audit, Schedules, User } from "../types/types";
 
 let today = Date.now() / 1000;
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -38,6 +38,14 @@ const disprove_schedule = async (
       setLoading(false);
       setResponse(data);
     });
+};
+
+const mapAudit = (audit: Audit[]) => {
+  return audit.map((audit: Audit, index) => (
+    <div key={audit.id}>
+      {audit.timestamp.slice(0, -10).replace("T", " ")} - {audit.action} - {audit.user.name}
+    </div>
+  ));
 };
 
 const mapApproveStatus = (status: number) => {
@@ -74,7 +82,8 @@ const mapApproveStatus = (status: number) => {
 };
 
 const AdminLeder = () => {
-  const [itemData, setItemData] = useState<MySchedule[]>([]);
+  const [itemData, setItemData] = useState<Schedules[]>([]);
+  const [currentUser, setCurrentUser] = useState<User>({} as User);
   const [response, setResponse] = useState();
   const [loading, setLoading] = useState(false);
   const { monthpickerProps, inputProps, selectedMonth, setSelected } =
@@ -84,16 +93,14 @@ const AdminLeder = () => {
       defaultSelected: new Date(),
     });
 
-  const mapVakter = (vaktliste: any[], type: string) => vaktliste.map((vakter: Schedules, i: number) => (
+  const mapVakter = (vaktliste: Schedules[]) => vaktliste.map((vakter: Schedules, i: number) => (
     //approve_level = 2;
 
     <Table.Row key={i}>
       <Table.HeaderCell scope="row">{vakter.user.name}</Table.HeaderCell>
-      <Table.DataCell scope="row">{type}</Table.DataCell>
+      <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
       <Table.DataCell>
-        {new Date(vakter.start_timestamp * 1000).toLocaleDateString()}
-      </Table.DataCell>
-      <Table.DataCell>
+        {new Date(vakter.start_timestamp * 1000).toLocaleDateString()}<br />
         {new Date(vakter.end_timestamp * 1000).toLocaleDateString()}
       </Table.DataCell>
       <Table.DataCell>{vakter.group.name}</Table.DataCell>
@@ -139,21 +146,26 @@ const AdminLeder = () => {
         </div>
       </Table.DataCell>
       {mapApproveStatus(vakter.approve_level)}
+      {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.DataCell scope="row">{vakter.cost}</Table.DataCell>}
+      <Table.DataCell scope="row">{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : "Ingen hendelser"}</Table.DataCell>
     </Table.Row>
   ));
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetch("/vaktor/api/leader_schedules")])
-      .then(async ([scheduleRes]) => {
+    Promise.all([fetch("/vaktor/api/leader_schedules"), fetch("/vaktor/api/get_me")])
+      .then(async ([scheduleRes, userRes]) => {
         const schedulejson = await scheduleRes.json();
-        return [schedulejson];
+        const userjson = await userRes.json();
+        return [schedulejson, userjson];
       })
-      .then(([itemData]) => {
+      .then(([itemData, userData]) => {
         itemData.sort(
           (a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp
         );
+
         setItemData(itemData);
+        setCurrentUser(userData)
         setLoading(false);
       });
   }, [response]);
@@ -176,33 +188,22 @@ const AdminLeder = () => {
           <Table.Row>
             <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
             <Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
-            <Table.HeaderCell scope="col">start</Table.HeaderCell>
-            <Table.HeaderCell scope="col">slutt</Table.HeaderCell>
-            <Table.HeaderCell scope="col">gruppe</Table.HeaderCell>
-            <Table.HeaderCell scope="col">actions</Table.HeaderCell>
-            <Table.HeaderCell scope="col">status</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Status</Table.HeaderCell>
+            {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>}
+            <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
+
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {itemData.map(({ vakter, bakvakter, interruptions }, i) => {
-            //approve_level = 0;
-            let v = vakter.filter((value) => new Date(value.start_timestamp * 1000).getMonth() ===
-              selectedMonth!.getMonth())
-            let bv = bakvakter.filter((value) => new Date(value.start_timestamp * 1000).getMonth() ===
-              selectedMonth!.getMonth())
-            let bytter = interruptions.filter((value) => new Date(value.start_timestamp * 1000).getMonth() ===
-              selectedMonth!.getMonth())
-
-            let combined = [mapVakter(v, "Ordinær vakt"), mapVakter(bv, "Bakvakt"), mapVakter(bytter, "Vaktbytte")]
-
-
-            return (
-              combined.map((vakter) => vakter)
-
-            )
-          }
+          {mapVakter(itemData.filter(
+            (value: Schedules) =>
+              new Date(value.start_timestamp * 1000).getMonth() ===
+              selectedMonth!.getMonth()
           )
-          }
+          )}
 
         </Table.Body>
       </Table>
