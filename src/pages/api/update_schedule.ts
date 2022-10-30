@@ -1,13 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
-    // for prod
+    // for prod / dev
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-
-    // for local testing
     //let authorizationHeader = process.env.FAKE_TOKEN
+    // for local testing
+
     let schedule_id = req.query.schedule_id
     let bakvakt = req.query.bakvakt
     let selectedVakthaver = req.query.selectedVakthaver
@@ -39,7 +38,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             },
             method: "PUT",
             body: JSON.stringify(bodycontent),
-
         },
     )
 
@@ -51,6 +49,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             else {
                 res.send("Cant get data from backend")
             }
-
         })
 }

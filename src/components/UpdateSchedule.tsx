@@ -5,7 +5,7 @@ import {
 import { useEffect, useState } from "react";
 import { Schedules } from "../types/types";
 import moment from "moment";
-import ScheduleModal from "./schedule_modal";
+import ScheduleModal from "./ScheduleModal";
 
 const mapPeriods = (periods: Schedules[]) =>
   periods.map((bakvakter, index) => (

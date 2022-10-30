@@ -4,7 +4,9 @@ import {
   Loader,
   UNSAFE_MonthPicker,
   UNSAFE_useMonthpicker,
+  ReadMore,
 } from "@navikt/ds-react";
+import moment from "moment";
 import { useEffect, useState, Dispatch } from "react";
 import { Audit, Schedules, User } from "../types/types";
 
@@ -43,10 +45,11 @@ const disprove_schedule = async (
 const mapAudit = (audit: Audit[]) => {
   return audit.map((audit: Audit, index) => (
     <div key={audit.id}>
-      {audit.timestamp.slice(0, -10).replace("T", " ")} <br />
-      {audit.action} - {audit.user.name}
-      <hr />
-    </div>
+      <ReadMore header={audit.timestamp.slice(0, -10).replace("T", " ")} style={audit.action.includes("Avgodkjent") ? { color: "red" } : { color: "green" }} >
+        {audit.action} - {audit.user.name}
+
+      </ReadMore>
+    </div >
   ));
 };
 
@@ -102,11 +105,12 @@ const AdminLeder = () => {
       <Table.HeaderCell scope="row">{vakter.user.name}</Table.HeaderCell>
       <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
       <Table.DataCell>
+        Uke {moment(vakter.start_timestamp * 1000).week()}  {(moment(vakter.start_timestamp * 1000).week()) < (moment(vakter.end_timestamp * 1000).week()) ? " - " + moment(vakter.end_timestamp * 1000).week() : ""}<br />
         {new Date(vakter.start_timestamp * 1000).toLocaleDateString()}<br />
         {new Date(vakter.end_timestamp * 1000).toLocaleDateString()}
       </Table.DataCell>
       <Table.DataCell>{vakter.group.name}</Table.DataCell>
-      <Table.DataCell style={{ maxWidth: "250px", minWidth: "250px" }}>
+      <Table.DataCell style={{ maxWidth: "220px", minWidth: "220px" }}>
         <div>
           <Button
             disabled={

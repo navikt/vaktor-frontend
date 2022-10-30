@@ -4,9 +4,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // for prod / dev
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-
-    // for local testing
     //let authorizationHeader = process.env.FAKE_TOKEN
+    // for local testing
 
     let group_id = req.query.group_id
     let user_id = req.query.user_id
@@ -18,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             headers: { 'Authorization': authorizationHeader },
             method: "POST",
         },
-
     )
 
     await backendResponse.json()
@@ -29,6 +27,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             else {
                 res.send("Cant get data from backend")
             }
-
         })
 }

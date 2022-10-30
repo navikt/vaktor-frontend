@@ -1,13 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
-    // for prod
+    // for prod / dev
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-
-    // for local testing
     //let authorizationHeader = process.env.FAKE_TOKEN
+    // for local testing
 
     let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/users/me/schedules`
     //let path = `http://localhost:8000/api/v1/users/me/schedules`
@@ -27,6 +25,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             else {
                 res.send("Cant get data from backend")
             }
-
         })
 }
