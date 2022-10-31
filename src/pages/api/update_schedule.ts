@@ -9,10 +9,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let schedule_id = req.query.schedule_id
     let bakvakt = req.query.bakvakt
+    let type = req.query.type
     let selectedVakthaver = req.query.selectedVakthaver
     let group_id = req.query.group_id
     let dateFrom = req.query.dateFrom
     let dateTo = req.query.dateTo
+    let action = req.query.action
 
     var bodycontent = (
         {
@@ -22,10 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             "start_timestamp": Number(dateFrom),
             "end_timestamp": Number(dateTo),
             "approve_level": 0,
+            "type": action === "replace" ? "ordinær vakt" : action,
         }
     );
 
-    let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/${schedule_id}?bakvakt=${bakvakt}`
+    let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/${schedule_id}?action=${action}`
 
     console.log(JSON.stringify(bodycontent), path)
 

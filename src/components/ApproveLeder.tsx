@@ -45,7 +45,7 @@ const disprove_schedule = async (
 const mapAudit = (audit: Audit[]) => {
   return audit.map((audit: Audit, index) => (
     <div key={audit.id}>
-      <ReadMore header={audit.timestamp.slice(0, -10).replace("T", " ")} style={audit.action.includes("Avgodkjent") ? { color: "red" } : { color: "green" }} >
+      <ReadMore header={audit.timestamp.slice(0, -10).replace("T", " ")} size="small" style={audit.action.includes("Avgodkjent") ? { color: "red" } : { color: "green" }} >
         {audit.action} - {audit.user.name}
 
       </ReadMore>
