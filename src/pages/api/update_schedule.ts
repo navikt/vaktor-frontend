@@ -8,8 +8,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // for local testing
 
     let schedule_id = req.query.schedule_id
-    let bakvakt = req.query.bakvakt
-    let type = req.query.type
     let selectedVakthaver = req.query.selectedVakthaver
     let group_id = req.query.group_id
     let dateFrom = req.query.dateFrom

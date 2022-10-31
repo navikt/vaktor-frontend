@@ -7,6 +7,7 @@ import {
   Radio,
   TextField,
   Modal,
+  ConfirmationPanel,
 } from "@navikt/ds-react";
 import { Schedules, User } from "../types/types";
 import moment from "moment";
@@ -19,7 +20,7 @@ const update_schedule = async (
   addVakt: Dispatch<any>,
 ) => {
   await fetch(
-    `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&type=${period.type}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
+    `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
   )
     .then((r) => r.json())
     .then((data) => {
@@ -56,8 +57,9 @@ const ScheduleModal = (props: props) => {
   const [groupData, setgroupData] = useState<User[]>([]);
   const [selectedVakthaver, setVakthaver] = useState("");
   const [action, setAction] = useState("");
-  const [timeFrom, setTimeFrom] = useState(new Date().setHours(12, 0));
-  const [timeTo, setTimeTo] = useState(new Date().setHours(12, 0))
+  const [timeFrom, setTimeFrom] = useState(props.schedule.start_timestamp);
+  const [timeTo, setTimeTo] = useState(props.schedule.end_timestamp);
+  const [confirmState, setConfirmState] = useState(false);
 
   useEffect(() => {
     if (Modal && Modal.setAppElement) {
@@ -75,6 +77,7 @@ const ScheduleModal = (props: props) => {
       });
   }, [props]);
 
+  console.log(timeTo)
   const tilComp = React.cloneElement(
     <TextField
       onChange={(e) => setTimeTo(new Date(e.target.value).getTime())}
@@ -88,6 +91,7 @@ const ScheduleModal = (props: props) => {
   );
 
   const fraComp = React.cloneElement(
+
     <TextField
       onChange={(e) => setTimeFrom(new Date(e.target.value).getTime())}
       label="Fra"
@@ -103,8 +107,12 @@ const ScheduleModal = (props: props) => {
     <>
       <Modal
         open={props.isOpen}
-        aria-label="Modal demo"
-        onClose={() => props.setIsOpen(!props.isOpen)}
+        aria-label="Modal for vaktperioder"
+        onClose={() => {
+          props.setIsOpen(!props.isOpen);
+          setConfirmState(false);
+        }
+        }
         aria-labelledby="modal-heading"
       >
         <Modal.Content>
@@ -139,24 +147,34 @@ const ScheduleModal = (props: props) => {
                 Sett eksisterede person som bakvakt og bistå (f.eks ved sykdom for opprinnelig vakthaver)
               </Radio>
               <Radio value="replace">
-                Bytt hele vaktperioden med en annen
+                Bytt hele vaktperioden med en annen (skal <b>ikke</b> brukes ved sykdom)
               </Radio>
             </RadioGroup>
             {action !== "replace" &&
-              <div style={{ display: "flex" }}>
+              <div style={{ display: "flex", justifyContent: "space-evenly" }}>
                 {fraComp}
                 {tilComp}
               </div>
             }
             <br />
+            <ConfirmationPanel
+              checked={confirmState}
+              label="Ja, jeg har fylt ut korrekt."
+              onChange={() => setConfirmState((x) => !x)}
+            >
+              Vær nøyaktig når du fyller ut start/slutt <b>dato</b> og <b>tid</b>.
+            </ConfirmationPanel>
+            <br />
             <Button
               className="buttonConfirm"
-              disabled={selectedVakthaver === ""}
+              //disabled={selectedVakthaver === ""}
+              disabled={confirmState === false}
               style={{
                 height: "50px",
                 marginTop: "25px",
                 marginBottom: "25px",
                 minWidth: "300px",
+
               }}
               onClick={() => {
                 let period = {
@@ -167,6 +185,8 @@ const ScheduleModal = (props: props) => {
                 };
                 update_schedule(period, action, selectedVakthaver, props.addVakt);
                 props.setIsOpen(false);
+
+
               }}
             >
               Legg til endring
