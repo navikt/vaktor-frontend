@@ -18,13 +18,13 @@ import {
 import { Information } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
-import { BodyShort, Label, Loader, Button } from "@navikt/ds-react";
+import { BodyShort, Label, Loader, Button, Search } from "@navikt/ds-react";
 import styled from "styled-components";
 import moment from "moment";
 import { Spring, animated, AnimatedProps } from "react-spring";
 import { NavigationButtons } from "./NavigationButtons";
 import { FluidValue } from "@react-spring/shared";
-import { Schedules } from "../types/types";
+import { Schedules, Vaktlag } from "../types/types";
 
 const SidebarHeaderText = styled.div`
   padding-top: 25px;
@@ -82,6 +82,8 @@ function VaktorTimeline() {
   const [itemTelephone, setItemTelephone] = useState("");
   const [itemStartTime, setItemStartTime] = useState("");
   const [itemEndTime, setItemEndTime] = useState("");
+
+  const [searchFilter, setSearchFilter] = useState("");
 
   const [visibleTimeStart, setVisibleTimeStart] = useState(
     moment().startOf("isoWeek").valueOf()
@@ -159,7 +161,7 @@ function VaktorTimeline() {
     setGrpPhone(groupPhone);
   };
 
-  groupsSorted.map((vaktlag: any, index: number) => {
+  groupsSorted.filter((vaktlag: Vaktlag) => vaktlag.name.toLowerCase().includes(searchFilter)).map((vaktlag: any, index: number) => {
     groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
     let groupName = vaktlag.name;
     let groupType = vaktlag.type;
@@ -325,7 +327,14 @@ function VaktorTimeline() {
   );
 
   return (
+
+
     <div>
+
+      <form style={{ width: "400px", marginBottom: "10px", }}>
+        <Search label="Søk etter vaktlag" hideLabel={false} variant="primary" onChange={(text) => setSearchFilter(text)} />
+      </form>
+
       <Spring
         to={{
           animatedVisibleTimeStart: visibleTimeStart,

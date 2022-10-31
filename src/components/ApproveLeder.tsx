@@ -5,6 +5,8 @@ import {
   UNSAFE_MonthPicker,
   UNSAFE_useMonthpicker,
   ReadMore,
+  Search,
+  Select,
 } from "@navikt/ds-react";
 import moment from "moment";
 import { useEffect, useState, Dispatch } from "react";
@@ -91,6 +93,11 @@ const AdminLeder = () => {
   const [currentUser, setCurrentUser] = useState<User>({} as User);
   const [response, setResponse] = useState();
   const [loading, setLoading] = useState(false);
+
+  const [searchFilter, setSearchFilter] = useState("");
+  const [searchFilterRole, setSearchFilterRole] = useState("");
+  const [searchFilterAction, setSearchFilterAction] = useState(5);
+
   const { monthpickerProps, inputProps, selectedMonth, setSelected } =
     UNSAFE_useMonthpicker({
       fromDate: new Date("Oct 01 2022"),
@@ -180,22 +187,51 @@ const AdminLeder = () => {
 
   if (itemData === undefined) return <></>;
   if (selectedMonth === undefined) setSelected(new Date());
+  let listeAvVakter = mapVakter(itemData.filter(
+    (value: Schedules) =>
+      value.user_id.toLowerCase() !== currentUser.id.toLowerCase() &&
+      new Date(value.start_timestamp * 1000).getMonth() ===
+      selectedMonth!.getMonth() && value.user.name.toLowerCase().includes(searchFilter) &&
+      value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase()) &&
+      (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
+  )
+  )
   return (
     <>
-      <div className="min-h-96">
+      <div className="min-h-96" style={{ display: "flex" }}>
         <UNSAFE_MonthPicker {...monthpickerProps}>
           <div className="grid gap-4">
             <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+
           </div>
         </UNSAFE_MonthPicker>
+        <form style={{ width: "300px", marginLeft: "30px" }}>
+          <Search label="Søk etter person" hideLabel={false} variant="primary" onChange={(text) => setSearchFilter(text)} />
+        </form>
+        <div style={{ width: "200px", marginLeft: "30px" }}>
+          <Select label="Velg rolle" onChange={(e) => setSearchFilterRole(e.target.value)}>
+            <option value="">Alle</option>
+            <option value="vakthaver">Vakthaver</option>
+            <option value="vaktsjef">Vaktsjef</option>
+          </Select>
+        </div>
+        <div style={{ width: "200px", marginLeft: "30px" }}>
+          <Select label="Velg handling" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
+            <option value={5}>Alle</option>
+            <option value={0}>Trenger godkjenning</option>
+            <option value={1}>Godkjent av ansatt</option>
+            <option value={2}>Venter på utregning</option>
+            <option value={3}>Godkjent av vaktsjef</option>
+            <option value={4}>Overført til lønn</option>
+          </Select >
+        </div>
       </div>
       <Table style={{
-          minWidth: "900px",
-          backgroundColor: "white",
-          marginBottom: "3vh",
-          marginTop: "2vh",
-        }}
-      >
+        minWidth: "900px",
+        backgroundColor: "white",
+        marginBottom: "3vh",
+        marginTop: "2vh",
+      }}>
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
@@ -210,12 +246,8 @@ const AdminLeder = () => {
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {mapVakter(itemData.filter(
-            (value: Schedules) =>
-              new Date(value.start_timestamp * 1000).getMonth() ===
-              selectedMonth!.getMonth()
-          )
-          )}
+
+          {listeAvVakter.length === 0 ? <h3 style={{ margin: "auto", color: "red" }}>Ingen treff</h3> : listeAvVakter}
 
         </Table.Body>
       </Table>
