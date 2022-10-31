@@ -92,6 +92,7 @@ function VaktorTimeline() {
     moment().startOf("isoWeek").add(7, "day").valueOf()
   );
   const [timeUnit, setTimeUnit] = useState("week");
+
   const date = (timestamp: number) => {
     let formatDate = moment.unix(timestamp);
     return formatDate;
@@ -142,6 +143,7 @@ function VaktorTimeline() {
   const groupsSorted = [...groupDataList].sort((a, b) =>
     a.name > b.name ? 1 : -1
   );
+  
   const groups: any = [];
   const groupColorList: any = [];
 
@@ -160,6 +162,7 @@ function VaktorTimeline() {
     setGrpType(grouptype);
     setGrpPhone(groupPhone);
   };
+
 
   groupsSorted.filter((vaktlag: Vaktlag) => vaktlag.name.toLowerCase().includes(searchFilter)).map((vaktlag: any, index: number) => {
     groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
@@ -310,6 +313,7 @@ function VaktorTimeline() {
   --  Returning timeline component -- 
   */
 
+
   const AnimatedTimeline = animated(
     ({
       animatedVisibleTimeStart,
@@ -327,10 +331,7 @@ function VaktorTimeline() {
   );
 
   return (
-
-
     <div>
-
       <form style={{ width: "400px", marginBottom: "10px", }}>
         <Search label="Søk etter vaktlag" hideLabel={false} variant="primary" onChange={(text) => setSearchFilter(text)} />
       </form>
