@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
     );
 
-    let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/${schedule_id}?action=${action}`
+    let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}?action=${action}`
 
     console.log(JSON.stringify(bodycontent), path)
 
