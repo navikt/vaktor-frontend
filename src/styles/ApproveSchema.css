@@ -1,0 +1,21 @@
+.AdminGuideContainer {
+  width: 70vw;
+  min-width: 600px;
+  max-width: 1200px;
+  margin: 4vh auto 4vh auto;
+}
+
+.AdminGuidePanel p {
+  text-align: center;
+  width: 100%;
+}
+
+.DatePicker_Custom {
+  margin-left: 15px;
+  height: 35px;
+}
+
+.DatePicker_Label {
+  height: 35px;
+  margin-top: 5px;
+}

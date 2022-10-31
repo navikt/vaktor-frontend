@@ -7,7 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     //let authorizationHeader = process.env.FAKE_TOKEN
     // for local testing
 
-    let path = "https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/"
+    let path = "https://vaktor-plan-api.dev.intern.nav.no/api/v1/users/me"
+
     const backendResponse = await fetch(
         path,
         {
@@ -23,5 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             else {
                 res.send("Cant get data from backend")
             }
+
         })
 }

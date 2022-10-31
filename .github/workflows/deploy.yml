@@ -11,12 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      
+      - name: Authenticate with private NPM package
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+        
       - name: Build and publish Docker image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo ${GITHUB_TOKEN} | docker login ghcr.io --username ${GITHUB_REPOSITORY} --password-stdin
-          docker build --tag ${docker_image} .
+          docker build --tag ${docker_image} --build-arg NPM_TOKEN=${{ secrets.NPM_TOKEN }} .
           docker push ${docker_image}
 
   deploy-test:
@@ -45,6 +49,3 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: nais.yml
           VAR: image=${{ env.docker_image }}
-
-
-

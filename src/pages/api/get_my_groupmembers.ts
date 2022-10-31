@@ -7,15 +7,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     //let authorizationHeader = process.env.FAKE_TOKEN
     // for local testing
 
-    let path = "https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/"
-    const backendResponse = await fetch(
+    let path = "https://vaktor-plan-api.dev.intern.nav.no/api/v1/users/me"
+
+    const getCurrentUser = await fetch(
         path,
         {
             headers: { 'Authorization': authorizationHeader },
+            method: "GET",
+        },
+    ).then(res => res.json())
+
+    let groupPath = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/groups/${getCurrentUser.groups[0].id}/members`
+
+    const getGroupMembers = await fetch(
+        groupPath,
+        {
+            headers: { 'Authorization': authorizationHeader },
+            method: "GET",
         },
     )
 
-    await backendResponse.json()
+    await getGroupMembers.json()
         .then(body => {
             if (body) {
                 res.status(200).json(body)

@@ -1,14 +1,18 @@
 import type { NextPage } from "next";
 import VaktorTimeline from "../components/VaktorTimeline";
 import moment from "moment";
-import "moment/locale/nb";
+import styled from "styled-components";
+
+const VaktorContainer = styled.div`
+  margin-top: -40px;
+`;
 
 const Home: NextPage = () => {
   moment.locale("nb");
   return (
-    <div>
+    <VaktorContainer>
       <VaktorTimeline />
-    </div>
+    </VaktorContainer>
   );
 };
 

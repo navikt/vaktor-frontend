@@ -1,0 +1,91 @@
+import { useRouter } from 'next/router'
+import Link from 'next/link'
+import { Button } from "@navikt/ds-react";
+import { useEffect, useState } from 'react';
+import { User } from "../types/types";
+
+import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder, RouterAdminSchedule } from '../types/routes';
+
+export default function Navbar() {
+	const [userData, setUserData] = useState<User>({} as User);
+
+	useEffect(() => {
+		Promise.all([fetch("/vaktor/api/get_me")])
+			.then(async ([current_user]) => {
+				const userjson = await current_user.json();
+				return [userjson];
+			})
+			.then(([userData]) => {
+				setUserData(userData);
+			});
+	}, []);
+
+	//const user = useContext<UserData>(UserStateContext
+	//userData.role = "leveranseleder"
+	{
+		//approve_level = 2;
+		return (
+
+			< nav >
+				<div className="logo">
+				{[
+            "vakthaver",
+            "vaktsjef",
+            "leveranseleder",
+            "personalleder",
+          ].includes(userData.role) && <h3>Hei, {userData.name}</h3>}
+      
+				</div>
+				{
+					(["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
+						<Link href="/"><Button variant="tertiary" style={{
+							marginLeft: "5px",
+							marginRight: "5px",
+							height: "35px",
+						}}><a className="link">{RouterVaktor.NAME}</a></Button></Link>
+
+					)
+				}
+
+				{
+					(["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
+						<Link href="/adminschedule"><Button variant="tertiary" style={{
+							marginLeft: "5px",
+							marginRight: "5px",
+							height: "35px",
+						}}><a className="link">{RouterAdminSchedule.NAME}</a></Button></Link>)
+				}
+
+				{
+					(["vakthaver", "vaktsjef", "leveranseleder"].includes(userData.role)) && (
+						<Link href="/admin"><Button variant="tertiary" style={{
+							marginLeft: "5px",
+							marginRight: "5px",
+							height: "35px",
+						}}><a className="link">{RouterAdmin.NAME}</a></Button></Link>
+					)
+				}
+
+				{
+					(["vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
+						<Link href="/adminleder"><Button variant="tertiary" style={{
+							marginLeft: "5px",
+							marginRight: "5px",
+							height: "35px",
+						}}><a className="link">{RouterLedergodkjenning.NAME}</a></Button></Link>
+					)
+				}
+
+				{
+					(userData.role === "leveranseleder") && (
+						<Link href="/assignleder"><Button variant="tertiary" style={{
+							marginLeft: "5px",
+							marginRight: "5px",
+							height: "35px",
+						}}><a className="link">{RouterAssignLeder.NAME}</a></Button></Link>
+					)
+				}
+			</nav >
+		);
+	}
+}

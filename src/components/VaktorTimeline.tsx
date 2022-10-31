@@ -8,16 +8,23 @@ import Timeline, {
 } from "react-calendar-timeline";
 import { useState, useEffect } from "react";
 import { Moment } from "moment";
-import { colorPicker, setGrpColor } from "./SetColors";
+import {
+  colorPicker,
+  setGrpColor,
+  setBorderColor,
+  setTextColor,
+  setInterruptionColor,
+} from "./SetColors";
 import { Information } from "@navikt/ds-icons";
 import GroupDetailsModal from "./GroupDetailsModal";
 import ItemDetailsModal from "./ItemDetailsModal";
-import { BodyShort, Label, Loader, Button } from "@navikt/ds-react";
+import { BodyShort, Label, Loader, Button, Search } from "@navikt/ds-react";
 import styled from "styled-components";
 import moment from "moment";
 import { Spring, animated, AnimatedProps } from "react-spring";
 import { NavigationButtons } from "./NavigationButtons";
 import { FluidValue } from "@react-spring/shared";
+import { Schedules, Vaktlag } from "../types/types";
 
 const SidebarHeaderText = styled.div`
   padding-top: 25px;
@@ -76,6 +83,8 @@ function VaktorTimeline() {
   const [itemStartTime, setItemStartTime] = useState("");
   const [itemEndTime, setItemEndTime] = useState("");
 
+  const [searchFilter, setSearchFilter] = useState("");
+
   const [visibleTimeStart, setVisibleTimeStart] = useState(
     moment().startOf("isoWeek").valueOf()
   );
@@ -83,7 +92,16 @@ function VaktorTimeline() {
     moment().startOf("isoWeek").add(7, "day").valueOf()
   );
   const [timeUnit, setTimeUnit] = useState("week");
-  const [scrolling, setScrolling] = useState();
+
+  const date = (timestamp: number) => {
+    let formatDate = moment.unix(timestamp);
+    return formatDate;
+  };
+
+  const formattedDate = (date: number | Moment) => {
+    let formattedDate = moment(date).format("DD/MM/YY");
+    return formattedDate;
+  };
 
   const handleTimeChange = (
     visibleTimeStart: number,
@@ -91,7 +109,6 @@ function VaktorTimeline() {
   ) => {
     setVisibleTimeStart(visibleTimeStart);
     setVisibleTimeEnd(visibleTimeEnd);
-    scrolling;
   };
 
   useEffect(() => {
@@ -118,15 +135,21 @@ function VaktorTimeline() {
     );
   if (!groupData) return <p>No profile data</p>;
 
-  const groupDataList: any = groupData;
+  /*
+  --  Generating groups (vaktlag) -- 
+  */
 
+  const groupDataList: any = groupData;
   const groupsSorted = [...groupDataList].sort((a, b) =>
     a.name > b.name ? 1 : -1
   );
-  console.log(groupsSorted);
-
+  
   const groups: any = [];
   const groupColorList: any = [];
+
+  const groupTitle = (title: string) => {
+    return title.length > 22 ? <>{title.substring(0, 21)}&hellip;</> : title;
+  };
 
   const updateGrpModal = (
     modalstate: boolean,
@@ -140,7 +163,8 @@ function VaktorTimeline() {
     setGrpPhone(groupPhone);
   };
 
-  groupsSorted.map((vaktlag: any, index: number) => {
+
+  groupsSorted.filter((vaktlag: Vaktlag) => vaktlag.name.toLowerCase().includes(searchFilter)).map((vaktlag: any, index: number) => {
     groupColorList.push({ group: vaktlag.id, color: colorPicker(index) });
     let groupName = vaktlag.name;
     let groupType = vaktlag.type;
@@ -155,7 +179,7 @@ function VaktorTimeline() {
           }
         >
           <SidebarText>
-            <Label>{groupName}</Label>
+            <Label>{groupTitle(groupName)}</Label>
             <SidebarIcon>
               <Information />
             </SidebarIcon>
@@ -163,21 +187,19 @@ function VaktorTimeline() {
         </div>
       ),
       id: vaktlag.id,
+      stackItems: false,
     });
   });
 
-  const date = (timestamp: number) => {
-    let formatDate = moment.unix(timestamp);
-    return formatDate;
-  };
-
-  const formattedDate = (date: number | Moment) => {
-    let formattedDate = moment(date).format("DD/MM/YY");
-    return formattedDate;
-  };
+  /*
+  --  Generating items (vaktplaner) from schedules -- 
+  */
 
   const itemList: any = itemData;
   const items: any = [];
+  const itemTitle = (name: string) => {
+    return timeUnit === "year" ? "" : name;
+  };
 
   const updateItemModal = (
     modalstate: boolean,
@@ -197,26 +219,18 @@ function VaktorTimeline() {
     setItemEndTime(endTime);
   };
 
-  itemList.map((itemObj: any) => {
-    //console.log(itemObj);
-
+  itemList.filter((vakt: Schedules) => vakt.type === "ordinær vakt").map((itemObj: Schedules) => {
     let itemColor = setGrpColor(groupColorList, itemObj.group_id);
-    let hoverColor = tinycolor(itemColor).darken(10).toString();
-    const borderColor = tinycolor(itemColor)
-      .darken(70)
-      .setAlpha(0.22)
-      .toString();
-    const textColor = tinycolor(itemColor).darken(80).toString();
+    let borderColor = setBorderColor(itemColor);
+    let textColor = setTextColor(itemColor);
     let itemStart = date(itemObj.start_timestamp);
     let itemEnd = date(itemObj.end_timestamp);
-    let itemDescription = itemObj.user.description;
-    let itemPhone = itemObj.group.phone;
 
     items.push({
       id: itemObj.id,
       start_time: itemStart,
       end_time: itemEnd,
-      title: <BodyShort>{itemObj.user.name}</BodyShort>,
+      title: <BodyShort>{itemTitle(itemObj.user.name)}</BodyShort>,
       group: itemObj.group_id,
       itemProps: {
         onMouseDown: () => {
@@ -224,8 +238,8 @@ function VaktorTimeline() {
             !itemModalOpen,
             itemObj.user.name,
             itemObj.group.name,
-            itemDescription,
-            itemPhone,
+            itemObj.user.description,
+            itemObj.group.phone,
             formattedDate(itemStart),
             formattedDate(itemEnd)
           );
@@ -241,7 +255,64 @@ function VaktorTimeline() {
         },
       },
     });
+
+    /*
+  --  Generating items (vaktplaner) from interruptions in schedules -- 
+  */
+
+    let itemInterruptions = itemObj.vakter.filter((vakt: Schedules) => ["bytte", "bistand"].includes(vakt.type));
+
+    if (itemInterruptions) {
+      itemInterruptions.map((interruptionObj: Schedules) => {
+        let interruptionColor = setInterruptionColor(
+          groupColorList,
+          interruptionObj.group_id
+        );
+        let textColor = setTextColor(interruptionColor);
+        let borderColor = setBorderColor(interruptionColor);
+        let interruptionStart = date(interruptionObj.start_timestamp);
+        let interruptionEnd = date(interruptionObj.end_timestamp);
+
+        items.push({
+          id: interruptionObj.id,
+          start_time: interruptionStart,
+          end_time: interruptionEnd,
+          title: <BodyShort>{interruptionObj.user.name}</BodyShort>,
+          group: interruptionObj.group_id,
+          itemProps: {
+            //fjernet til innholdet i interruptions er likt som schedule
+            onMouseDown: () => {
+              updateItemModal(
+                !itemModalOpen,
+                interruptionObj.user.name,
+                interruptionObj.group.name,
+                interruptionObj.user.description,
+                interruptionObj.group.phone,
+                formattedDate(interruptionStart),
+                formattedDate(interruptionEnd)
+              );
+            },
+
+            style: {
+              background: interruptionColor,
+              color: textColor,
+              borderColor: borderColor,
+              borderWidth: "2.5px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              zIndex: 100,
+              overflow: "hidden",
+            },
+          },
+        });
+      });
+    }
   });
+
+  /*
+  --  Returning timeline component -- 
+  */
+
 
   const AnimatedTimeline = animated(
     ({
@@ -261,6 +332,10 @@ function VaktorTimeline() {
 
   return (
     <div>
+      <form style={{ width: "400px", marginBottom: "10px", }}>
+        <Search label="Søk etter vaktlag" hideLabel={false} variant="primary" onChange={(text) => setSearchFilter(text)} />
+      </form>
+
       <Spring
         to={{
           animatedVisibleTimeStart: visibleTimeStart,
