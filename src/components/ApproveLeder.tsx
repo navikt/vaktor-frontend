@@ -189,7 +189,13 @@ const AdminLeder = () => {
           </div>
         </UNSAFE_MonthPicker>
       </div>
-      <Table>
+      <Table style={{
+          minWidth: "900px",
+          backgroundColor: "white",
+          marginBottom: "3vh",
+          marginTop: "2vh",
+        }}
+      >
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell scope="col">Navn</Table.HeaderCell>

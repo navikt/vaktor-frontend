@@ -28,7 +28,13 @@ export default function Navbar() {
 
 			< nav >
 				<div className="logo">
-					<h1>Vaktor</h1>
+				{[
+            "vakthaver",
+            "vaktsjef",
+            "leveranseleder",
+            "personalleder",
+          ].includes(userData.role) && <h3>Hei, {userData.name}</h3>}
+      
 				</div>
 				{
 					(["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (

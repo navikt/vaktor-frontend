@@ -143,15 +143,20 @@ const Admin = () => {
 	if (loading === true) return <Loader></Loader>;
 
 	return (
-		<Table>
+		<Table
+		style={{
+			minWidth: "900px",
+			backgroundColor: "white",
+			marginBottom: "3vh",
+		  }}>
 			<Table.Header>
 				<Table.Row>
 					<Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
 					<Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
-					<Table.HeaderCell scope="col">start</Table.HeaderCell>
-					<Table.HeaderCell scope="col">slutt</Table.HeaderCell>
-					<Table.HeaderCell scope="col">actions</Table.HeaderCell>
-					<Table.HeaderCell scope="col">status</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Start</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Slutt</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Actions</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Status</Table.HeaderCell>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>

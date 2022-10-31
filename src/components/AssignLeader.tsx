@@ -64,7 +64,11 @@ const AssignLeder = () => {
     if (loading === true) return <Loader></Loader>;
 
     return (
-        <Table>
+        <Table  style={{
+            minWidth: "900px",
+            backgroundColor: "white",
+            marginBottom: "3vh",
+          }}>
             <Table.Header>
                 <Table.Row>
                     <Table.HeaderCell scope="col">Navn</Table.HeaderCell>

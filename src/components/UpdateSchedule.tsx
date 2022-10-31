@@ -53,6 +53,8 @@ const UpdateSchedule = () => {
       <Table
         style={{
           minWidth: "900px",
+          backgroundColor: "white",
+          marginBottom: "3vh",
         }}
       >
         <Table.Header>

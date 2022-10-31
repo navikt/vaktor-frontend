@@ -19,10 +19,11 @@ const Layout = ({ children }: any) => {
     <div className="mainContainer">
       <Header imageURL="vaktor/assets/navblack.png" />
       <div className="content">
+      <div className="topHeader">
+          <h1>Vaktor</h1>
+        </div>
         <Navbar />
-        {["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(
-          userData.role
-        ) && <h3>Hei, {userData.name}</h3>}
+       
 
         {children}
       </div>
