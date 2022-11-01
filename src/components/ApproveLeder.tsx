@@ -13,7 +13,6 @@ import { useEffect, useState, Dispatch } from "react";
 import { Audit, Schedules, User } from "../types/types";
 
 let today = Date.now() / 1000;
-//let today = 1668470400  // 15. November 2022 00:00:00
 
 const confirm_schedule = async (
   schedule_id: string,
@@ -159,7 +158,7 @@ const AdminLeder = () => {
         </div>
       </Table.DataCell>
       {mapApproveStatus(vakter.approve_level)}
-      {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.DataCell scope="row" style={{ maxWidth: "200px", minWidth: "150px" }}>{vakter.cost}</Table.DataCell>}
+      {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.DataCell scope="row" style={{ maxWidth: "200px", minWidth: "150px" }}>{vakter.cost.length !== 0 ? vakter.cost[0].total_cost : "ingen beregning foreligger"}</Table.DataCell>}
       <Table.DataCell scope="row" style={{ maxWidth: "250px", minWidth: "200px" }}>{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : "Ingen hendelser"}</Table.DataCell>
     </Table.Row>
   ));
