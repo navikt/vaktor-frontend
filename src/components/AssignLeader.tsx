@@ -64,11 +64,11 @@ const AssignLeder = () => {
     if (loading === true) return <Loader></Loader>;
 
     return (
-        <Table  style={{
+        <Table style={{
             minWidth: "900px",
             backgroundColor: "white",
             marginBottom: "3vh",
-          }}>
+        }}>
             <Table.Header>
                 <Table.Row>
                     <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
@@ -131,7 +131,7 @@ const AssignLeder = () => {
                             </Table.DataCell>
                             <Table.DataCell style={{ maxWidth: "200px", margin: "50px" }}>
                                 <GroupOptions
-                                    user_list={vaktlag.members}
+                                    user_list={vaktlag.members.filter((user: User) => user.role !== "leveranseleder")}
                                     group_id={vaktlag.id}
                                     //setLoading={setLoading}
                                     setVaksjef={setVaktsjef}

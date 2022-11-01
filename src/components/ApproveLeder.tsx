@@ -158,7 +158,7 @@ const AdminLeder = () => {
         </div>
       </Table.DataCell>
       {mapApproveStatus(vakter.approve_level)}
-      {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.DataCell scope="row" style={{ maxWidth: "200px", minWidth: "150px" }}>{vakter.cost.length !== 0 ? vakter.cost[0].total_cost : "ingen beregning foreligger"}</Table.DataCell>}
+      {["personalleder", "leveranseleder"].includes(currentUser!.role) && <Table.DataCell scope="row" style={{ maxWidth: "200px", minWidth: "150px" }}>{vakter.cost.length !== 0 ? vakter.cost[0].total_cost : "ingen beregning foreligger"}</Table.DataCell>}
       <Table.DataCell scope="row" style={{ maxWidth: "250px", minWidth: "200px" }}>{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : "Ingen hendelser"}</Table.DataCell>
     </Table.Row>
   ));
@@ -239,7 +239,7 @@ const AdminLeder = () => {
             <Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
             <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
             <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-            {["personaleder", "leveranseleder"].includes(currentUser!.role) && <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>}
+            {["personalleder", "leveranseleder"].includes(currentUser!.role) && <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>}
             <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
 
           </Table.Row>
