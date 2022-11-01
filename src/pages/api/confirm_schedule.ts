@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // for local testing
 
     let schedule_id = req.query.schedule_id
-    let path = `https://vaktor-plan-api.dev.intern.nav.no/api/v1/schedules/${schedule_id}/confirm`
+    let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}/confirm`
 
     const backendResponse = await fetch(
         path,

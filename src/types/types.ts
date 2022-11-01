@@ -56,7 +56,7 @@ export interface Schedules {
     group: Vaktlag,
     user: User,
     type: string,
-    cost: number,
+    cost: Cost[],
     vakter: Schedules[],
     audits: Audit[],
 }
@@ -78,4 +78,11 @@ export interface Audit {
     action: string,
     changed_by: string,
     user: User,
+}
+
+export interface Cost { //groups
+    id: string,
+    total_cost: number,
+    approver_id: string,
+    approver: User,
 }
