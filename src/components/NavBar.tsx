@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from "@navikt/ds-react";
 import { useEffect, useState } from 'react';
 import { User } from "../types/types";
+import Image from 'next/image'
 
 import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder, RouterAdminSchedule } from '../types/routes';
 
@@ -25,16 +26,22 @@ export default function Navbar() {
 	{
 		//approve_level = 2;
 		return (
-
 			< nav >
+				{
+					<Image
+						src='/vaktor/images/vaktor-logo.png'
+						alt='Vaktor logo'
+						width={70}
+						height={70}
+					/>
+				}
 				<div className="logo">
-				{[
-            "vakthaver",
-            "vaktsjef",
-            "leveranseleder",
-            "personalleder",
-          ].includes(userData.role) && <h3>Hei, {userData.name}</h3>}
-      
+					{[
+						"vakthaver",
+						"vaktsjef",
+						"leveranseleder",
+						"personalleder",
+					].includes(userData.role) && <h3>Hei, {userData.name}</h3>}
 				</div>
 				{
 					(["vakthaver", "vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (

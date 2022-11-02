@@ -26,9 +26,11 @@ a.link {
   top: 0;
   z-index: 2000;
 }
+
 .mainContainer {
   background-color: var(--navds-semantic-color-canvas-background);
 }
+
 .content {
   max-width: 85vw;
   margin: 0 auto;
@@ -37,18 +39,19 @@ a.link {
 }
 
 nav {
-  margin: -20px 0px 40px 0px;
+  margin: -5px 0px 50px 0px;
   padding: 20px 2;
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
   border-bottom: 1px solid #ddd;
+  position: relative;
 }
 
 nav .logo {
   margin-right: auto;
   margin-bottom: -17px;
-  margin-left: 20px;
+  margin-left: 10px;
 }
 
 .topHeader {
