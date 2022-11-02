@@ -10,9 +10,9 @@ import ScheduleModal from "./ScheduleModal";
 const mapPeriods = (periods: Schedules[]) =>
   periods.map((bakvakter, index) => (
     <div key={index}>
-      {bakvakter.user.name} -{" "}<br />
-      {new Date(bakvakter.start_timestamp * 1000).toLocaleString().slice(0, -3)} -{" "}
-      {new Date(bakvakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}
+      <b>{bakvakter.user.name}</b><br />
+      Fra: {" "}{new Date(bakvakter.start_timestamp * 1000).toLocaleString().slice(0, -3)}<br />
+      Til: {" "}{new Date(bakvakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}
     </div>
   ));
 
@@ -82,11 +82,12 @@ const UpdateSchedule = () => {
                 </Table.DataCell>
 
                 <Table.DataCell>
+                  Fra: {" "}
                   {new Date(
                     schedule.start_timestamp * 1000
-                  ).toLocaleDateString()}{" "}
-                  -{" "}
-                  {new Date(schedule.end_timestamp * 1000).toLocaleDateString()}
+                  ).toLocaleString().slice(0, -3)}<br />
+                  Til: {" "}
+                  {new Date(schedule.end_timestamp * 1000).toLocaleString().slice(0, -3)}
                   <br />
                   <Button
                     style={{

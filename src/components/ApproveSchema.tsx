@@ -1,6 +1,6 @@
-import { Button, Table, Loader } from "@navikt/ds-react";
+import { Button, Table, Loader, ReadMore } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch } from "react";
-import { Schedules } from "../types/types";
+import { Audit, Schedules } from "../types/types";
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -33,6 +33,18 @@ const disprove_schedule = async (
 			setResponse(data);
 		});
 };
+
+const mapAudit = (audit: Audit[]) => {
+	return audit.map((audit: Audit, index) => (
+		<div key={audit.id}>
+			<ReadMore header={audit.timestamp.slice(0, -10).replace("T", " ")} size="small" style={audit.action.includes("Avgodkjent") ? { color: "red" } : { color: "green" }} >
+				{audit.action} - {audit.user.name}
+
+			</ReadMore>
+		</div >
+	));
+};
+
 
 const mapApproveStatus = (status: number) => {
 	let statusText = "";
@@ -81,10 +93,10 @@ const Admin = () => {
 			<Table.DataCell>{vakter.type}</Table.DataCell>
 
 			<Table.DataCell>
-				{new Date(vakter.start_timestamp * 1000).toLocaleDateString()}
+				{new Date(vakter.start_timestamp * 1000).toLocaleString().slice(0, -3)}
 			</Table.DataCell>
 			<Table.DataCell>
-				{new Date(vakter.end_timestamp * 1000).toLocaleDateString()}
+				{new Date(vakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}
 			</Table.DataCell>
 			<Table.DataCell style={{ maxWidth: "230px" }}>
 				<div>
@@ -120,6 +132,9 @@ const Admin = () => {
 			</Table.DataCell>
 			{mapApproveStatus(vakter.approve_level)
 			}
+			<Table.DataCell>
+				{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : "Ingen hendelser"}
+			</Table.DataCell>
 		</Table.Row >
 	));
 
@@ -144,11 +159,11 @@ const Admin = () => {
 
 	return (
 		<Table
-		style={{
-			minWidth: "900px",
-			backgroundColor: "white",
-			marginBottom: "3vh",
-		  }}>
+			style={{
+				minWidth: "900px",
+				backgroundColor: "white",
+				marginBottom: "3vh",
+			}}>
 			<Table.Header>
 				<Table.Row>
 					<Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
@@ -157,6 +172,8 @@ const Admin = () => {
 					<Table.HeaderCell scope="col">Slutt</Table.HeaderCell>
 					<Table.HeaderCell scope="col">Actions</Table.HeaderCell>
 					<Table.HeaderCell scope="col">Status</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Audit</Table.HeaderCell>
+
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>

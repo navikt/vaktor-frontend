@@ -112,8 +112,8 @@ const AdminLeder = () => {
       <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
       <Table.DataCell>
         Uke {moment(vakter.start_timestamp * 1000).week()}  {(moment(vakter.start_timestamp * 1000).week()) < (moment(vakter.end_timestamp * 1000).week()) ? " - " + moment(vakter.end_timestamp * 1000).week() : ""}<br />
-        {new Date(vakter.start_timestamp * 1000).toLocaleDateString()}<br />
-        {new Date(vakter.end_timestamp * 1000).toLocaleDateString()}
+        {new Date(vakter.start_timestamp * 1000).toLocaleString()}<br />
+        {new Date(vakter.end_timestamp * 1000).toLocaleString()}
       </Table.DataCell>
       <Table.DataCell>{vakter.group.name}</Table.DataCell>
       <Table.DataCell style={{ maxWidth: "220px", minWidth: "220px" }}>
