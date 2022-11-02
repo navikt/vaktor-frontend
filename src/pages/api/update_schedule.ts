@@ -25,6 +25,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             "type": action === "replace" ? "ordinær vakt" : action,
         }
     );
+    
+    if (action === "replace")(
+        Object.assign(bodycontent, {"id": schedule_id})
+    )
 
     let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}?action=${action}`
 
