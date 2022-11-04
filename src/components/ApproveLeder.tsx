@@ -101,7 +101,15 @@ const AdminLeder = () => {
     UNSAFE_useMonthpicker({
       fromDate: new Date("Oct 01 2022"),
       toDate: new Date("Aug 23 2025"),
-      defaultSelected: new Date(),
+      //defaultSelected: new Date("Oct 2022")
+      defaultSelected: new Date(
+        new Date().getDay() - 10 > 0
+          ? moment().locale("en-GB").format("MMM Y")
+          : moment()
+            .locale("en-GB")
+            .month(moment().month() - 1)
+            .format("MMM Y")
+      )
     });
 
   const mapVakter = (vaktliste: Schedules[]) => vaktliste.map((vakter: Schedules, i: number) => (
