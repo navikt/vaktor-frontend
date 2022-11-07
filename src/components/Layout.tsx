@@ -19,7 +19,7 @@ const Layout = ({ children }: any) => {
   }, []);
   return (
     <div className="mainContainer">
-      <Header imageURL="/vaktor/assets/navblack.png" userID={""} userName={""} />
+      <Header imageURL="/vaktor/assets/navblack.png" />
       <Head>
         <title>Vaktor - Beredskapsvakt</title>
         <link rel="shortcut icon" href="/vaktor/images/favicon.ico" />
