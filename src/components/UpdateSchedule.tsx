@@ -1,27 +1,53 @@
 import {
   Button,
   Table,
+  Alert,
+  Popover,
 } from "@navikt/ds-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, RefObject, Dispatch } from "react";
 import { Schedules } from "../types/types";
 import moment from "moment";
 import ScheduleModal from "./ScheduleModal";
 
-const mapPeriods = (periods: Schedules[]) =>
+const mapPeriods = (periods: Schedules[], openState: boolean, buttonRef: RefObject<HTMLButtonElement>, setOpenState: Dispatch<boolean>) =>
   periods.map((bakvakter, index) => (
+
     <div key={index}>
       <b>{bakvakter.user.name}</b><br />
       Fra: {" "}{new Date(bakvakter.start_timestamp * 1000).toLocaleString().slice(0, -3)}<br />
-      Til: {" "}{new Date(bakvakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}
+      Til: {" "}{new Date(bakvakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}<br />
+
+      {bakvakter.approve_level === 0 ?
+        <><Button onClick={() => { setOpenState(true); console.log("Schedule id", bakvakter.id) }} style={{
+          maxWidth: "210px",
+          marginTop: "5px",
+          marginBottom: "5px",
+        }} variant="danger" size="small">Slett endring</Button>
+          <Popover
+            open={openState}
+            onClose={() => setOpenState(false)}
+            anchorEl={buttonRef.current}
+          >
+            <Popover.Content>Innhold her!</Popover.Content>
+          </Popover> </> : <div style={{ color: "red" }}>Kan ikke slettes</div>
+
+
+
+      }
+
+
     </div>
   ));
+
 
 const UpdateSchedule = () => {
   const [scheduleData, setScheduleData] = useState<Schedules[]>([]);
   const [selectedSchedule, setSchedule] = useState<Schedules>();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [response, setResponse] = useState();
-  const [Vakt, addVakt] = useState()
+  const [Vakt, addVakt] = useState();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [openState, setOpenState] = useState<boolean>(false);
 
   useEffect(() => {
     Promise.all([fetch("/vaktor/api/group_schedules")])
@@ -111,7 +137,7 @@ const UpdateSchedule = () => {
                 >
                   {
                     // Map out bakvakter
-                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bistand"))
+                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bistand"), openState, buttonRef, setOpenState)
                   }
                 </Table.DataCell>
                 <Table.DataCell
@@ -121,7 +147,7 @@ const UpdateSchedule = () => {
                 >
                   {
                     // Map out innterruptions (vaktbytter)
-                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bytte"))
+                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bytte"), openState, buttonRef, setOpenState)
                   }
                 </Table.DataCell>
                 <Table.DataCell
@@ -131,7 +157,7 @@ const UpdateSchedule = () => {
                 >
                   {
                     // Map out bakvakter
-                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bakvakt"))
+                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bakvakt"), openState, buttonRef, setOpenState)
                   }
                 </Table.DataCell>
               </Table.Row>

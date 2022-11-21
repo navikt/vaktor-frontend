@@ -129,6 +129,7 @@ const AdminLeder = () => {
           <Button
             disabled={
               vakter.approve_level === 4 ||
+              vakter.approve_level === 3 ||
               vakter.approve_level === 2 ||
               vakter.end_timestamp > today
             }

@@ -185,6 +185,7 @@ const ScheduleModal = (props: props) => {
                 };
                 update_schedule(period, action, selectedVakthaver, props.addVakt);
                 props.setIsOpen(false);
+                setConfirmState(false);
 
 
               }}

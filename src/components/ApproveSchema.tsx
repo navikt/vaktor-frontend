@@ -130,8 +130,10 @@ const Admin = () => {
 
 				</div>
 			</Table.DataCell>
-			{mapApproveStatus(vakter.approve_level)
-			}
+			{mapApproveStatus(vakter.approve_level)}
+			<Table.DataCell>
+				{vakter.cost.length !== 0 ? vakter.cost[0].total_cost : "ingen beregning foreligger"}
+			</Table.DataCell>
 			<Table.DataCell>
 				{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : "Ingen hendelser"}
 			</Table.DataCell>
@@ -172,6 +174,7 @@ const Admin = () => {
 					<Table.HeaderCell scope="col">Slutt</Table.HeaderCell>
 					<Table.HeaderCell scope="col">Actions</Table.HeaderCell>
 					<Table.HeaderCell scope="col">Status</Table.HeaderCell>
+					<Table.HeaderCell scope="col">Godtgjørelse</Table.HeaderCell>
 					<Table.HeaderCell scope="col">Audit</Table.HeaderCell>
 
 				</Table.Row>

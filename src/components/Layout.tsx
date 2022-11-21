@@ -37,7 +37,7 @@ const Layout = ({ children }: any) => {
 
         {children}
       </div>
-      <Footer imageURL="vaktor/assets/navblack.png" />
+      <Footer imageURL="/vaktor/assets/navblack.png" />
     </div>
   );
 };
