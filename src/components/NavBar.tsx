@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { User } from "../types/types";
 import Image from 'next/image'
 
-import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder, RouterAdminSchedule } from '../types/routes';
+import { RouterVaktor, RouterAdmin, RouterLedergodkjenning, RouterAssignLeder, RouterAdminSchedule, RouterVaktperioder } from '../types/routes';
 
 export default function Navbar() {
 	const [userData, setUserData] = useState<User>({} as User);
@@ -61,6 +61,15 @@ export default function Navbar() {
 							marginRight: "5px",
 							height: "35px",
 						}}><a className="link">{RouterAdminSchedule.NAME}</a></Button></Link>)
+				}
+
+				{
+					(["vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
+						<Link href="/vaktperioder"><Button variant="tertiary" style={{
+							marginLeft: "5px",
+							marginRight: "5px",
+							height: "35px",
+						}}><a className="link">{RouterVaktperioder.NAME}</a></Button></Link>)
 				}
 
 				{
