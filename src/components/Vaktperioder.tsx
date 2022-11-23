@@ -2,9 +2,7 @@ import {
   Button,
   Table,
   Loader,
-  ReadMore,
-  CheckboxGroup,
-  Checkbox,
+  UNSAFE_DatePicker, UNSAFE_useRangeDatepicker, HelpText
 } from "@navikt/ds-react";
 import { useEffect, useState, Dispatch } from "react";
 import { Vaktlag, Schedules, User } from "../types/types";
@@ -38,6 +36,11 @@ const Vaktperioder = () => {
   const [activeMembers, setActiveMembers] = useState<User[]>([]);
   const [startTimestamp, setStartTimestamp] = useState<number>(0);
   const [endTimestamp, setEndTimestamp] = useState<number>(0);
+  const { datepickerProps, toInputProps, fromInputProps, selectedRange } =
+    UNSAFE_useRangeDatepicker({
+      fromDate: new Date("Jan 01 2022"),
+      onRangeChange: console.log,
+    });
 
   activeMembers.length === 0 && itemData.length !== 0
     ? setActiveMembers(itemData)
@@ -92,49 +95,98 @@ const Vaktperioder = () => {
 
   return (
     <>
-      <Table
-        style={{
-          minWidth: "500px",
-          maxWidth: "500px",
-          backgroundColor: "white",
-          marginBottom: "3vh",
-        }}
-      >
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell scope="col">Id</Table.HeaderCell>
-            <Table.HeaderCell scope="col">Ident</Table.HeaderCell>
-            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-            <Table.HeaderCell scope="col">Rolle</Table.HeaderCell>
-            <Table.HeaderCell scope="col">Aktiv</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {activeMembers.length !== 0 && itemData ? (
-            mapMembers(itemData)
-          ) : (
-            <Table.Row></Table.Row>
-          )}
-        </Table.Body>
-      </Table>
-      <Button
-        style={{
-          backgroundColor: "#f96c6c",
-          height: "30px",
-          minWidth: "210px",
-        }}
-        onClick={() =>
-          createSchedule(
-            activeMembers,
-            setResponse, //setLoading
-            startTimestamp,
-            endTimestamp,
-            isMidlertidlig
-          )
-        }
-      >
-        Generer vaktperioder
-      </Button>
+      <div style={{
+        marginTop: "2vh",
+        marginBottom: "3vh",
+        display: "grid",
+        alignItems: "center",
+        justifyContent: "space-around",
+      }}>
+
+
+        <div>
+          <UNSAFE_DatePicker {...datepickerProps} style={{
+          }}>
+            <div style={{
+              display: "flex",
+              gap: "15px",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <UNSAFE_DatePicker.Input {...fromInputProps} label="Fra" />
+              <UNSAFE_DatePicker.Input {...toInputProps} label="Til" />
+            </div>
+          </UNSAFE_DatePicker>
+        </div>
+
+        <Table
+          style={{
+            minWidth: "500px",
+            maxWidth: "500px",
+            backgroundColor: "white",
+            marginTop: "2vh",
+            marginBottom: "3vh",
+
+          }}
+        >
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell scope="col">
+                <div style={{
+                  display: "flex",
+                  alignItems: "space-around",
+                }}>ID
+                  <HelpText title="Hva brukes ID til?" style={{
+                    marginLeft: "10px"
+                  }}>
+
+                    <b>Id:</b> Brukes for å bestemme hvilken rekkefølge vakthaverne skal gå vakt. Den som står øverst vil få første vakt når nye perioder genereres
+                  </HelpText>
+                </div>
+              </Table.HeaderCell>
+              <Table.HeaderCell scope="col">Ident</Table.HeaderCell>
+              <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+              <Table.HeaderCell scope="col">Rolle</Table.HeaderCell>
+              <Table.HeaderCell scope="col">
+                <div style={{
+                  display: "flex",
+                  alignItems: "space-around",
+                }}>Aktiv
+                  <HelpText title="Hva brukes aktiv toggle til?" style={{
+                    marginLeft: "10px"
+                  }}>
+                    <b>Aktiv toggle:</b> Toggles til av dersom en vakthaver <b>ikke</b> skal nkluderes i nye vaktperioder<br />
+                  </HelpText>
+                </div>
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {activeMembers.length !== 0 && itemData ? (
+              mapMembers(itemData)
+            ) : (
+              <Table.Row></Table.Row>
+            )}
+          </Table.Body>
+        </Table>
+        <Button
+          style={{
+            minWidth: "210px",
+            marginBottom: "15px",
+          }}
+          onClick={() =>
+            createSchedule(
+              activeMembers,
+              setResponse, //setLoading
+              startTimestamp,
+              endTimestamp,
+              isMidlertidlig
+            )
+          }
+        >
+          Generer vaktperioder
+        </Button>
+      </div >
     </>
   );
 };

@@ -29,7 +29,7 @@ const Home: NextPage = () => {
                 <div className="AdminGuideContainer">
                     <GuidePanel className="AdminGuidePanel">
                         <p>
-                            Her kan du generere nye vaktperioder{" "}
+                            Her kan du generere nye vaktperioder for ditt vaktlag: <b>{userData.groups[0].name}</b>
                         </p>
                     </GuidePanel>
                 </div>
