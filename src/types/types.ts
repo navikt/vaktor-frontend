@@ -70,6 +70,7 @@ export interface User {
   description: string;
   groups: Vaktlag[];
   group_order_index?: number;
+  group_id?: string;
 }
 
 export interface Audit {

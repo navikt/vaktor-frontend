@@ -1,44 +1,9 @@
-import {
-  Button,
-  Table,
-  Alert,
-  Popover,
-} from "@navikt/ds-react";
+import { Button, Table, Alert, Popover } from "@navikt/ds-react";
 import { useEffect, useState, useRef, RefObject, Dispatch } from "react";
 import { Schedules } from "../types/types";
 import moment from "moment";
 import ScheduleModal from "./ScheduleModal";
-
-const mapPeriods = (periods: Schedules[], openState: boolean, buttonRef: RefObject<HTMLButtonElement>, setOpenState: Dispatch<boolean>) =>
-  periods.map((bakvakter, index) => (
-
-    <div key={index}>
-      <b>{bakvakter.user.name}</b><br />
-      Fra: {" "}{new Date(bakvakter.start_timestamp * 1000).toLocaleString().slice(0, -3)}<br />
-      Til: {" "}{new Date(bakvakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}<br />
-
-      {bakvakter.approve_level === 0 ?
-        <><Button onClick={() => { setOpenState(true); console.log("Schedule id", bakvakter.id) }} style={{
-          maxWidth: "210px",
-          marginTop: "5px",
-          marginBottom: "5px",
-        }} variant="danger" size="small">Slett endring</Button>
-          <Popover
-            open={openState}
-            onClose={() => setOpenState(false)}
-            anchorEl={buttonRef.current}
-          >
-            <Popover.Content>Innhold her!</Popover.Content>
-          </Popover> </> : <div style={{ color: "red" }}>Kan ikke slettes</div>
-
-
-
-      }
-
-
-    </div>
-  ));
-
+import ScheduleChanges from "./ScheduleChanges";
 
 const UpdateSchedule = () => {
   const [scheduleData, setScheduleData] = useState<Schedules[]>([]);
@@ -46,8 +11,6 @@ const UpdateSchedule = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [response, setResponse] = useState();
   const [Vakt, addVakt] = useState();
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [openState, setOpenState] = useState<boolean>(false);
 
   useEffect(() => {
     Promise.all([fetch("/vaktor/api/group_schedules")])
@@ -94,75 +57,87 @@ const UpdateSchedule = () => {
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {scheduleData.filter((schedule: Schedules) => schedule.type === "ordinær vakt").map((schedule: Schedules, i) => {
-            //approve_level = 0;
-            return (
-              <Table.Row key={i}>
-                <Table.HeaderCell scope="row">
-                  {schedule.user.name}<br />
-                  {schedule.type}
-                </Table.HeaderCell>
+          {scheduleData
+            .filter((schedule: Schedules) => schedule.type === "ordinær vakt")
+            .map((schedule: Schedules, i) => {
+              //approve_level = 0;
+              return (
+                <Table.Row key={i}>
+                  <Table.HeaderCell scope="row">
+                    {schedule.user.name}
+                    <br />
+                    {schedule.type}
+                  </Table.HeaderCell>
 
-                <Table.DataCell>
-                  {moment(schedule.start_timestamp * 1000).week()}
-                </Table.DataCell>
+                  <Table.DataCell>
+                    {moment(schedule.start_timestamp * 1000).week()}
+                  </Table.DataCell>
 
-                <Table.DataCell>
-                  Fra: {" "}
-                  {new Date(
-                    schedule.start_timestamp * 1000
-                  ).toLocaleString().slice(0, -3)}<br />
-                  Til: {" "}
-                  {new Date(schedule.end_timestamp * 1000).toLocaleString().slice(0, -3)}
-                  <br />
-                  <Button
+                  <Table.DataCell>
+                    Fra:{" "}
+                    {new Date(schedule.start_timestamp * 1000)
+                      .toLocaleString()
+                      .slice(0, -3)}
+                    <br />
+                    Til:{" "}
+                    {new Date(schedule.end_timestamp * 1000)
+                      .toLocaleString()
+                      .slice(0, -3)}
+                    <br />
+                    <Button
+                      style={{
+                        height: "30px",
+                        marginTop: "10px",
+                        marginBottom: "5px",
+                        minWidth: "210px",
+                      }}
+                      onClick={() => {
+                        setSchedule(schedule);
+                        setIsOpen(true);
+                      }}
+                    >
+                      Legg til endringer
+                    </Button>
+                  </Table.DataCell>
+                  <Table.DataCell
                     style={{
-                      height: "30px",
-                      marginTop: "10px",
-                      marginBottom: "5px",
-                      minWidth: "210px",
-                    }}
-                    onClick={() => {
-                      setSchedule(schedule);
-                      setIsOpen(true);
+                      maxWidth: "210px",
                     }}
                   >
-                    Legg til endringer
-                  </Button>
-                </Table.DataCell>
-                <Table.DataCell
-                  style={{
-                    maxWidth: "210px",
-                  }}
-                >
-                  {
-                    // Map out bakvakter
-                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bistand"), openState, buttonRef, setOpenState)
-                  }
-                </Table.DataCell>
-                <Table.DataCell
-                  style={{
-                    maxWidth: "210px",
-                  }}
-                >
-                  {
-                    // Map out innterruptions (vaktbytter)
-                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bytte"), openState, buttonRef, setOpenState)
-                  }
-                </Table.DataCell>
-                <Table.DataCell
-                  style={{
-                    maxWidth: "210px",
-                  }}
-                >
-                  {
-                    // Map out bakvakter
-                    mapPeriods(schedule.vakter.filter((vakt) => vakt.type == "bakvakt"), openState, buttonRef, setOpenState)
-                  }
-                </Table.DataCell>
-              </Table.Row>
-            );
-          })}
+                    <ScheduleChanges
+                      periods={schedule.vakter.filter(
+                        (vakt) => vakt.type == "bistand"
+                      )}
+                      setResponse={setResponse}
+                    ></ScheduleChanges>
+                  </Table.DataCell>
+                  <Table.DataCell
+                    style={{
+                      maxWidth: "210px",
+                    }}
+                  >
+                    <ScheduleChanges
+                      periods={schedule.vakter.filter(
+                        (vakt) => vakt.type == "bytte"
+                      )}
+                      setResponse={setResponse}
+                    ></ScheduleChanges>
+                  </Table.DataCell>
+                  <Table.DataCell
+                    style={{
+                      maxWidth: "210px",
+                    }}
+                  >
+                    <ScheduleChanges
+                      periods={schedule.vakter.filter(
+                        (vakt) => vakt.type == "bakvakt"
+                      )}
+                      setResponse={setResponse}
+                    ></ScheduleChanges>
+                  </Table.DataCell>
+                </Table.Row>
+              );
+            })}
         </Table.Body>
       </Table>
     </>

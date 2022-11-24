@@ -2,19 +2,24 @@ import { Dispatch, useCallback, useEffect, useState } from "react";
 import { User } from "../types/types";
 import { Switch, Table, TextField } from "@navikt/ds-react";
 
+const findFirstMissing = (array: number[]): number => {
+  for (var i = 0; i < array.length; i++) {
+    if (array[i] !== i + 1) {
+      return i + 1;
+    }
+  }
+  return 0;
+};
+
 const PerioderOptions = (props: {
   member: User;
-  activeMembers: User[];
-  setActiveMembers: Dispatch<User[]>;
-  setItemData: Dispatch<any>;
+  setItemData: Dispatch<User[]>;
   itemData: User[];
 }) => {
   const [error, setError] = useState("");
-  const [switchisActive, setSwitchisActive] = useState(true);
-  // const [error, setError] = useState();
+  const [groupOrderIndexes, setGroupOrderIndexes] = useState<number[]>([]);
 
   useEffect(() => {
-    console.log(props.itemData);
     props.itemData
       .map(
         (user) =>
@@ -25,12 +30,12 @@ const PerioderOptions = (props: {
       .includes(true)
       ? setError("Duplikate indekser")
       : setError("");
-  }, [props]);
+
+    var indexList = props.itemData.map((user: User) => user.group_order_index!);
+    setGroupOrderIndexes(indexList);
+  }, [props, setGroupOrderIndexes]);
 
   const handleIndexChange = (index: number) => {
-    //var lengthOfList = props.itemData.if(index);
-    // validere:
-
     var tmpArray = [...props.itemData];
 
     tmpArray.forEach((user) => {
@@ -44,19 +49,9 @@ const PerioderOptions = (props: {
 
   const handleChange = (isActive: boolean) => {
     if (isActive == true) {
-      setSwitchisActive(true);
-      handleIndexChange(props.itemData.length);
-      props.setActiveMembers([...props.activeMembers, props.member]);
+      handleIndexChange(findFirstMissing(groupOrderIndexes));
     } else {
-      var tmpArray = [...props.activeMembers];
-      tmpArray.forEach((user, idx) => {
-        if (user.ressursnummer === props.member.ressursnummer) {
-          tmpArray.splice(idx, 1);
-        }
-      });
       handleIndexChange(100);
-      setSwitchisActive(false);
-      props.setActiveMembers(tmpArray);
     }
   };
 
@@ -64,7 +59,6 @@ const PerioderOptions = (props: {
     <Table.Row key={props.member.name}>
       <Table.DataCell>
         <TextField
-          disabled={props.member.group_order_index === 100}
           label="ID"
           hideLabel
           defaultValue={
@@ -72,6 +66,7 @@ const PerioderOptions = (props: {
               ? ""
               : props.member.group_order_index
           }
+          disabled={props.member.group_order_index === 100}
           maxLength={2}
           size="small"
           htmlSize={14}
@@ -87,11 +82,7 @@ const PerioderOptions = (props: {
       <Table.DataCell>{props.member.role}</Table.DataCell>
       <Table.DataCell>
         <Switch
-          checked={props.activeMembers
-            .map(
-              (member) => props.member.ressursnummer === member.ressursnummer
-            )
-            .includes(true)}
+          checked={props.member.group_order_index !== 100}
           onChange={(e) => handleChange(e.target.checked)}
         >
           Aktiv
