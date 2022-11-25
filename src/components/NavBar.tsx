@@ -64,7 +64,7 @@ export default function Navbar() {
 				}
 
 				{
-					(["vaktsjef", "leveranseleder", "personalleder"].includes(userData.role)) && (
+					(["vaktsjef"].includes(userData.role)) && (
 						<Link href="/vaktperioder"><Button variant="tertiary" style={{
 							marginLeft: "5px",
 							marginRight: "5px",
