@@ -5,7 +5,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // for prod / dev
-  let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
+  let authorizationHeader =
+    req.headers && req.headers.authorization
+      ? req.headers.authorization
+      : "No Authorization header";
   //let authorizationHeader = process.env.FAKE_TOKEN
   // for local testing
 
@@ -13,15 +16,11 @@ export default async function handler(
   let end_timestamp = req.query.end_timestamp;
   let group_id = req.query.group_id;
   let midlertidlig_vakt = req.query.midlertidlig_vakt;
-  let user_order = req.query.user_order;
+  let amountOfWeeks = req.query.amountOfWeeks;
+  let rolloverDay = req.query.rolloverDay;
+  let user_order = JSON.parse(req.body);
 
-  var bodycontent = {
-    users: user_order,
-  };
-
-  let path = `${process.env.BACKEND_URL}/api/v1/schedules?group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}`;
-
-  console.log(JSON.stringify(bodycontent), path);
+  let path = `${process.env.BACKEND_URL}/api/v1/schedules/?group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amount_of_weeks=${amountOfWeeks}&rollover_day=${rolloverDay}`;
 
   const backendResponse = await fetch(path, {
     headers: {
@@ -29,7 +28,7 @@ export default async function handler(
       "Content-Type": "application/json",
     },
     method: "POST",
-    body: JSON.stringify(bodycontent),
+    body: JSON.stringify(user_order),
   });
 
   await backendResponse.json().then((body) => {
