@@ -5,7 +5,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // for prod / dev
-  let authorizationHeader = process.env.FAKE_TOKEN;
+  let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
   //let authorizationHeader = process.env.FAKE_TOKEN
   // for local testing
 
@@ -28,7 +28,7 @@ export default async function handler(
       Authorization: authorizationHeader,
       "Content-Type": "application/json",
     },
-    method: "PUT",
+    method: "POST",
     body: JSON.stringify(bodycontent),
   });
 
