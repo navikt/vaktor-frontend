@@ -25,7 +25,8 @@ const createSchedule = async (
   end_timestamp: number,
   midlertidlig_vakt: boolean,
   rolloverDay: number,
-  amountOfWeeks: number
+  amountOfWeeks: number,
+  setResponseError: Dispatch<string>
 ) => {
   //setLoading(true);
 
@@ -41,7 +42,7 @@ const createSchedule = async (
   await fetch(url, fetchOptions)
     .then((r) => {
       if (!r.ok) {
-        console.error(r.status, r.statusText);
+        setResponseError(r.statusText);
         return [];
       }
       return r.json();
@@ -59,6 +60,7 @@ const Vaktperioder = () => {
   const numWeeksInMs = 6.048e8 * 4; // 4 weeks in ms
   const [itemData, setItemData] = useState<User[]>([]);
   const [response, setResponse] = useState([]);
+  const [responseError, setResponseError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isMidlertidlig, setIsMidlertidlig] = useState(true);
   const [startTimestamp, setStartTimestamp] = useState<number>(
@@ -129,11 +131,10 @@ const Vaktperioder = () => {
   }, [response]);
 
   if (loading === true) return <Loader></Loader>;
-
   return (
     <>
-      {response.length !== 0 ? (
-        mapResponse(response, page, setPage)
+      {response.length !== 0 || responseError !== "" ? (
+        mapResponse(response, page, setPage, responseError)
       ) : (
         <div
           style={{
@@ -272,7 +273,8 @@ const Vaktperioder = () => {
                 endTimestamp,
                 isMidlertidlig,
                 rolloverDay,
-                amountOfWeeks
+                amountOfWeeks,
+                setResponseError
               )
             }
           >
@@ -289,11 +291,25 @@ export default Vaktperioder;
 const mapResponse = (
   schedules: Schedules[],
   page: number,
-  setPage: Dispatch<number>
+  setPage: Dispatch<number>,
+  error: string
 ) => {
   const rowsPerPage = 10;
   let sortData = schedules;
   sortData = sortData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  if (error !== "") {
+    return (
+      <div style={{ height: "60vh" }}>
+        <Alert
+          style={{ maxWidth: "50%", minWidth: "550px", margin: "auto" }}
+          variant="error"
+        >
+          Woopsie, det har skjedd en feil. <br /> Kanskje det allerede finnes
+          vakter i angitt periode?
+        </Alert>
+      </div>
+    );
+  }
   return (
     <div
       className="grid gap-4"
@@ -315,31 +331,28 @@ const mapResponse = (
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {sortData.map((schedule: Schedules, idx: number) => {
-            //approve_level = 0;
-            return (
-              <Table.Row key={idx}>
-                <Table.HeaderCell
-                  scope="row"
-                  style={{
-                    minWidth: "210px",
-                    maxWidth: "210px",
-                  }}
-                >
-                  {schedule.user.name}
-                </Table.HeaderCell>
+          {sortData.map((schedule: Schedules, idx: number) => (
+            <Table.Row key={idx}>
+              <Table.HeaderCell
+                scope="row"
+                style={{
+                  minWidth: "210px",
+                  maxWidth: "210px",
+                }}
+              >
+                {schedule.user.name}
+              </Table.HeaderCell>
 
-                <Table.DataCell>
-                  Uke: {moment(schedule.start_timestamp * 1000).week()}{" "}
-                  {moment(schedule.start_timestamp * 1000).week() <
-                  moment(schedule.end_timestamp * 1000).week()
-                    ? " - " + moment(schedule.end_timestamp * 1000).week()
-                    : ""}
-                  <br />
-                </Table.DataCell>
-              </Table.Row>
-            );
-          })}
+              <Table.DataCell>
+                Uke: {moment(schedule.start_timestamp * 1000).week()}{" "}
+                {moment(schedule.start_timestamp * 1000).week() <
+                moment(schedule.end_timestamp * 1000).week()
+                  ? " - " + moment(schedule.end_timestamp * 1000).week()
+                  : ""}
+                <br />
+              </Table.DataCell>
+            </Table.Row>
+          ))}
         </Table.Body>
       </Table>
       <Pagination

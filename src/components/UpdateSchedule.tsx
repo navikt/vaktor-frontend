@@ -1,4 +1,10 @@
-import { Button, Table, Alert, Popover } from "@navikt/ds-react";
+import {
+  Button,
+  Table,
+  UNSAFE_useMonthpicker,
+  UNSAFE_MonthPicker,
+  Search,
+} from "@navikt/ds-react";
 import { useEffect, useState, useRef, RefObject, Dispatch } from "react";
 import { Schedules } from "../types/types";
 import moment from "moment";
@@ -11,6 +17,14 @@ const UpdateSchedule = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [response, setResponse] = useState();
   const [Vakt, addVakt] = useState();
+  const [searchFilter, setSearchFilter] = useState("");
+  const { monthpickerProps, inputProps, selectedMonth, setSelected } =
+    UNSAFE_useMonthpicker({
+      fromDate: new Date("Oct 01 2022"),
+      toDate: new Date("Aug 23 2025"),
+      //defaultSelected: new Date("Oct 2022")
+      defaultSelected: new Date(moment().locale("en-GB").format("MMM Y")),
+    });
 
   useEffect(() => {
     Promise.all([fetch("/vaktor/api/group_schedules")])
@@ -39,13 +53,30 @@ const UpdateSchedule = () => {
       ) : (
         <></>
       )}
-      <div style={{
-        marginTop: "2vh",
-        marginBottom: "3vh",
-        display: "grid",
-        alignItems: "center",
-        justifyContent: "space-around",
-      }}>
+      <div
+        style={{
+          marginTop: "2vh",
+          marginBottom: "3vh",
+          display: "grid",
+          alignItems: "center",
+          justifyContent: "space-around",
+        }}
+      >
+        <div className="min-h-96" style={{ display: "flex" }}>
+          <UNSAFE_MonthPicker {...monthpickerProps}>
+            <div className="grid gap-4">
+              <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+            </div>
+          </UNSAFE_MonthPicker>
+          <form style={{ width: "300px", marginLeft: "30px" }}>
+            <Search
+              label="Søk etter person"
+              hideLabel={false}
+              variant="primary"
+              onChange={(text) => setSearchFilter(text)}
+            />
+          </form>
+        </div>
         <Table
           style={{
             minWidth: "1150px",
@@ -65,22 +96,38 @@ const UpdateSchedule = () => {
           </Table.Header>
           <Table.Body>
             {scheduleData
-              .filter((schedule: Schedules) => schedule.type === "ordinær vakt")
+              .filter(
+                (schedule: Schedules) =>
+                  schedule.type === "ordinær vakt" &&
+                  schedule.user.name
+                    .toLowerCase()
+                    .includes(searchFilter.toLowerCase()) &&
+                  new Date(schedule.start_timestamp * 1000).getMonth() ===
+                    selectedMonth!.getMonth()
+              )
               .map((schedule: Schedules, i) => {
                 //approve_level = 0;
                 return (
                   <Table.Row key={i}>
-                    <Table.HeaderCell scope="row" style={{
-                      minWidth: "210px",
-                      maxWidth: "210px",
-                    }}>
+                    <Table.HeaderCell
+                      scope="row"
+                      style={{
+                        minWidth: "210px",
+                        maxWidth: "210px",
+                      }}
+                    >
                       {schedule.user.name}
                       <br />
                       {schedule.type}
                     </Table.HeaderCell>
 
                     <Table.DataCell>
-                      Uke: {moment(schedule.start_timestamp * 1000).week()}  {(moment(schedule.start_timestamp * 1000).week()) < (moment(schedule.end_timestamp * 1000).week()) ? " - " + moment(schedule.end_timestamp * 1000).week() : ""}<br />
+                      Uke: {moment(schedule.start_timestamp * 1000).week()}{" "}
+                      {moment(schedule.start_timestamp * 1000).week() <
+                      moment(schedule.end_timestamp * 1000).week()
+                        ? " - " + moment(schedule.end_timestamp * 1000).week()
+                        : ""}
+                      <br />
                       Fra:{" "}
                       {new Date(schedule.start_timestamp * 1000)
                         .toLocaleString()
@@ -96,7 +143,8 @@ const UpdateSchedule = () => {
                           height: "30px",
                           marginTop: "10px",
                           marginBottom: "5px",
-                          minWidth: "210px",
+                          minWidth: "170px",
+                          maxWidth: "190px",
                         }}
                         onClick={() => {
                           setSchedule(schedule);

@@ -8,16 +8,18 @@ import {
   TextField,
   Modal,
   ConfirmationPanel,
+  Alert,
 } from "@navikt/ds-react";
 import { Schedules, User } from "../types/types";
 import moment from "moment";
+import { TodayMarker } from "react-calendar-timeline";
 //import TextField from "./testComp";
 
 const update_schedule = async (
   period: Schedules,
   action: string,
   selectedVakthaver: string,
-  addVakt: Dispatch<any>,
+  addVakt: Dispatch<any>
 ) => {
   await fetch(
     `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
@@ -57,8 +59,8 @@ const ScheduleModal = (props: props) => {
   const [groupData, setgroupData] = useState<User[]>([]);
   const [selectedVakthaver, setVakthaver] = useState("");
   const [action, setAction] = useState("");
-  const [timeFrom, setTimeFrom] = useState(props.schedule.start_timestamp);
-  const [timeTo, setTimeTo] = useState(props.schedule.end_timestamp);
+  const [timeFrom, setTimeFrom] = useState<number>(0);
+  const [timeTo, setTimeTo] = useState<number>(0);
   const [confirmState, setConfirmState] = useState(false);
 
   useEffect(() => {
@@ -77,26 +79,26 @@ const ScheduleModal = (props: props) => {
       });
   }, [props]);
 
-  console.log(timeTo)
-  const tilComp = React.cloneElement(
+  const fraComp = React.cloneElement(
     <TextField
-      onChange={(e) => setTimeTo(new Date(e.target.value).getTime())}
-      label="Til"
+      onChange={(e) => setTimeFrom(new Date(e.target.value).getTime())}
+      label="Fra"
       min={removeMilliFromISO(props.schedule.start_timestamp)}
       max={removeMilliFromISO(props.schedule.end_timestamp)}
+      error={timeFrom > timeTo && timeTo !== 0}
     />,
     {
       type: "datetime-local",
     }
   );
 
-  const fraComp = React.cloneElement(
-
+  const tilComp = React.cloneElement(
     <TextField
-      onChange={(e) => setTimeFrom(new Date(e.target.value).getTime())}
-      label="Fra"
+      onChange={(e) => setTimeTo(new Date(e.target.value).getTime())}
+      label="Til"
       min={removeMilliFromISO(props.schedule.start_timestamp)}
       max={removeMilliFromISO(props.schedule.end_timestamp)}
+      error={timeFrom > timeTo && timeTo !== 0}
     />,
     {
       type: "datetime-local",
@@ -111,8 +113,9 @@ const ScheduleModal = (props: props) => {
         onClose={() => {
           props.setIsOpen(!props.isOpen);
           setConfirmState(false);
-        }
-        }
+          setTimeTo(0);
+          setTimeFrom(0);
+        }}
         aria-labelledby="modal-heading"
       >
         <Modal.Content>
@@ -130,39 +133,66 @@ const ScheduleModal = (props: props) => {
               }}
             >
               <option value="">Velg vakthaver</option>
-              {mapGroupOptions(groupData.filter((user: User) => user.id.toUpperCase() !== props.schedule.user_id.toUpperCase()))}
+              {mapGroupOptions(
+                groupData.filter(
+                  (user: User) =>
+                    user.id.toUpperCase() !==
+                    props.schedule.user_id.toUpperCase()
+                )
+              )}
             </Select>
 
             <RadioGroup
               legend="Hva skal gjøres med opprinnelig plan"
               onChange={(valg: any) => setAction(valg)}
             >
-              <Radio value="bakvakt">
-                Legg til som bakvakt
-              </Radio>
+              <Radio value="bakvakt">Legg til som bakvakt</Radio>
               <Radio value="bytte">
                 Erstatt eksisterende vakt (f.eks ved bytte)
               </Radio>
               <Radio value="bistand">
-                Sett eksisterede person som bakvakt og bistå (f.eks ved sykdom for opprinnelig vakthaver)
+                Sett eksisterede person som bakvakt og bistå (f.eks ved sykdom
+                for opprinnelig vakthaver)
               </Radio>
               <Radio value="replace">
-                Bytt hele vaktperioden med en annen (skal <b>ikke</b> brukes ved sykdom)
+                Bytt hele vaktperioden med en annen (skal <b>ikke</b> brukes ved
+                sykdom)
               </Radio>
             </RadioGroup>
-            {action !== "replace" &&
-              <div style={{ display: "flex", justifyContent: "space-evenly" }}>
-                {fraComp}
-                {tilComp}
+            {action !== "replace" && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: "20px",
+                  margin: "auto",
+                  flexDirection: "column",
+                }}
+              >
+                <div style={{ display: "flex", gap: "20px", margin: "auto" }}>
+                  {fraComp}
+                  {tilComp}
+                </div>
+                {timeFrom > timeTo && timeTo !== 0 && (
+                  <Alert
+                    style={{ minWidth: "68%", margin: "auto" }}
+                    variant="error"
+                  >
+                    Fra dato må være før til dato.
+                  </Alert>
+                )}
               </div>
-            }
+            )}
             <br />
             <ConfirmationPanel
+              disabled={
+                timeFrom > timeTo || selectedVakthaver === "" || action === ""
+              }
               checked={confirmState}
               label="Ja, jeg har fylt ut korrekt."
               onChange={() => setConfirmState((x) => !x)}
             >
-              Vær nøyaktig når du fyller ut start/slutt <b>dato</b> og <b>tid</b>.
+              Vær nøyaktig når du fyller ut start/slutt <b>dato</b> og{" "}
+              <b>tid</b>.
             </ConfirmationPanel>
             <br />
             <Button
@@ -174,20 +204,30 @@ const ScheduleModal = (props: props) => {
                 marginTop: "25px",
                 marginBottom: "25px",
                 minWidth: "300px",
-
               }}
               onClick={() => {
                 let period = {
                   ...props.schedule,
-                  start_timestamp: action === "replace" ? props.schedule.start_timestamp : timeFrom / 1000,
-                  end_timestamp: action === "replace" ? props.schedule.end_timestamp : timeTo / 1000,
+                  start_timestamp:
+                    action === "replace"
+                      ? props.schedule.start_timestamp
+                      : timeFrom / 1000,
+                  end_timestamp:
+                    action === "replace"
+                      ? props.schedule.end_timestamp
+                      : timeTo / 1000,
                   schedule_id: props.schedule.id,
                 };
-                update_schedule(period, action, selectedVakthaver, props.addVakt);
+                update_schedule(
+                  period,
+                  action,
+                  selectedVakthaver,
+                  props.addVakt
+                );
                 props.setIsOpen(false);
                 setConfirmState(false);
-
-
+                setTimeTo(0);
+                setTimeFrom(0);
               }}
             >
               Legg til endring
