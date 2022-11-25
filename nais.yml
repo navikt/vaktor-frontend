@@ -20,11 +20,11 @@ spec:
         max: 2
     resources:
         limits:
-            cpu: "400m"
-            memory: "512Mi"
+            cpu: "1000M"
+            memory: "1024Mi"
         requests:
-            cpu: "400m"
-            memory: "512Mi"
+            cpu: "1000m"
+            memory: "1024Mi"
     azure:
         application:
             enabled: true
