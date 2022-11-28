@@ -79,9 +79,9 @@ const Vaktperioder = () => {
     const [page, setPage] = useState(1)
     const { datepickerProps, toInputProps, fromInputProps, selectedRange } =
         UNSAFE_useRangeDatepicker({
-            /* fromDate: new Date(Date.now() + numWeeksInMs),
+            fromDate: new Date(Date.now() + numWeeksInMs),
             toDate: new Date("Feb 01 2024"),
-            defaultMonth: new Date(Date.now() + numWeeksInMs), */
+            defaultMonth: new Date(Date.now() + numWeeksInMs),
             onRangeChange: (val) => {
                 if (val && val.from && val.to) {
                     setStartTimestamp(val.from.setHours(12) / 1000)

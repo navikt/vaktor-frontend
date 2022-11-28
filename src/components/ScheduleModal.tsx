@@ -1,242 +1,417 @@
-import { useEffect, useState, Dispatch } from "react";
-import React from "react";
+import { useEffect, useState, Dispatch } from "react"
+import React from "react"
 import {
-  Button,
-  Select,
-  RadioGroup,
-  Radio,
-  TextField,
-  Modal,
-  ConfirmationPanel,
-  Alert,
-} from "@navikt/ds-react";
-import { Schedules, User } from "../types/types";
-import moment from "moment";
-import { TodayMarker } from "react-calendar-timeline";
+    Button,
+    Select,
+    RadioGroup,
+    Radio,
+    TextField,
+    Modal,
+    ConfirmationPanel,
+    Alert,
+    UNSAFE_DatePicker,
+    UNSAFE_useRangeDatepicker,
+} from "@navikt/ds-react"
+import { Schedules, User } from "../types/types"
+import moment from "moment"
+import { TodayMarker } from "react-calendar-timeline"
 //import TextField from "./testComp";
 
 const update_schedule = async (
-  period: Schedules,
-  action: string,
-  selectedVakthaver: string,
-  addVakt: Dispatch<any>
+    period: Schedules,
+    action: string,
+    selectedVakthaver: string,
+    addVakt: Dispatch<any>
 ) => {
-  await fetch(
-    `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
-  )
-    .then((r) => r.json())
-    .then((data) => {
-      addVakt(data);
-    });
-};
+    await fetch(
+        `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
+    )
+        .then((r) => r.json())
+        .then((data) => {
+            addVakt(data)
+        })
+}
 
 const mapGroupOptions = (members: User[]) => {
-  return members.map((user: User, index) => (
-    <option key={index} value={user.id}>
-      {user.name}
-    </option>
-  ));
-};
+    return members.map((user: User, index) => (
+        <option key={index} value={user.id}>
+            {user.name}
+        </option>
+    ))
+}
 
-type props = {
-  schedule: Schedules;
-  isOpen: boolean;
-  setIsOpen: Dispatch<boolean>;
-  setResponse: Dispatch<any>;
-  addVakt: Dispatch<any>;
-};
+const ScheduleModal = (props: {
+    schedule: Schedules
+    isOpen: boolean
+    setIsOpen: Dispatch<boolean>
+    setResponse: Dispatch<any>
+    addVakt: Dispatch<any>
+}) => {
+    const [groupData, setgroupData] = useState<User[]>([])
+    const [selectedVakthaver, setVakthaver] = useState("")
+    const [action, setAction] = useState("")
+    const [confirmState, setConfirmState] = useState(false)
+    const [startTimestamp, setStartTimestamp] = useState<number>(
+        props.schedule.start_timestamp
+    )
+    const [endTimestamp, setEndTimestamp] = useState<number>(
+        props.schedule.end_timestamp
+    )
+    const [clock_start, setClockStart] = useState<number>(0)
+    const [clock_end, setClockEnd] = useState<number>(0)
+    const { datepickerProps, toInputProps, fromInputProps, selectedRange } =
+        UNSAFE_useRangeDatepicker({
+            fromDate: new Date(props.schedule.start_timestamp * 1000),
+            toDate: new Date(props.schedule.end_timestamp * 1000),
+            onRangeChange: (val) => {
+                if (val && val.from && val.to) {
+                    setStartTimestamp(val.from.setHours(12) / 1000)
+                    setEndTimestamp(val.to.setHours(12) / 1000)
+                }
+            },
+        })
+    useEffect(() => {
+        if (Modal && Modal.setAppElement) {
+            Modal.setAppElement("#__next")
+        }
+        Promise.all([fetch("/vaktor/api/get_my_groupmembers")])
 
-const removeMilliFromISO = (timestamp: number) => {
-  let m_date = moment
-    .unix(timestamp)
-    .toISOString(true)
-    .split("Z")[0]
-    .slice(0, -13);
-  return m_date;
-};
+            .then(async ([membersRes]) => {
+                props.setResponse(membersRes.status)
+                const groupData = await membersRes.json()
+                return [groupData]
+            })
+            .then(([groupData]) => {
+                setgroupData(groupData)
+            })
+    }, [props])
 
-const ScheduleModal = (props: props) => {
-  const [groupData, setgroupData] = useState<User[]>([]);
-  const [selectedVakthaver, setVakthaver] = useState("");
-  const [action, setAction] = useState("");
-  const [timeFrom, setTimeFrom] = useState<number>(0);
-  const [timeTo, setTimeTo] = useState<number>(0);
-  const [confirmState, setConfirmState] = useState(false);
-
-  useEffect(() => {
-    if (Modal && Modal.setAppElement) {
-      Modal.setAppElement("#__next");
-    }
-    Promise.all([fetch("/vaktor/api/get_my_groupmembers")])
-
-      .then(async ([membersRes]) => {
-        props.setResponse(membersRes.status);
-        const groupData = await membersRes.json();
-        return [groupData];
-      })
-      .then(([groupData]) => {
-        setgroupData(groupData);
-      });
-  }, [props]);
-
-  const fraComp = React.cloneElement(
-    <TextField
-      onChange={(e) => setTimeFrom(new Date(e.target.value).getTime())}
-      label="Fra"
-      min={removeMilliFromISO(props.schedule.start_timestamp)}
-      max={removeMilliFromISO(props.schedule.end_timestamp)}
-      error={timeFrom > timeTo && timeTo !== 0}
-    />,
-    {
-      type: "datetime-local",
-    }
-  );
-
-  const tilComp = React.cloneElement(
-    <TextField
-      onChange={(e) => setTimeTo(new Date(e.target.value).getTime())}
-      label="Til"
-      min={removeMilliFromISO(props.schedule.start_timestamp)}
-      max={removeMilliFromISO(props.schedule.end_timestamp)}
-      error={timeFrom > timeTo && timeTo !== 0}
-    />,
-    {
-      type: "datetime-local",
-    }
-  );
-
-  return (
-    <>
-      <Modal
-        open={props.isOpen}
-        aria-label="Modal for vaktperioder"
-        onClose={() => {
-          props.setIsOpen(!props.isOpen);
-          setConfirmState(false);
-          setTimeTo(0);
-          setTimeFrom(0);
-        }}
-        aria-labelledby="modal-heading"
-      >
-        <Modal.Content>
-          {" "}
-          <div className="contentEndring">
-            <Select
-              label="vakthaver"
-              className="buttonConfirm"
-              onChange={(e) => {
-                setVakthaver(e.target.value);
-              }}
-              size="medium"
-              style={{
-                marginBottom: "20px",
-              }}
-            >
-              <option value="">Velg vakthaver</option>
-              {mapGroupOptions(
-                groupData.filter(
-                  (user: User) =>
-                    user.id.toUpperCase() !==
-                    props.schedule.user_id.toUpperCase()
-                )
-              )}
-            </Select>
-
-            <RadioGroup
-              legend="Hva skal gjøres med opprinnelig plan"
-              onChange={(valg: any) => setAction(valg)}
-            >
-              <Radio value="bakvakt">Legg til som bakvakt</Radio>
-              <Radio value="bytte">
-                Erstatt eksisterende vakt (f.eks ved bytte)
-              </Radio>
-              <Radio value="bistand">
-                Sett eksisterede person som bakvakt og bistå (f.eks ved sykdom
-                for opprinnelig vakthaver)
-              </Radio>
-              <Radio value="replace">
-                Bytt hele vaktperioden med en annen (skal <b>ikke</b> brukes ved
-                sykdom)
-              </Radio>
-            </RadioGroup>
-            {action !== "replace" && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "20px",
-                  margin: "auto",
-                  flexDirection: "column",
+    return (
+        <>
+            <Modal
+                open={props.isOpen}
+                aria-label="Modal for vaktperioder"
+                onClose={() => {
+                    props.setIsOpen(!props.isOpen)
+                    setConfirmState(false)
+                    setStartTimestamp(0)
+                    setEndTimestamp(0)
+                    setClockEnd(0)
+                    setClockStart(0)
                 }}
-              >
-                <div style={{ display: "flex", gap: "20px", margin: "auto" }}>
-                  {fraComp}
-                  {tilComp}
-                </div>
-                {timeFrom > timeTo && timeTo !== 0 && (
-                  <Alert
-                    style={{ minWidth: "68%", margin: "auto" }}
-                    variant="error"
-                  >
-                    Fra dato må være før til dato.
-                  </Alert>
-                )}
-              </div>
-            )}
-            <br />
-            <ConfirmationPanel
-              disabled={
-                timeFrom > timeTo || selectedVakthaver === "" || action === ""
-              }
-              checked={confirmState}
-              label="Ja, jeg har fylt ut korrekt."
-              onChange={() => setConfirmState((x) => !x)}
+                aria-labelledby="modal-heading"
             >
-              Vær nøyaktig når du fyller ut start/slutt <b>dato</b> og{" "}
-              <b>tid</b>.
-            </ConfirmationPanel>
-            <br />
-            <Button
-              className="buttonConfirm"
-              //disabled={selectedVakthaver === ""}
-              disabled={confirmState === false}
-              style={{
-                height: "50px",
-                marginTop: "25px",
-                marginBottom: "25px",
-                minWidth: "300px",
-              }}
-              onClick={() => {
-                let period = {
-                  ...props.schedule,
-                  start_timestamp:
-                    action === "replace"
-                      ? props.schedule.start_timestamp
-                      : timeFrom / 1000,
-                  end_timestamp:
-                    action === "replace"
-                      ? props.schedule.end_timestamp
-                      : timeTo / 1000,
-                  schedule_id: props.schedule.id,
-                };
-                update_schedule(
-                  period,
-                  action,
-                  selectedVakthaver,
-                  props.addVakt
-                );
-                props.setIsOpen(false);
-                setConfirmState(false);
-                setTimeTo(0);
-                setTimeFrom(0);
-              }}
-            >
-              Legg til endring
-            </Button>
-          </div>
-        </Modal.Content>
-      </Modal>
-    </>
-  );
-};
+                <Modal.Content style={{ minHeight: "100%" }}>
+                    {" "}
+                    <div className="contentEndring">
+                        <Select
+                            label="vakthaver"
+                            className="buttonConfirm"
+                            onChange={(e) => {
+                                setVakthaver(e.target.value)
+                            }}
+                            size="medium"
+                            style={{
+                                marginBottom: "20px",
+                            }}
+                        >
+                            <option value="">Velg vakthaver</option>
+                            {mapGroupOptions(
+                                groupData.filter(
+                                    (user: User) =>
+                                        user.id.toUpperCase() !==
+                                        props.schedule.user_id.toUpperCase()
+                                )
+                            )}
+                        </Select>
 
-export default ScheduleModal;
+                        <RadioGroup
+                            legend="Hva skal gjøres med opprinnelig plan"
+                            onChange={(valg: string) => setAction(valg)}
+                        >
+                            <Radio value="bakvakt">Legg til som bakvakt</Radio>
+                            <Radio value="bytte">
+                                Erstatt eksisterende vakt (f.eks ved bytte)
+                            </Radio>
+                            <Radio value="bistand">
+                                Sett eksisterede person som bakvakt og bistå
+                                (f.eks ved sykdom for opprinnelig vakthaver)
+                            </Radio>
+                            <Radio value="replace">
+                                Bytt hele vaktperioden med en annen (skal{" "}
+                                <b>ikke</b> brukes ved sykdom)
+                            </Radio>
+                        </RadioGroup>
+                        {action !== "replace" && (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "20px",
+                                    margin: "auto",
+                                    flexDirection: "column",
+                                    marginTop: "2vh",
+                                    marginBottom: "3vh",
+                                }}
+                            >
+                                <div style={{ margin: "auto" }}>
+                                    <UNSAFE_DatePicker
+                                        {...datepickerProps}
+                                        style={{}}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                gap: "15px",
+                                            }}
+                                        >
+                                            <UNSAFE_DatePicker.Input
+                                                {...fromInputProps}
+                                                label="Fra"
+                                            />
+                                            <Select
+                                                label="klokken"
+                                                defaultValue={0}
+                                                error={
+                                                    clock_start * 3600 +
+                                                        startTimestamp <
+                                                    props.schedule
+                                                        .start_timestamp
+                                                }
+                                                onChange={(e) =>
+                                                    setClockStart(
+                                                        Number(e.target.value)
+                                                    )
+                                                }
+                                            >
+                                                <option value={-12}>
+                                                    00:00
+                                                </option>
+                                                <option value={-11}>
+                                                    01:00
+                                                </option>
+                                                <option value={-10}>
+                                                    02:00
+                                                </option>
+                                                <option value={-9}>
+                                                    03:00
+                                                </option>
+                                                <option value={-8}>
+                                                    04:00
+                                                </option>
+                                                <option value={-7}>
+                                                    05:00
+                                                </option>
+                                                <option value={-6}>
+                                                    06:00
+                                                </option>
+                                                <option value={-5}>
+                                                    07:00
+                                                </option>
+                                                <option value={-4}>
+                                                    08:00
+                                                </option>
+                                                <option value={-3}>
+                                                    09:00
+                                                </option>
+                                                <option value={-2}>
+                                                    10:00
+                                                </option>
+                                                <option value={-1}>
+                                                    11:00
+                                                </option>
+                                                <option value={0}>12:00</option>
+                                                <option value={1}>13:00</option>
+                                                <option value={2}>14:00</option>
+                                                <option value={3}>15:00</option>
+                                                <option value={4}>16:00</option>
+                                                <option value={5}>17:00</option>
+                                                <option value={6}>18:00</option>
+                                                <option value={7}>19:00</option>
+                                                <option value={8}>20:00</option>
+                                                <option value={9}>21:00</option>
+                                                <option value={10}>
+                                                    22:00
+                                                </option>
+                                                <option value={11}>
+                                                    23:00
+                                                </option>
+                                            </Select>
+                                        </div>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                gap: "15px",
+                                            }}
+                                        >
+                                            <UNSAFE_DatePicker.Input
+                                                {...toInputProps}
+                                                label="Til"
+                                            />
+                                            <Select
+                                                label="klokken"
+                                                defaultValue={0}
+                                                error={
+                                                    clock_end * 3600 +
+                                                        endTimestamp >
+                                                    props.schedule.end_timestamp
+                                                }
+                                                onChange={(e) =>
+                                                    setClockEnd(
+                                                        Number(e.target.value)
+                                                    )
+                                                }
+                                            >
+                                                <option value={-12}>
+                                                    00:00
+                                                </option>
+                                                <option value={-11}>
+                                                    01:00
+                                                </option>
+                                                <option value={-10}>
+                                                    02:00
+                                                </option>
+                                                <option value={-9}>
+                                                    03:00
+                                                </option>
+                                                <option value={-8}>
+                                                    04:00
+                                                </option>
+                                                <option value={-7}>
+                                                    05:00
+                                                </option>
+                                                <option value={-6}>
+                                                    06:00
+                                                </option>
+                                                <option value={-5}>
+                                                    07:00
+                                                </option>
+                                                <option value={-4}>
+                                                    08:00
+                                                </option>
+                                                <option value={-3}>
+                                                    09:00
+                                                </option>
+                                                <option value={-2}>
+                                                    10:00
+                                                </option>
+                                                <option value={-1}>
+                                                    11:00
+                                                </option>
+                                                <option value={0}>12:00</option>
+                                                <option value={1}>13:00</option>
+                                                <option value={2}>14:00</option>
+                                                <option value={3}>15:00</option>
+                                                <option value={4}>16:00</option>
+                                                <option value={5}>17:00</option>
+                                                <option value={6}>18:00</option>
+                                                <option value={7}>19:00</option>
+                                                <option value={8}>20:00</option>
+                                                <option value={9}>21:00</option>
+                                                <option value={10}>
+                                                    22:00
+                                                </option>
+                                                <option value={11}>
+                                                    23:00
+                                                </option>
+                                            </Select>
+                                        </div>
+                                    </UNSAFE_DatePicker>
+                                </div>
+                                {(clock_start * 3600 + startTimestamp <
+                                    props.schedule.start_timestamp ||
+                                    clock_end * 3600 + endTimestamp >
+                                        props.schedule.end_timestamp) && (
+                                    <Alert
+                                        style={{
+                                            minWidth: "68%",
+                                            margin: "auto",
+                                        }}
+                                        variant="error"
+                                    >
+                                        <b>
+                                            {" "}
+                                            Du kan ikke sette start/slutt
+                                            utenfor valgt periode
+                                        </b>
+                                        <br />
+                                        Periode start:{" "}
+                                        {new Date(
+                                            props.schedule.start_timestamp *
+                                                1000
+                                        )
+                                            .toLocaleString()
+                                            .slice(0, -3)}
+                                        <br />
+                                        Periode slutt:{" "}
+                                        {new Date(
+                                            props.schedule.end_timestamp * 1000
+                                        )
+                                            .toLocaleString()
+                                            .slice(0, -3)}
+                                    </Alert>
+                                )}
+                            </div>
+                        )}
+                        <br />
+                        <ConfirmationPanel
+                            disabled={
+                                startTimestamp > endTimestamp ||
+                                selectedVakthaver === "" ||
+                                action === ""
+                            }
+                            checked={confirmState}
+                            label="Ja, jeg har fylt ut korrekt."
+                            onChange={() => setConfirmState((x) => !x)}
+                        >
+                            Vær nøyaktig når du fyller ut start/slutt{" "}
+                            <b>dato</b> og <b>tid</b>.
+                        </ConfirmationPanel>
+                        <br />
+                        <Button
+                            className="buttonConfirm"
+                            //disabled={selectedVakthaver === ""}
+                            disabled={confirmState === false}
+                            style={{
+                                height: "50px",
+                                marginTop: "25px",
+                                marginBottom: "25px",
+                                minWidth: "300px",
+                            }}
+                            onClick={() => {
+                                let period = {
+                                    ...props.schedule,
+                                    start_timestamp:
+                                        action === "replace"
+                                            ? props.schedule.start_timestamp
+                                            : startTimestamp +
+                                              clock_start * 3600,
+                                    end_timestamp:
+                                        action === "replace"
+                                            ? props.schedule.end_timestamp
+                                            : endTimestamp + clock_end * 3600,
+                                    schedule_id: props.schedule.id,
+                                }
+                                update_schedule(
+                                    period,
+                                    action,
+                                    selectedVakthaver,
+                                    props.addVakt
+                                )
+                                props.setIsOpen(false)
+                                setConfirmState(false)
+                                setStartTimestamp(0)
+                                setEndTimestamp(0)
+                                setClockEnd(0)
+                                setClockStart(0)
+                            }}
+                        >
+                            Legg til endring
+                        </Button>
+                    </div>
+                </Modal.Content>
+            </Modal>
+        </>
+    )
+}
+
+export default ScheduleModal
