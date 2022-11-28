@@ -11,6 +11,7 @@ import {
     UNSAFE_useRangeDatepicker,
     Pagination,
     Alert,
+    Select,
 } from "@navikt/ds-react"
 import ColumnHeader from "@navikt/ds-react/esm/table/ColumnHeader"
 import moment from "moment"
@@ -67,22 +68,24 @@ const Vaktperioder = () => {
     const [loading, setLoading] = useState(false)
     const [isMidlertidlig, setIsMidlertidlig] = useState(true)
     const [startTimestamp, setStartTimestamp] = useState<number>(
-        new Date("Jan 01 2023").getTime() / 1000
+        new Date("Jan 01 2023").setHours(12) / 1000
     )
     const [endTimestamp, setEndTimestamp] = useState<number>(0)
+    const [clock_start, setClockStart] = useState<number>(0)
+    const [clock_end, setClockEnd] = useState<number>(0)
     const [rolloverDay, setRolloverDay] = useState<number>(2)
     const [rolloverTime, setRolloverTime] = useState<number>(12)
     const [amountOfWeeks, setAmountOfWeeks] = useState<number>(52)
     const [page, setPage] = useState(1)
     const { datepickerProps, toInputProps, fromInputProps, selectedRange } =
         UNSAFE_useRangeDatepicker({
-            fromDate: new Date(Date.now() + numWeeksInMs),
+            /* fromDate: new Date(Date.now() + numWeeksInMs),
             toDate: new Date("Feb 01 2024"),
-            defaultMonth: new Date(Date.now() + numWeeksInMs),
+            defaultMonth: new Date(Date.now() + numWeeksInMs), */
             onRangeChange: (val) => {
                 if (val && val.from && val.to) {
-                    setStartTimestamp(val.from.getTime() / 1000)
-                    setEndTimestamp(val.to.getTime() / 1000)
+                    setStartTimestamp(val.from.setHours(12) / 1000)
+                    setEndTimestamp(val.to.setHours(12) / 1000)
                 }
             },
         })
@@ -156,22 +159,88 @@ const Vaktperioder = () => {
                     {isMidlertidlig ? (
                         <div style={{ margin: "auto" }}>
                             <UNSAFE_DatePicker {...datepickerProps} style={{}}>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "15px",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
+                                <div style={{ display: "flex", gap: "15px" }}>
                                     <UNSAFE_DatePicker.Input
                                         {...fromInputProps}
                                         label="Fra"
                                     />
+                                    <Select
+                                        label="klokken"
+                                        defaultValue={0}
+                                        onChange={(e) =>
+                                            setClockStart(
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                    >
+                                        <option value={-12}>00:00</option>
+                                        <option value={-11}>01:00</option>
+                                        <option value={-10}>02:00</option>
+                                        <option value={-9}>03:00</option>
+                                        <option value={-8}>04:00</option>
+                                        <option value={-7}>05:00</option>
+                                        <option value={-6}>06:00</option>
+                                        <option value={-5}>07:00</option>
+                                        <option value={-4}>08:00</option>
+                                        <option value={-3}>09:00</option>
+                                        <option value={-2}>10:00</option>
+                                        <option value={-1}>11:00</option>
+                                        <option value={0}>12:00</option>
+                                        <option value={1}>13:00</option>
+                                        <option value={2}>14:00</option>
+                                        <option value={3}>15:00</option>
+                                        <option value={4}>16:00</option>
+                                        <option value={5}>17:00</option>
+                                        <option value={6}>18:00</option>
+                                        <option value={7}>19:00</option>
+                                        <option value={8}>20:00</option>
+                                        <option value={9}>21:00</option>
+                                        <option value={10}>22:00</option>
+                                        <option value={11}>23:00</option>
+                                    </Select>
+                                </div>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: "15px",
+                                    }}
+                                >
                                     <UNSAFE_DatePicker.Input
                                         {...toInputProps}
                                         label="Til"
                                     />
+                                    <Select
+                                        label="klokken"
+                                        defaultValue={0}
+                                        onChange={(e) =>
+                                            setClockEnd(Number(e.target.value))
+                                        }
+                                    >
+                                        <option value={-12}>00:00</option>
+                                        <option value={-11}>01:00</option>
+                                        <option value={-10}>02:00</option>
+                                        <option value={-9}>03:00</option>
+                                        <option value={-8}>04:00</option>
+                                        <option value={-7}>05:00</option>
+                                        <option value={-6}>06:00</option>
+                                        <option value={-5}>07:00</option>
+                                        <option value={-4}>08:00</option>
+                                        <option value={-3}>09:00</option>
+                                        <option value={-2}>10:00</option>
+                                        <option value={-1}>11:00</option>
+                                        <option value={0}>12:00</option>
+                                        <option value={1}>13:00</option>
+                                        <option value={2}>14:00</option>
+                                        <option value={3}>15:00</option>
+                                        <option value={4}>16:00</option>
+                                        <option value={5}>17:00</option>
+                                        <option value={6}>18:00</option>
+                                        <option value={7}>19:00</option>
+                                        <option value={8}>20:00</option>
+                                        <option value={9}>21:00</option>
+                                        <option value={10}>22:00</option>
+                                        <option value={11}>23:00</option>
+                                    </Select>
                                 </div>
                             </UNSAFE_DatePicker>
                         </div>
@@ -315,7 +384,17 @@ const Vaktperioder = () => {
                             minWidth: "210px",
                             marginBottom: "15px",
                         }}
-                        onClick={() =>
+                        onClick={() => {
+                            console.log("startTimestamp: ", startTimestamp)
+                            console.log("clockstart * 3600", clock_start * 3600)
+                            console.log(
+                                "start: ",
+                                startTimestamp + clock_start * 3600
+                            )
+                            console.log(
+                                "end: ",
+                                endTimestamp + clock_end * 3600
+                            )
                             createSchedule(
                                 itemData.filter(
                                     (user: User) =>
@@ -323,16 +402,18 @@ const Vaktperioder = () => {
                                 ),
                                 setResponse, //setLoading
                                 isMidlertidlig
-                                    ? startTimestamp
+                                    ? startTimestamp + clock_start * 3600
                                     : selectedMonth!.getTime() / 1000,
-                                endTimestamp,
+                                isMidlertidlig
+                                    ? endTimestamp + clock_end * 3600
+                                    : 0,
                                 isMidlertidlig,
                                 rolloverDay,
                                 amountOfWeeks,
                                 setResponseError,
                                 rolloverTime
                             )
-                        }
+                        }}
                     >
                         Generer vaktperioder
                     </Button>
