@@ -16,6 +16,11 @@ export enum RouterAdminSchedule {
     PATH = "/adminschedule"
 }
 
+export enum RouterVaktperioder {
+    NAME = "Vaktperioder",
+    PATH = "/vaktperider"
+}
+
 export enum RouterLedergodkjenning {
     NAME = "Ledergodkjenning",
     PATH = "/adminleder"

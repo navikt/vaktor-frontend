@@ -16,8 +16,15 @@ spec:
         - name: BACKEND_URL
           value: https://vaktor-plan-api.intern.nav.no
     replicas:
-        min: 1
-        max: 1
+        min: 2
+        max: 2
+    resources:
+        limits:
+            cpu: "1000M"
+            memory: "1024Mi"
+        requests:
+            cpu: "1000m"
+            memory: "1024Mi"
     azure:
         application:
             enabled: true

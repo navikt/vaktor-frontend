@@ -99,7 +99,7 @@ function VaktorTimeline() {
   };
 
   const formattedDate = (date: number | Moment) => {
-    let formattedDate = moment(date).format("DD/MM/YY");
+    let formattedDate = moment(date).format("DD/MM/YY HH:mm");
     return formattedDate;
   };
 
@@ -143,7 +143,7 @@ function VaktorTimeline() {
   const groupsSorted = [...groupDataList].sort((a, b) =>
     a.name > b.name ? 1 : -1
   );
-  
+
   const groups: any = [];
   const groupColorList: any = [];
 

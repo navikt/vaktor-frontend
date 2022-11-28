@@ -12,24 +12,16 @@ export default async function handler(
   //let authorizationHeader = process.env.FAKE_TOKEN
   // for local testing
 
-  let path = `${process.env.BACKEND_URL}/api/v1/users/me`;
+  let schedule_id = req.query.schedule_id;
+  let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}/delete`;
 
-  const getCurrentUser = await fetch(path, {
+  const backendResponse = await fetch(path, {
     headers: { Authorization: authorizationHeader },
-    method: "GET",
-  }).then((res) => res.json());
-
-  let groupPath = `${process.env.BACKEND_URL}/api/v1/groups/${getCurrentUser.groups[0].id}/members`;
-
-  const getGroupMembers = await fetch(groupPath, {
-    headers: { Authorization: authorizationHeader },
-    method: "GET",
+    method: "DELETE",
   });
 
-  await getGroupMembers.json().then((body) => {
+  await backendResponse.json().then((body) => {
     if (body) {
-      body.forEach((user: any) => (user.groups = getCurrentUser.groups));
-      console.log("body", body);
       res.status(200).json(body);
     } else {
       res.send("Cant get data from backend");
