@@ -1,4 +1,5 @@
 import { Button, Table, Loader, ReadMore } from "@navikt/ds-react";
+import moment from "moment";
 import { useEffect, useState, Dispatch } from "react";
 import { Audit, Schedules } from "../types/types";
 
@@ -73,7 +74,7 @@ const mapApproveStatus = (status: number) => {
 	}
 
 	return (
-		<Table.DataCell style={{ backgroundColor: statusColor, maxWidth: "110px", minWidth: "100px" }}>
+		<Table.DataCell style={{ backgroundColor: statusColor, maxWidth: "210px", minWidth: "200px" }}>
 			{statusText}
 		</Table.DataCell>
 	);
@@ -90,13 +91,15 @@ const Admin = () => {
 		//approve_level = 2;
 		< Table.Row key={vakter.id} >
 			<Table.HeaderCell scope="row">{vakter.group.name}</Table.HeaderCell>
-			<Table.DataCell>{vakter.type}</Table.DataCell>
-
 			<Table.DataCell>
-				{new Date(vakter.start_timestamp * 1000).toLocaleString().slice(0, -3)}
-			</Table.DataCell>
-			<Table.DataCell>
-				{new Date(vakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}
+				<b>{vakter.type}</b><br />
+				Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
+				{moment(vakter.start_timestamp * 1000).week() <
+					moment(vakter.end_timestamp * 1000).week()
+					? " - " + moment(vakter.end_timestamp * 1000).week()
+					: ""}<br />
+				Fra: {new Date(vakter.start_timestamp * 1000).toLocaleString().slice(0, -3)}<br />
+				Til: {new Date(vakter.end_timestamp * 1000).toLocaleString().slice(0, -3)}
 			</Table.DataCell>
 			<Table.DataCell style={{ maxWidth: "230px" }}>
 				<div>
@@ -160,31 +163,37 @@ const Admin = () => {
 	if (loading === true) return <Loader></Loader>;
 
 	return (
-		<Table
-			style={{
+		<>
+			<div style={{
 				minWidth: "900px",
+				maxWidth: "1200px",
 				backgroundColor: "white",
 				marginBottom: "3vh",
+				display: "flex",
+				alignContent: "center",
+				margin: "auto"
 			}}>
-			<Table.Header>
-				<Table.Row>
-					<Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
-					<Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
-					<Table.HeaderCell scope="col">Start</Table.HeaderCell>
-					<Table.HeaderCell scope="col">Slutt</Table.HeaderCell>
-					<Table.HeaderCell scope="col">Actions</Table.HeaderCell>
-					<Table.HeaderCell scope="col">Status</Table.HeaderCell>
-					<Table.HeaderCell scope="col">Godtgjørelse</Table.HeaderCell>
-					<Table.HeaderCell scope="col">Audit</Table.HeaderCell>
+				<Table
+				>
+					<Table.Header>
+						<Table.Row>
+							<Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
+							<Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+							<Table.HeaderCell scope="col">Actions</Table.HeaderCell>
+							<Table.HeaderCell scope="col">Status</Table.HeaderCell>
+							<Table.HeaderCell scope="col">Godtgjørelse</Table.HeaderCell>
+							<Table.HeaderCell scope="col">Audit</Table.HeaderCell>
 
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
 
-				{itemData ? mapVakter(itemData) : <Table.Row></Table.Row>}
+						{itemData ? mapVakter(itemData) : <Table.Row></Table.Row>}
 
-			</Table.Body>
-		</Table >
+					</Table.Body>
+				</Table >
+			</div>
+		</>
 	);
 };
 
