@@ -41,6 +41,8 @@ export default async function handler(
             }
         })
     } else {
-        res.status(backendResponse.status).json(backendResponse.statusText)
+        const errorMessage = await backendResponse.json()
+        res.status(backendResponse.status)
+        res.json(errorMessage)
     }
 }

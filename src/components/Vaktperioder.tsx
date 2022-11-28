@@ -41,9 +41,11 @@ const createSchedule = async (
     }
 
     await fetch(url, fetchOptions)
-        .then((r) => {
+        .then(async (r) => {
             if (!r.ok) {
-                setResponseError(r.statusText)
+                const rText = await r.json()
+                console.log("response: ", rText.detail)
+                setResponseError(rText.detail)
                 return []
             }
             return r.json()
@@ -350,7 +352,6 @@ const mapResponse = (
 ) => {
     const rowsPerPage = 10
     let sortData = schedules
-    console.log("data: ", sortData)
     sortData = sortData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
     if (error !== "") {
         return (
@@ -363,8 +364,8 @@ const mapResponse = (
                     }}
                     variant="error"
                 >
-                    Woopsie, det har skjedd en feil. <br /> Kanskje det allerede
-                    finnes vakter i angitt periode?
+                    Woopsie, det har skjedd en feil. <br />
+                    <i>{error}</i>
                 </Alert>
             </div>
         )
