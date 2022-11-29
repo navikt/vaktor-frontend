@@ -36,21 +36,25 @@ const disprove_schedule = async (
 }
 
 const mapAudit = (audit: Audit[]) => {
-    return audit.map((audit: Audit, index) => (
-        <div key={audit.id}>
-            <ReadMore
-                header={audit.timestamp.slice(0, 19).replace("T", " ")}
-                size="small"
-                style={
-                    audit.action.includes("Avgodkjent")
-                        ? { color: "red" }
-                        : { color: "green" }
-                }
-            >
-                {audit.action} - {audit.user.name}
-            </ReadMore>
-        </div>
-    ))
+    return audit.map((audit: Audit, index) => {
+        const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
+        const auditTimestamp = new Date(tmp_timestamp).toISOString()
+        return (
+            <div key={audit.id}>
+                <ReadMore
+                    header={auditTimestamp.slice(0, 19).replace("T", " ")}
+                    size="small"
+                    style={
+                        audit.action.includes("Avgodkjent")
+                            ? { color: "red" }
+                            : { color: "green" }
+                    }
+                >
+                    {audit.action} - {audit.user.name}
+                </ReadMore>
+            </div>
+        )
+    })
 }
 
 const mapApproveStatus = (status: number) => {

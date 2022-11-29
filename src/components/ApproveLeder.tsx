@@ -45,9 +45,8 @@ const disprove_schedule = async (
 
 const mapAudit = (audit: Audit[]) => {
     return audit.map((audit: Audit, index) => {
-        const auditTimestamp = new Date(
-            new Date(audit.timestamp).getTime() + 3600000
-        ).toISOString()
+        const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
+        const auditTimestamp = new Date(tmp_timestamp).toISOString()
         return (
             <div key={audit.id}>
                 <ReadMore
