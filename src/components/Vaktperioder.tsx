@@ -96,7 +96,7 @@ const Vaktperioder = () => {
             fromDate: new Date("Jan 01 2023"),
             toDate: new Date("Feb 01 2025"),
             defaultYear: new Date("Jan 01 2023"),
-            defaultSelected: new Date("Jan 01 2023"),
+            defaultSelected: new Date("Jan 01 2023 12:00"),
         })
 
     const mapMembers = (members: User[]) =>
