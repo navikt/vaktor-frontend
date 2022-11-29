@@ -38,11 +38,11 @@ const disprove_schedule = async (
 const mapAudit = (audit: Audit[]) => {
     return audit.map((audit: Audit, index) => {
         const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
-        const auditTimestamp = new Date(tmp_timestamp).toISOString()
+        const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
         return (
             <div key={audit.id}>
                 <ReadMore
-                    header={auditTimestamp.slice(0, 19).replace("T", " ")}
+                    header={auditTimestamp.slice(0, 20).replace("T", " ")}
                     size="small"
                     style={
                         audit.action.includes("Avgodkjent")
@@ -118,14 +118,28 @@ const Admin = () => {
                         : ""}
                     <br />
                     Fra:{" "}
-                    {new Date(vakter.start_timestamp * 1000)
-                        .toLocaleString()
-                        .slice(0, -3)}
+                    {new Date(vakter.start_timestamp * 1000).toLocaleString(
+                        "no-NB",
+                        {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        }
+                    )}
                     <br />
                     Til:{" "}
-                    {new Date(vakter.end_timestamp * 1000)
-                        .toLocaleString()
-                        .slice(0, -3)}
+                    {new Date(vakter.end_timestamp * 1000).toLocaleString(
+                        "no-NB",
+                        {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        }
+                    )}
                 </Table.DataCell>
                 <Table.DataCell style={{ maxWidth: "230px" }}>
                     <div>
