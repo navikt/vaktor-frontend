@@ -25,6 +25,7 @@ import { Spring, animated, AnimatedProps } from "react-spring"
 import { NavigationButtons } from "./NavigationButtons"
 import { FluidValue } from "@react-spring/shared"
 import { Schedules, Vaktlag } from "../types/types"
+import Overview from "./OverviewNoTimeline"
 
 const SidebarHeaderText = styled.div`
     padding-top: 25px;
@@ -238,7 +239,7 @@ function VaktorTimeline() {
             let textColor = setTextColor(itemColor)
             let itemStart = date(itemObj.start_timestamp)
             let itemEnd = date(itemObj.end_timestamp)
-
+            console.log(itemObj.user_id)
             items.push({
                 id: itemObj.id,
                 start_time: itemStart,
@@ -303,7 +304,9 @@ function VaktorTimeline() {
                             onMouseDown: () => {
                                 updateItemModal(
                                     !itemModalOpen,
-                                    interruptionObj.user.name,
+                                    interruptionObj.user.id === "A123456"
+                                        ? interruptionObj.group.phone
+                                        : interruptionObj.user.name,
                                     interruptionObj.group.name,
                                     interruptionObj.user.description,
                                     interruptionObj.group.phone,
@@ -350,94 +353,105 @@ function VaktorTimeline() {
 
     return (
         <div>
-            <form style={{ width: "400px", marginBottom: "10px" }}>
-                <Search
-                    label="Søk etter vaktlag"
-                    hideLabel={false}
-                    variant="primary"
-                    onChange={(text) => setSearchFilter(text)}
-                />
-            </form>
+            {itemData[0].user_id === "A123456" ? (
+                <Overview groups={groupsSorted} />
+            ) : (
+                <>
+                    <form style={{ width: "400px", marginBottom: "10px" }}>
+                        <Search
+                            label="Søk etter vaktlag"
+                            hideLabel={false}
+                            variant="primary"
+                            onChange={(text) => setSearchFilter(text)}
+                        />
+                    </form>
 
-            <Spring
-                to={{
-                    animatedVisibleTimeStart: visibleTimeStart,
-                    animatedVisibleTimeEnd: visibleTimeEnd,
-                }}
-            >
-                {(
-                    value: JSX.IntrinsicAttributes &
-                        AnimatedProps<{ [x: string]: any }> & {
-                            scrollTop?:
-                                | number
-                                | FluidValue<number, any>
-                                | undefined
-                            scrollLeft?:
-                                | number
-                                | FluidValue<number, any>
-                                | undefined
-                        }
-                ) => (
-                    <AnimatedTimeline
-                        groups={groups}
-                        items={items}
-                        minZoom={86400000}
-                        sidebarContent="Vaktlag"
-                        itemHeightRatio={0.8}
-                        sidebarWidth={240}
-                        lineHeight={45}
-                        canMove={false}
-                        buffer={1}
-                        visibleTimeStart={visibleTimeStart}
-                        visibleTimeEnd={visibleTimeEnd}
-                        onTimeChange={() =>
-                            handleTimeChange(visibleTimeStart, visibleTimeEnd)
-                        }
-                        {...value}
+                    <Spring
+                        to={{
+                            animatedVisibleTimeStart: visibleTimeStart,
+                            animatedVisibleTimeEnd: visibleTimeEnd,
+                        }}
                     >
-                        <TimelineHeaders className="sticky">
-                            <NavigationButtons
-                                timeStart={visibleTimeStart}
-                                timeUnit={timeUnit}
-                                setVisibleTimeStart={setVisibleTimeStart}
-                                setVisibleTimeEnd={setVisibleTimeEnd}
-                                setTimeUnit={setTimeUnit}
-                            />
-                            <SidebarHeader>
-                                {({ getRootProps }) => {
-                                    return (
-                                        <div {...getRootProps()}>
-                                            <SidebarHeaderText>
-                                                Vaktlag:
-                                            </SidebarHeaderText>
-                                        </div>
+                        {(
+                            value: JSX.IntrinsicAttributes &
+                                AnimatedProps<{ [x: string]: any }> & {
+                                    scrollTop?:
+                                        | number
+                                        | FluidValue<number, any>
+                                        | undefined
+                                    scrollLeft?:
+                                        | number
+                                        | FluidValue<number, any>
+                                        | undefined
+                                }
+                        ) => (
+                            <AnimatedTimeline
+                                groups={groups}
+                                items={items}
+                                minZoom={86400000}
+                                sidebarContent="Vaktlag"
+                                itemHeightRatio={0.8}
+                                sidebarWidth={240}
+                                lineHeight={45}
+                                canMove={false}
+                                buffer={1}
+                                visibleTimeStart={visibleTimeStart}
+                                visibleTimeEnd={visibleTimeEnd}
+                                onTimeChange={() =>
+                                    handleTimeChange(
+                                        visibleTimeStart,
+                                        visibleTimeEnd
                                     )
-                                }}
-                            </SidebarHeader>
-                            <DateHeader unit="primaryHeader" />
-                            <DateHeader />
-                        </TimelineHeaders>
-                    </AnimatedTimeline>
-                )}
-            </Spring>
-            {grpModalOpen && (
-                <GroupDetailsModal
-                    handleClose={() => setGrpModalOpen(false)}
-                    groupName={grpName}
-                    groupType={grpType}
-                    groupTelephone={grpPhone}
-                />
-            )}
-            {itemModalOpen && (
-                <ItemDetailsModal
-                    handleClose={() => setItemModalOpen(false)}
-                    userName={itemUserName}
-                    groupName={itemGrpName}
-                    description={itemDescription}
-                    telephone={itemTelephone}
-                    startTime={itemStartTime}
-                    endTime={itemEndTime}
-                />
+                                }
+                                {...value}
+                            >
+                                <TimelineHeaders className="sticky">
+                                    <NavigationButtons
+                                        timeStart={visibleTimeStart}
+                                        timeUnit={timeUnit}
+                                        setVisibleTimeStart={
+                                            setVisibleTimeStart
+                                        }
+                                        setVisibleTimeEnd={setVisibleTimeEnd}
+                                        setTimeUnit={setTimeUnit}
+                                    />
+                                    <SidebarHeader>
+                                        {({ getRootProps }) => {
+                                            return (
+                                                <div {...getRootProps()}>
+                                                    <SidebarHeaderText>
+                                                        Vaktlag:
+                                                    </SidebarHeaderText>
+                                                </div>
+                                            )
+                                        }}
+                                    </SidebarHeader>
+                                    <DateHeader unit="primaryHeader" />
+                                    <DateHeader />
+                                </TimelineHeaders>
+                            </AnimatedTimeline>
+                        )}
+                    </Spring>
+                    {grpModalOpen && (
+                        <GroupDetailsModal
+                            handleClose={() => setGrpModalOpen(false)}
+                            groupName={grpName}
+                            groupType={grpType}
+                            groupTelephone={grpPhone}
+                        />
+                    )}
+                    {itemModalOpen && (
+                        <ItemDetailsModal
+                            handleClose={() => setItemModalOpen(false)}
+                            userName={itemUserName}
+                            groupName={itemGrpName}
+                            description={itemDescription}
+                            telephone={itemTelephone}
+                            startTime={itemStartTime}
+                            endTime={itemEndTime}
+                        />
+                    )}
+                </>
             )}
         </div>
     )
