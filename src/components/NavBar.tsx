@@ -173,7 +173,11 @@ export default function Navbar() {
                     <></>
                 ) : (
                     <Alert
-                        style={{ maxHeight: "100%", maxWidth: "15vw" }}
+                        style={{
+                            maxHeight: "100%",
+                            maxWidth: "15vw",
+                            marginBottom: "20px",
+                        }}
                         size="small"
                         variant="info"
                     >
