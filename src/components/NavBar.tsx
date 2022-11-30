@@ -172,17 +172,18 @@ export default function Navbar() {
                 ].includes(userData.role) ? (
                     <></>
                 ) : (
-                    <Alert
-                        style={{
-                            maxHeight: "100%",
-                            maxWidth: "15vw",
-                            marginBottom: "20px",
-                        }}
-                        size="small"
-                        variant="info"
-                    >
-                        Du har ingen rolle i vaktor
-                    </Alert>
+                    <div style={{ marginBottom: "20px", marginTop: "-20px" }}>
+                        <Alert
+                            style={{
+                                maxWidth: "250px",
+                                minWidth: "250px",
+                            }}
+                            size="small"
+                            variant="info"
+                        >
+                            Du har ingen rolle i vaktor
+                        </Alert>
+                    </div>
                 )}
             </>
         )
