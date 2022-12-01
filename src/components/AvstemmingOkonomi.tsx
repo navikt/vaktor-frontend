@@ -10,38 +10,9 @@ import {
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
-import { Audit, Schedules, User } from "../types/types"
+import { Audit, Cost, Schedules, User } from "../types/types"
 
 let today = Date.now() / 1000
-
-const confirm_schedule = async (
-    schedule_id: string,
-    setResponse: Dispatch<any>,
-    setLoading: Dispatch<any>
-) => {
-    setLoading(true)
-
-    await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
-        .then((r) => r.json())
-        .then((data) => {
-            setLoading(false)
-            setResponse(data)
-        })
-}
-
-const disprove_schedule = async (
-    schedule_id: string,
-    setResponse: Dispatch<any>,
-    setLoading: Dispatch<any>
-) => {
-    setLoading(true)
-    await fetch(`/vaktor/api/disprove_schedule?schedule_id=${schedule_id}`)
-        .then((r) => r.json())
-        .then((data) => {
-            setLoading(false)
-            setResponse(data)
-        })
-}
 
 const mapAudit = (audit: Audit[]) => {
     return audit.map((audit: Audit, index) => {
@@ -60,6 +31,17 @@ const mapAudit = (audit: Audit[]) => {
                 >
                     {audit.action} - {audit.user.name}
                 </ReadMore>
+            </div>
+        )
+    })
+}
+
+const mapCost = (cost: Cost[]) => {
+    return cost.map((cost: Cost, idx) => {
+        return (
+            <div key={cost.id}>¨
+                Cost ID: {cost.id}<br />
+                {cost.total_cost}
             </div>
         )
     })
@@ -104,7 +86,7 @@ const mapApproveStatus = (status: number) => {
     )
 }
 
-const AdminLeder = () => {
+const AvstemmingOkonomi = () => {
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [currentUser, setCurrentUser] = useState<User>({} as User)
     const [response, setResponse] = useState()
@@ -134,11 +116,14 @@ const AdminLeder = () => {
             //approve_level = 2;
 
             <Table.Row key={i}>
-                <Table.HeaderCell scope="row">
-                    {vakter.user.name}
-                </Table.HeaderCell>
+                <Table.DataCell scope="row">
+                    <b> {vakter.user.name}</b ><br />
+                    {vakter.group.name}
+                </Table.DataCell>
                 <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
                 <Table.DataCell>
+                    <b>ID: {vakter.id} </b>
+                    <br />
                     Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                     {moment(vakter.start_timestamp * 1000).week() <
                         moment(vakter.end_timestamp * 1000).week()
@@ -167,59 +152,6 @@ const AdminLeder = () => {
                         }
                     )}
                 </Table.DataCell>
-                <Table.DataCell>{vakter.group.name}</Table.DataCell>
-                <Table.DataCell
-                    style={{ maxWidth: "220px", minWidth: "220px" }}
-                >
-                    <div>
-                        <Button
-                            disabled={
-                                vakter.approve_level === 4 ||
-                                vakter.approve_level === 3 ||
-                                vakter.approve_level === 2 ||
-                                vakter.end_timestamp > today
-                            }
-                            style={{
-                                height: "30px",
-                                marginBottom: "5px",
-                                minWidth: "210px",
-                            }}
-                            onClick={() => {
-                                confirm_schedule(
-                                    vakter.id,
-                                    setResponse,
-                                    setLoading
-                                )
-                            }}
-                        >
-                            {" "}
-                            Godkjenn{" "}
-                        </Button>
-
-                        <Button
-                            disabled={
-                                vakter.approve_level === 0 ||
-                                vakter.approve_level === 2 ||
-                                vakter.approve_level === 4
-                            }
-                            style={{
-                                backgroundColor: "#f96c6c",
-                                height: "30px",
-                                minWidth: "210px",
-                            }}
-                            onClick={() =>
-                                disprove_schedule(
-                                    vakter.id,
-                                    setResponse,
-                                    setLoading
-                                )
-                            }
-                        >
-                            {" "}
-                            Avgodkjenn{" "}
-                        </Button>
-                    </div>
-                </Table.DataCell>
                 {mapApproveStatus(vakter.approve_level)}
                 {["personalleder", "leveranseleder"].includes(
                     currentUser!.role
@@ -229,7 +161,8 @@ const AdminLeder = () => {
                             style={{ maxWidth: "200px", minWidth: "150px" }}
                         >
                             {vakter.cost.length !== 0
-                                ? vakter.cost[0].total_cost
+                                ? mapCost(vakter.cost)
+
                                 : "ingen beregning foreligger"}
                         </Table.DataCell>
                     )}
@@ -247,7 +180,7 @@ const AdminLeder = () => {
     useEffect(() => {
         setLoading(true)
         Promise.all([
-            fetch("/vaktor/api/leader_schedules"),
+            fetch("/vaktor/api/all_schedules"),
             fetch("/vaktor/api/get_me"),
         ])
             .then(async ([scheduleRes, userRes]) => {
@@ -274,7 +207,6 @@ const AdminLeder = () => {
     let listeAvVakter = mapVakter(
         itemData.filter(
             (value: Schedules) =>
-                value.user_id.toLowerCase() !== currentUser.id.toLowerCase() &&
                 new Date(value.start_timestamp * 1000).getMonth() ===
                 selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
@@ -289,7 +221,15 @@ const AdminLeder = () => {
         )
     )
     return (
-        <>
+        <div style={{
+            minWidth: "900px",
+            maxWidth: "1500px",
+            backgroundColor: "white",
+            marginBottom: "3vh",
+            display: "grid",
+            alignContent: "center",
+            margin: "auto",
+        }}>
             <div className="min-h-96" style={{ display: "flex" }}>
                 <UNSAFE_MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
@@ -319,7 +259,7 @@ const AdminLeder = () => {
                 </div>
                 <div style={{ width: "200px", marginLeft: "30px" }}>
                     <Select
-                        label="Velg handling"
+                        label="Filter på status"
                         onChange={(e) =>
                             setSearchFilterAction(Number(e.target.value))
                         }
@@ -333,46 +273,42 @@ const AdminLeder = () => {
                     </Select>
                 </div>
             </div>
-            <Table
-                style={{
-                    minWidth: "900px",
-                    backgroundColor: "white",
-                    marginBottom: "3vh",
-                    marginTop: "2vh",
-                }}
-            >
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-                        <Table.HeaderCell scope="col">
-                            Type vakt
-                        </Table.HeaderCell>
-                        <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
-                        <Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
-                        <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
-                        <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                        {["personalleder", "leveranseleder"].includes(
-                            currentUser!.role
-                        ) && (
-                                <Table.HeaderCell scope="col">
-                                    Kostnad
-                                </Table.HeaderCell>
-                            )}
-                        <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {listeAvVakter.length === 0 ? (
-                        <h3 style={{ margin: "auto", color: "red" }}>
-                            Ingen treff
-                        </h3>
-                    ) : (
-                        listeAvVakter
-                    )}
-                </Table.Body>
-            </Table>
-        </>
+            <div>
+                <Table
+
+                >
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">
+                                Type vakt
+                            </Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Status</Table.HeaderCell>
+                            {["personalleder", "leveranseleder"].includes(
+                                currentUser!.role
+                            ) && (
+                                    <Table.HeaderCell scope="col">
+                                        Kostnad
+                                    </Table.HeaderCell>
+                                )}
+                            <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {listeAvVakter.length === 0 ? (
+                            <h3 style={{ margin: "auto", color: "red" }}>
+                                Ingen treff
+                            </h3>
+                        ) : (
+                            listeAvVakter
+                        )}
+                    </Table.Body>
+                </Table>
+            </div>
+        </div>
+
     )
 }
 
-export default AdminLeder
+export default AvstemmingOkonomi
