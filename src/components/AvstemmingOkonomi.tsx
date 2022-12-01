@@ -47,8 +47,8 @@ const mapCost = (cost: Cost[]) => {
                     <li>2681: {cost.artskoder[0].artskode_kveld}</li>
                     <li>2682: {cost.artskoder[0].artskode_dag}</li>
                     <li>2683: {cost.artskoder[0].artskode_helg}</li>
-                    <li>2684: {cost.artskoder[0].artskode_helg}</li>
-                    <li>2685: {cost.artskoder[0].artskode_helg}</li>
+
+
                 </ul>
 
             </div>
@@ -171,7 +171,6 @@ const AvstemmingOkonomi = () => {
                         >
                             {vakter.cost.length !== 0
                                 ? mapCost(vakter.cost)
-
                                 : "ingen beregning foreligger"}
                         </Table.DataCell>
                     )}

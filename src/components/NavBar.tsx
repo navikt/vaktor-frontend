@@ -50,6 +50,7 @@ export default function Navbar() {
 							"vaktsjef",
 							"leveranseleder",
 							"personalleder",
+							"okonomi"
 						].includes(userData.role) && (
 								<h3>Hei, {userData.name}</h3>
 							)}
@@ -59,6 +60,7 @@ export default function Navbar() {
 						"vaktsjef",
 						"leveranseleder",
 						"personalleder",
+						"okonomi"
 					].includes(userData.role) && (
 							<Link href="/">
 								<Button

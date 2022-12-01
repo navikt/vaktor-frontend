@@ -10,7 +10,7 @@ import {
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
-import { Audit, Schedules, User } from "../types/types"
+import { Audit, Schedules, User, Cost } from "../types/types"
 
 let today = Date.now() / 1000
 
@@ -60,6 +60,24 @@ const mapAudit = (audit: Audit[]) => {
                 >
                     {audit.action} - {audit.user.name}
                 </ReadMore>
+            </div>
+        )
+    })
+}
+
+const mapCost = (cost: Cost[]) => {
+    return cost.map((cost: Cost, idx) => {
+        return (
+            <div key={cost.id}>
+                <b>ID: {cost.id}</b><br />
+                Totalt: {cost.total_cost}<br />
+                <ul>
+                    <li>2680: {cost.artskoder[0].artskode_morgen}</li>
+                    <li>2681: {cost.artskoder[0].artskode_kveld}</li>
+                    <li>2682: {cost.artskoder[0].artskode_dag}</li>
+                    <li>2683: {cost.artskoder[0].artskode_helg}</li>
+                </ul>
+
             </div>
         )
     })
@@ -229,7 +247,7 @@ const AdminLeder = () => {
                             style={{ maxWidth: "200px", minWidth: "150px" }}
                         >
                             {vakter.cost.length !== 0
-                                ? vakter.cost[0].total_cost
+                                ? mapCost(vakter.cost)
                                 : "ingen beregning foreligger"}
                         </Table.DataCell>
                     )}
