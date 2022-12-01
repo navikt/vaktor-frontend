@@ -1,7 +1,7 @@
 import { Button, Table, Loader, ReadMore } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
-import { Audit, Schedules } from "../types/types"
+import { Audit, Cost, Schedules } from "../types/types"
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -52,6 +52,24 @@ const mapAudit = (audit: Audit[]) => {
                 >
                     {audit.action} - {audit.user.name}
                 </ReadMore>
+            </div>
+        )
+    })
+}
+
+const mapCost = (cost: Cost[]) => {
+    return cost.map((cost: Cost, idx) => {
+        return (
+            <div key={cost.id}>
+                <b>ID: {cost.id}</b><br />
+                Totalt: {cost.total_cost}<br />
+                <ul>
+                    <li>2680: {cost.artskoder[0].artskode_morgen}</li>
+                    <li>2681: {cost.artskoder[0].artskode_kveld}</li>
+                    <li>2682: {cost.artskoder[0].artskode_dag}</li>
+                    <li>2683: {cost.artskoder[0].artskode_helg}</li>
+                </ul>
+
             </div>
         )
     })
@@ -113,7 +131,7 @@ const Admin = () => {
                     <br />
                     Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                     {moment(vakter.start_timestamp * 1000).week() <
-                    moment(vakter.end_timestamp * 1000).week()
+                        moment(vakter.end_timestamp * 1000).week()
                         ? " - " + moment(vakter.end_timestamp * 1000).week()
                         : ""}
                     <br />
@@ -188,7 +206,7 @@ const Admin = () => {
                 {mapApproveStatus(vakter.approve_level)}
                 <Table.DataCell>
                     {vakter.cost.length !== 0
-                        ? vakter.cost[0].total_cost
+                        ? mapCost(vakter.cost)
                         : "ingen beregning foreligger"}
                 </Table.DataCell>
                 <Table.DataCell>
