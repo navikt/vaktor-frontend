@@ -164,20 +164,22 @@ export default function Navbar() {
 						</Link>
 					)}
 
-					{userData.role === "leveranseleder" && (
-						<Link href="/avstemming">
-							<Button
-								variant="tertiary"
-								style={{
-									marginLeft: "5px",
-									marginRight: "5px",
-									height: "35px",
-								}}
-							>
-								<a className="link">{RouterAvstemmingOkonomi.NAME}</a>
-							</Button>
-						</Link>
-					)}
+					{["okonomi", "leveranseleder"].includes(
+						userData.role
+					) && (
+							<Link href="/avstemming">
+								<Button
+									variant="tertiary"
+									style={{
+										marginLeft: "5px",
+										marginRight: "5px",
+										height: "35px",
+									}}
+								>
+									<a className="link">{RouterAvstemmingOkonomi.NAME}</a>
+								</Button>
+							</Link>
+						)}
 				</nav>
 
 				{[

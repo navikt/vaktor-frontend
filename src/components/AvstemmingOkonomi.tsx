@@ -10,7 +10,7 @@ import {
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
-import { Audit, Cost, Schedules, User } from "../types/types"
+import { Audit, Cost, Schedules, User, Artskoder } from "../types/types"
 
 let today = Date.now() / 1000
 
@@ -39,9 +39,18 @@ const mapAudit = (audit: Audit[]) => {
 const mapCost = (cost: Cost[]) => {
     return cost.map((cost: Cost, idx) => {
         return (
-            <div key={cost.id}>¨
-                Cost ID: {cost.id}<br />
-                {cost.total_cost}
+            <div key={cost.id}>
+                <b>ID: {cost.id}</b><br />
+                Totalt: {cost.total_cost}<br />
+                <ul>
+                    <li>2680: {cost.artskoder[0].artskode_morgen}</li>
+                    <li>2681: {cost.artskoder[0].artskode_kveld}</li>
+                    <li>2682: {cost.artskoder[0].artskode_dag}</li>
+                    <li>2683: {cost.artskoder[0].artskode_helg}</li>
+                    <li>2684: {cost.artskoder[0].artskode_helg}</li>
+                    <li>2685: {cost.artskoder[0].artskode_helg}</li>
+                </ul>
+
             </div>
         )
     })
@@ -223,7 +232,7 @@ const AvstemmingOkonomi = () => {
     return (
         <div style={{
             minWidth: "900px",
-            maxWidth: "1500px",
+            maxWidth: "90vw",
             backgroundColor: "white",
             marginBottom: "3vh",
             display: "grid",
@@ -283,13 +292,19 @@ const AvstemmingOkonomi = () => {
                             <Table.HeaderCell scope="col">
                                 Type vakt
                             </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+                            <Table.HeaderCell scope="col" style={{
+                                minWidth: "400px",
+                                maxWidth: "400px"
+                            }}>Periode</Table.HeaderCell>
                             <Table.HeaderCell scope="col">Status</Table.HeaderCell>
                             {["personalleder", "leveranseleder"].includes(
                                 currentUser!.role
                             ) && (
-                                    <Table.HeaderCell scope="col">
-                                        Kostnad
+                                    <Table.HeaderCell scope="col" style={{
+                                        minWidth: "400px",
+                                        maxWidth: "400px"
+                                    }}>
+                                        Kost
                                     </Table.HeaderCell>
                                 )}
                             <Table.HeaderCell scope="col">Audit</Table.HeaderCell>

@@ -21,7 +21,7 @@ const Home: NextPage = () => {
             });
     }, []);
 
-    if (["vaktsjef", "leveranseleder", "personalleder"].includes(
+    if (["okonomi", "leveranseleder"].includes(
         userData.role
     )) return (
         <>
