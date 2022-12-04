@@ -95,9 +95,7 @@ export interface Artskoder {
   //groups
   id: string;
   cost_id: string;
-  artskode_morgen: string;
-  artskode_kveld: string;
-  artskode_dag: string;
-  artskode_helg: string;
-
+  type: string;
+  sum: string;
+  hours: string;
 }

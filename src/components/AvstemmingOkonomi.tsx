@@ -39,19 +39,34 @@ const mapAudit = (audit: Audit[]) => {
 const mapCost = (cost: Cost[]) => {
     return cost.map((cost: Cost, idx) => {
         return (
-            <div key={cost.id}>
+            <div key={cost.id} >
                 <b>ID: {cost.id}</b><br />
-                Totalt: {cost.total_cost}<br />
-                <ul>
-                    <li>2680: {cost.artskoder[0].artskode_morgen}</li>
-                    <li>2681: {cost.artskoder[0].artskode_kveld}</li>
-                    <li>2682: {cost.artskoder[0].artskode_dag}</li>
-                    <li>2683: {cost.artskoder[0].artskode_helg}</li>
+                Totalt: {cost.total_cost} < br />
+                <div style={{
+                    display: "flex",
+                    gap: "15px"
+                }}>
+                    <div style={{
 
+                    }}>
+                        <b>Sum</b>
+                        <ul style={{
+                            marginTop: "0px"
+                        }}>
+                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.sum} </li>)}
+                        </ul>
+                    </div>
+                    <div>
+                        <b>Antall timer</b>
+                        <ul style={{
+                            marginTop: "0px"
+                        }}>
+                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.hours} </li>)}
+                        </ul>
+                    </div>
+                </div>
 
-                </ul>
-
-            </div>
+            </div >
         )
     })
 }
