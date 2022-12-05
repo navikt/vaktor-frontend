@@ -2,6 +2,7 @@ import { Button, Table, Loader, ReadMore } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
 import { Audit, Cost, Schedules } from "../types/types"
+import MapCost from "./MapCost"
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -56,43 +57,6 @@ const mapAudit = (audit: Audit[]) => {
         )
     })
 }
-
-const mapCost = (cost: Cost[]) => {
-    return cost.map((cost: Cost, idx) => {
-        return (
-            <div key={cost.id} >
-
-                <b>Totalt: {cost.total_cost} </b>< br />
-                <div style={{
-                    display: "flex",
-                    gap: "15px",
-                    marginTop: "15px"
-                }}>
-                    <div style={{
-
-                    }}>
-                        <b>Sum</b>
-                        <ul style={{
-                            marginTop: "0px"
-                        }}>
-                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.sum} </li>)}
-                        </ul>
-                    </div>
-                    <div>
-                        <b>Antall timer</b>
-                        <ul style={{
-                            marginTop: "0px"
-                        }}>
-                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.hours} </li>)}
-                        </ul>
-                    </div>
-                </div>
-
-            </div >
-        )
-    })
-}
-
 
 const mapApproveStatus = (status: number) => {
     let statusText = ""
@@ -225,7 +189,7 @@ const dineVakter = () => {
                 {mapApproveStatus(vakter.approve_level)}
                 <Table.DataCell style={{ minWidth: "300px" }}>
                     {vakter.cost.length !== 0
-                        ? mapCost(vakter.cost)
+                        ? <MapCost cost={vakter.cost}></MapCost>
                         : "ingen beregning foreligger"}
                 </Table.DataCell>
                 <Table.DataCell>

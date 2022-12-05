@@ -11,6 +11,7 @@ import {
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
 import { Audit, Schedules, User, Cost } from "../types/types"
+import MapCost from "./MapCost"
 
 let today = Date.now() / 1000
 
@@ -61,43 +62,6 @@ const mapAudit = (audit: Audit[]) => {
                     {audit.action} - {audit.user.name}
                 </ReadMore>
             </div>
-        )
-    })
-}
-
-const mapCost = (cost: Cost[]) => {
-    return cost.map((cost: Cost, idx) => {
-        return (
-            <div key={cost.id} >
-
-                <b>Totalt: {cost.total_cost} </b><br />
-                <div style={{
-                    display: "flex",
-                    gap: "15px",
-                    marginTop: "15px"
-
-                }}>
-                    <div style={{
-
-                    }}>
-                        <b>Sum</b>
-                        <ul style={{
-                            marginTop: "0px"
-                        }}>
-                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.sum} </li>)}
-                        </ul>
-                    </div>
-                    <div>
-                        <b>Antall timer</b>
-                        <ul style={{
-                            marginTop: "0px"
-                        }}>
-                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.hours} </li>)}
-                        </ul>
-                    </div>
-                </div>
-
-            </div >
         )
     })
 }
@@ -266,7 +230,7 @@ const AdminLeder = () => {
                             style={{ maxWidth: "200px", minWidth: "300px" }}
                         >
                             {vakter.cost.length !== 0
-                                ? mapCost(vakter.cost)
+                                ? <MapCost cost={vakter.cost}></MapCost>
                                 : "ingen beregning foreligger"}
                         </Table.DataCell>
                     )}
