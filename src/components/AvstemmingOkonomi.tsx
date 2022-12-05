@@ -11,6 +11,7 @@ import {
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
 import { Audit, Cost, Schedules, User, Artskoder } from "../types/types"
+import MapCost from "./MapCost"
 
 let today = Date.now() / 1000
 
@@ -32,41 +33,6 @@ const mapAudit = (audit: Audit[]) => {
                     {audit.action} - {audit.user.name}
                 </ReadMore>
             </div>
-        )
-    })
-}
-
-const mapCost = (cost: Cost[]) => {
-    return cost.map((cost: Cost, idx) => {
-        return (
-            <div key={cost.id} >
-                <b>ID: {cost.id}</b><br />
-                Totalt: {cost.total_cost} < br />
-                <div style={{
-                    display: "flex",
-                    gap: "15px"
-                }}>
-                    <div style={{
-
-                    }}>
-                        <b>Sum</b>
-                        <ul style={{
-                            marginTop: "0px"
-                        }}>
-                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.sum} </li>)}
-                        </ul>
-                    </div>
-                    <div>
-                        <b>Antall timer</b>
-                        <ul style={{
-                            marginTop: "0px"
-                        }}>
-                            {cost.artskoder.map((artskode) => <li> {artskode.type}: {artskode.hours} </li>)}
-                        </ul>
-                    </div>
-                </div>
-
-            </div >
         )
     })
 }
@@ -140,6 +106,7 @@ const AvstemmingOkonomi = () => {
             //approve_level = 2;
 
             <Table.Row key={i}>
+                <Table.DataCell >{i + 1}</Table.DataCell>
                 <Table.DataCell scope="row">
                     <b> {vakter.user.name}</b ><br />
                     {vakter.group.name}
@@ -154,7 +121,7 @@ const AvstemmingOkonomi = () => {
                         ? " - " + moment(vakter.end_timestamp * 1000).week()
                         : ""}
                     <br />
-                    {new Date(vakter.start_timestamp * 1000).toLocaleString(
+                    Start: {new Date(vakter.start_timestamp * 1000).toLocaleString(
                         "no-NB",
                         {
                             day: "2-digit",
@@ -165,7 +132,7 @@ const AvstemmingOkonomi = () => {
                         }
                     )}
                     <br />
-                    {new Date(vakter.end_timestamp * 1000).toLocaleString(
+                    Slutt: {new Date(vakter.end_timestamp * 1000).toLocaleString(
                         "no-NB",
                         {
                             day: "2-digit",
@@ -185,7 +152,7 @@ const AvstemmingOkonomi = () => {
                             style={{ maxWidth: "200px", minWidth: "150px" }}
                         >
                             {vakter.cost.length !== 0
-                                ? mapCost(vakter.cost)
+                                ? <MapCost cost={vakter.cost} avstemming={true}></MapCost>
                                 : "ingen beregning foreligger"}
                         </Table.DataCell>
                     )}
@@ -297,11 +264,10 @@ const AvstemmingOkonomi = () => {
                 </div>
             </div>
             <div>
-                <Table
-
-                >
+                <Table zebraStripes>
                     <Table.Header>
                         <Table.Row>
+                            <Table.HeaderCell>#</Table.HeaderCell>
                             <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
                             <Table.HeaderCell scope="col">
                                 Type vakt
