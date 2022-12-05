@@ -102,70 +102,72 @@ const AvstemmingOkonomi = () => {
         })
 
     const mapVakter = (vaktliste: Schedules[]) =>
-        vaktliste.map((vakter: Schedules, i: number) => (
-            //approve_level = 2;
+        vaktliste
+            .sort((a: Schedules, b: Schedules) => (a.start_timestamp) !== (b.start_timestamp) ? (a.start_timestamp) - (b.start_timestamp) : a.user.name.localeCompare(b.user.name))
+            .map((vakter: Schedules, i: number) => (
+                //approve_level = 2;
 
-            <Table.Row key={i}>
-                <Table.DataCell >{i + 1}</Table.DataCell>
-                <Table.DataCell scope="row">
-                    <b> {vakter.user.name}</b ><br />
-                    {vakter.group.name}
-                </Table.DataCell>
-                <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
-                <Table.DataCell>
-                    <b>ID: {vakter.id} </b>
-                    <br />
-                    Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
-                    {moment(vakter.start_timestamp * 1000).week() <
-                        moment(vakter.end_timestamp * 1000).week()
-                        ? " - " + moment(vakter.end_timestamp * 1000).week()
-                        : ""}
-                    <br />
-                    Start: {new Date(vakter.start_timestamp * 1000).toLocaleString(
-                        "no-NB",
-                        {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }
-                    )}
-                    <br />
-                    Slutt: {new Date(vakter.end_timestamp * 1000).toLocaleString(
-                        "no-NB",
-                        {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }
-                    )}
-                </Table.DataCell>
-                {mapApproveStatus(vakter.approve_level)}
-                {["personalleder", "leveranseleder"].includes(
-                    currentUser!.role
-                ) && (
-                        <Table.DataCell
-                            scope="row"
-                            style={{ maxWidth: "200px", minWidth: "150px" }}
-                        >
-                            {vakter.cost.length !== 0
-                                ? <MapCost cost={vakter.cost} avstemming={true}></MapCost>
-                                : "ingen beregning foreligger"}
-                        </Table.DataCell>
-                    )}
-                <Table.DataCell
-                    scope="row"
-                    style={{ maxWidth: "250px", minWidth: "200px" }}
-                >
-                    {vakter.audits.length !== 0
-                        ? mapAudit(vakter.audits)
-                        : "Ingen hendelser"}
-                </Table.DataCell>
-            </Table.Row>
-        ))
+                <Table.Row key={i}>
+                    <Table.DataCell >{i + 1}</Table.DataCell>
+                    <Table.DataCell scope="row">
+                        <b> {vakter.user.name}</b ><br />
+                        {vakter.group.name}
+                    </Table.DataCell>
+                    <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
+                    <Table.DataCell>
+                        <b>ID: {vakter.id} </b>
+                        <br />
+                        Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
+                        {moment(vakter.start_timestamp * 1000).week() <
+                            moment(vakter.end_timestamp * 1000).week()
+                            ? " - " + moment(vakter.end_timestamp * 1000).week()
+                            : ""}
+                        <br />
+                        Start: {new Date(vakter.start_timestamp * 1000).toLocaleString(
+                            "no-NB",
+                            {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }
+                        )}
+                        <br />
+                        Slutt: {new Date(vakter.end_timestamp * 1000).toLocaleString(
+                            "no-NB",
+                            {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }
+                        )}
+                    </Table.DataCell>
+                    {mapApproveStatus(vakter.approve_level)}
+                    {["personalleder", "leveranseleder"].includes(
+                        currentUser!.role
+                    ) && (
+                            <Table.DataCell
+                                scope="row"
+                                style={{ maxWidth: "200px", minWidth: "150px" }}
+                            >
+                                {vakter.cost.length !== 0
+                                    ? <MapCost cost={vakter.cost} avstemming={true}></MapCost>
+                                    : "ingen beregning foreligger"}
+                            </Table.DataCell>
+                        )}
+                    <Table.DataCell
+                        scope="row"
+                        style={{ maxWidth: "250px", minWidth: "200px" }}
+                    >
+                        {vakter.audits.length !== 0
+                            ? mapAudit(vakter.audits)
+                            : "Ingen hendelser"}
+                    </Table.DataCell>
+                </Table.Row>
+            ))
 
     useEffect(() => {
         setLoading(true)
