@@ -133,7 +133,7 @@ const mapApproveStatus = (status: number) => {
     )
 }
 
-const Admin = () => {
+const dineVakter = () => {
     const [itemData, setItemData] = useState()
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
@@ -305,4 +305,4 @@ const Admin = () => {
     )
 }
 
-export default Admin
+export default dineVakter

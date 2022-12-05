@@ -8,12 +8,12 @@ export enum RouterVaktor {
 // Admin
 export enum RouterAdmin {
     NAME = "Dine Vakter",
-    PATH = "/admin"
+    PATH = "/dine_vakter"
 }
 
 export enum RouterAdminSchedule {
     NAME = "Vaktlagets vakter",
-    PATH = "/adminschedule"
+    PATH = "/vaktlagets_vakter"
 }
 
 export enum RouterVaktperioder {
@@ -23,12 +23,12 @@ export enum RouterVaktperioder {
 
 export enum RouterLedergodkjenning {
     NAME = "Ledergodkjenning",
-    PATH = "/adminleder"
+    PATH = "/ledergodkjenning"
 }
 
-export enum RouterAssignLeder {
+export enum RouterLeveranseleder {
     NAME = "Leveranseleder",
-    PATH = "/assignleder"
+    PATH = "/leveranseleder"
 }
 
 export enum RouterAvstemmingOkonomi {

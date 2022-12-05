@@ -9,7 +9,7 @@ import {
 	RouterVaktor,
 	RouterAdmin,
 	RouterLedergodkjenning,
-	RouterAssignLeder,
+	RouterLeveranseleder,
 	RouterAdminSchedule,
 	RouterVaktperioder,
 	RouterAvstemmingOkonomi,
@@ -82,7 +82,7 @@ export default function Navbar() {
 						"leveranseleder",
 						"personalleder",
 					].includes(userData.role) && (
-							<Link href="/adminschedule">
+							<Link href="/vaktlagets_vakter">
 								<Button
 									variant="tertiary"
 									style={{
@@ -118,7 +118,7 @@ export default function Navbar() {
 					{["vakthaver", "vaktsjef", "leveranseleder"].includes(
 						userData.role
 					) && (
-							<Link href="/admin">
+							<Link href="/dine_vakter">
 								<Button
 									variant="tertiary"
 									style={{
@@ -135,7 +135,7 @@ export default function Navbar() {
 					{["vaktsjef", "leveranseleder", "personalleder"].includes(
 						userData.role
 					) && (
-							<Link href="/adminleder">
+							<Link href="/ledergodkjenning">
 								<Button
 									variant="tertiary"
 									style={{
@@ -152,7 +152,7 @@ export default function Navbar() {
 						)}
 
 					{userData.role === "leveranseleder" && (
-						<Link href="/assignleder">
+						<Link href="/leveranseleder">
 							<Button
 								variant="tertiary"
 								style={{
@@ -161,7 +161,7 @@ export default function Navbar() {
 									height: "35px",
 								}}
 							>
-								<a className="link">{RouterAssignLeder.NAME}</a>
+								<a className="link">{RouterLeveranseleder.NAME}</a>
 							</Button>
 						</Link>
 					)}

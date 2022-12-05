@@ -239,7 +239,6 @@ function VaktorTimeline() {
             let textColor = setTextColor(itemColor)
             let itemStart = date(itemObj.start_timestamp)
             let itemEnd = date(itemObj.end_timestamp)
-            console.log(itemObj.user_id)
             items.push({
                 id: itemObj.id,
                 start_time: itemStart,
@@ -376,13 +375,13 @@ function VaktorTimeline() {
                             value: JSX.IntrinsicAttributes &
                                 AnimatedProps<{ [x: string]: any }> & {
                                     scrollTop?:
-                                        | number
-                                        | FluidValue<number, any>
-                                        | undefined
+                                    | number
+                                    | FluidValue<number, any>
+                                    | undefined
                                     scrollLeft?:
-                                        | number
-                                        | FluidValue<number, any>
-                                        | undefined
+                                    | number
+                                    | FluidValue<number, any>
+                                    | undefined
                                 }
                         ) => (
                             <AnimatedTimeline
