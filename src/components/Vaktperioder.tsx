@@ -134,9 +134,7 @@ const Vaktperioder = () => {
                         (user: User) => user.role !== "leveranseleder"
                     )
                 )
-                setIsMidlertidlig(
-                    itemData[0].groups[0].type !== "Døgnkontinuerlig (24/7)"
-                )
+                setIsMidlertidlig(itemData[0].groups[0].type === "Midlertidlig")
                 setLoading(false)
             })
     }, [response])
