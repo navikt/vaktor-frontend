@@ -30,7 +30,6 @@ const ScheduleChanges = (props: {
               <Button
                 onClick={() => {
                   setOpenState(true);
-                  console.log("Schedule id", bakvakter.id);
                 }}
                 style={{
                   maxWidth: "210px",
