@@ -30,6 +30,12 @@ export enum RouterAssignLeder {
     NAME = "Leveranseleder",
     PATH = "/assignleder"
 }
+
+export enum RouterAvstemmingOkonomi {
+    NAME = "Avstemming",
+    PATH = "/avstemming"
+}
+
 // ---
 
 // Error

@@ -88,4 +88,14 @@ export interface Cost {
   total_cost: number;
   approver_id: string;
   approver: User;
+  artskoder: Artskoder[];
+}
+
+export interface Artskoder {
+  //groups
+  id: string;
+  cost_id: string;
+  type: string;
+  sum: string;
+  hours: string;
 }
