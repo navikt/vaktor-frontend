@@ -42,7 +42,7 @@ const mapLeaders = (leder: User[]) =>
         </div>
     ));
 
-const AssignLeder = () => {
+const Leveranseleder = () => {
     const [groupData, setgroupData] = useState<Vaktlag[]>([]);
     const [response, setResponse] = useState();
     const [loading, setLoading] = useState(false);
@@ -145,4 +145,4 @@ const AssignLeder = () => {
     );
 };
 
-export default AssignLeder;
+export default Leveranseleder;
