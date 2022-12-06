@@ -1,17 +1,59 @@
+import { Table } from "@navikt/ds-react"
 import { Cost, Artskoder } from "../types/types"
+
+
+const mapCostStatus = (status: number) => {
+    let statusText = ""
+    let statusColor = ""
+    switch (status) {
+        case 1:
+            statusText = "Ordinær kjøring"
+            statusColor = "#66CBEC"
+            break
+        case 2:
+            statusText = "Lønnsendring"
+            statusColor = "#99DEAD"
+            break
+        case 3:
+            statusText = "Feilutregning/feil i vaktor"
+            statusColor = "#99DEAD"
+            break
+        case 4:
+            statusText = "Sekundærkjøring"
+            statusColor = "#E18071"
+            break
+        default:
+            statusText = "Ukjent status"
+            statusColor = "#FFFFFF"
+            break
+    }
+
+    return (
+
+        <div>{statusText}</div>
+    )
+}
+
 
 const MapCost: Function = (props: {
     cost: Cost[];
     avstemming?: boolean;
 }) => {
     return props.cost
-        .map((cost: Cost) => {
+        .map((cost: Cost, idx) => {
             return (
-                <div key={cost.id}>
+                <div key={cost.id} style={{
+                    marginBottom: "25px",
+
+                }}>
                     {props.avstemming === true ? <b>ID: {cost.id}</b> : false}
                     <div style={{
-                        marginTop: "15px"
-                    }}>Total Sum: <b style={{ color: "green" }}> {cost.total_cost}</b> </div>
+                        marginTop: "5px",
+                        display: "flex",
+                        gap: "20px"
+
+
+                    }}><div>Total Sum: <b style={{ color: "green" }}> {cost.total_cost}</b> </div>{mapCostStatus(Number(cost.type_id))}</div>
                     <div style={{
                         display: "flex",
                         gap: "15px",

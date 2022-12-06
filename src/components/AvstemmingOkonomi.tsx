@@ -16,25 +16,27 @@ import MapCost from "./MapCost"
 let today = Date.now() / 1000
 
 const mapAudit = (audit: Audit[]) => {
-    return audit.map((audit: Audit, index) => {
-        const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
-        const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
-        return (
-            <div key={audit.id}>
-                <ReadMore
-                    header={auditTimestamp.slice(0, 20).replace("T", " ")}
-                    size="small"
-                    style={
-                        audit.action.includes("Avgodkjent")
-                            ? { color: "red" }
-                            : { color: "green" }
-                    }
-                >
-                    {audit.action} - {audit.user.name}
-                </ReadMore>
-            </div>
-        )
-    })
+    return audit
+        .sort(((a: Audit, b: Audit) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()))
+        .map((audit: Audit, index) => {
+            const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
+            const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
+            return (
+                <div key={audit.id}>
+                    <ReadMore
+                        header={auditTimestamp.slice(0, 20).replace("T", " ")}
+                        size="small"
+                        style={
+                            audit.action.includes("Avgodkjent")
+                                ? { color: "red" }
+                                : { color: "green" }
+                        }
+                    >
+                        {audit.action} - {audit.user.name}
+                    </ReadMore>
+                </div>
+            )
+        })
 }
 
 const mapApproveStatus = (status: number) => {
@@ -75,6 +77,8 @@ const mapApproveStatus = (status: number) => {
         </Table.DataCell>
     )
 }
+
+
 
 const AvstemmingOkonomi = () => {
     const [itemData, setItemData] = useState<Schedules[]>([])
@@ -145,6 +149,15 @@ const AvstemmingOkonomi = () => {
                                 minute: "2-digit",
                             }
                         )}
+                        <br />
+
+                        <div style={{ marginTop: "15px", marginBottom: "15px" }}>
+                            {vakter.vakter.length !== 0
+                                ? "Endringer:"
+                                : ""}
+                            {vakter.vakter.map((endringer) => <div><b> {endringer.type}:</b> {endringer.user.name}</div>)}<br />
+                        </div>
+
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
                     {["personalleder", "leveranseleder", "okonomi"].includes(
