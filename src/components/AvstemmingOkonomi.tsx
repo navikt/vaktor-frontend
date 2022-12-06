@@ -111,6 +111,7 @@ const AvstemmingOkonomi = () => {
                     <Table.DataCell >{i + 1}</Table.DataCell>
                     <Table.DataCell scope="row">
                         <b> {vakter.user.name}</b ><br />
+                        {(vakter.user.id).toUpperCase()}<br />
                         {vakter.group.name}
                     </Table.DataCell>
                     <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
