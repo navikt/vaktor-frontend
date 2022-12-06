@@ -147,7 +147,7 @@ const AvstemmingOkonomi = () => {
                         )}
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
-                    {["personalleder", "leveranseleder"].includes(
+                    {["personalleder", "leveranseleder", "okonomi"].includes(
                         currentUser!.role
                     ) && (
                             <Table.DataCell
