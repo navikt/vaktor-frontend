@@ -15,6 +15,11 @@ import {
 	RouterAvstemmingOkonomi,
 } from "../types/routes"
 
+const today = new Date()
+let greetings: string | any[] = []
+
+today.getMonth() === 11 ? greetings = ["Hei, ", "Vooof! ", "Voff, voff, ", "God jul, "] : greetings = ["Hei, ", "Vooof! ", "Voff, voff, "]
+
 export default function Navbar() {
 	const [userData, setUserData] = useState<User>({} as User)
 
@@ -36,13 +41,26 @@ export default function Navbar() {
 		return (
 			<>
 				<nav>
-					{
-						<Image
-							src="/vaktor/images/vaktor-logo.png"
-							alt="Vaktor logo"
-							width={70}
-							height={70}
-						/>
+					{today.getMonth() === 11
+						?
+						<div style={{ marginTop: "10px" }}>
+							<Image
+								src="/vaktor/images/vaktor-santa.png"
+								alt="Vaktor logo"
+								width={70}
+								height={70}
+							/>
+						</div>
+
+						:
+						<div style={{ marginTop: "10px" }}>
+							<Image
+								src="/vaktor/images/vaktor-logo.png"
+								alt="Vaktor logo"
+								width={70}
+								height={70}
+							/>
+						</div>
 					}
 					<div className="logo">
 						{[
@@ -52,7 +70,7 @@ export default function Navbar() {
 							"personalleder",
 							"okonomi"
 						].includes(userData.role) && (
-								<h3>Hei, {userData.name}</h3>
+								<h3>{greetings[Math.floor(Math.random() * greetings.length)]} {userData.name}</h3>
 							)}
 					</div>
 					{[

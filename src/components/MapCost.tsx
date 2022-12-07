@@ -1,5 +1,5 @@
 import { Table } from "@navikt/ds-react"
-import { Cost, Artskoder } from "../types/types"
+import { Cost, Artskoder, Schedules } from "../types/types"
 
 
 const mapCostStatus = (status: number) => {
@@ -40,6 +40,7 @@ const MapCost: Function = (props: {
     avstemming?: boolean;
 }) => {
     return props.cost
+        .sort((a: Cost, b: Cost) => Number(a.type_id) - Number(b.type_id))
         .map((cost: Cost, idx) => {
             return (
                 <div key={cost.id} style={{
