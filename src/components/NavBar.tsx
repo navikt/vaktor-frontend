@@ -207,6 +207,7 @@ export default function Navbar() {
 					"vaktsjef",
 					"leveranseleder",
 					"personalleder",
+					"okonomi",
 				].includes(userData.role) ? (
 					<></>
 				) : (

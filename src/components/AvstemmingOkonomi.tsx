@@ -293,7 +293,7 @@ const AvstemmingOkonomi = () => {
                                 maxWidth: "400px"
                             }}>Periode</Table.HeaderCell>
                             <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                            {["personalleder", "leveranseleder"].includes(
+                            {["personalleder", "leveranseleder", "okonomi"].includes(
                                 currentUser!.role
                             ) && (
                                     <Table.HeaderCell scope="col" style={{
