@@ -364,7 +364,7 @@ function VaktorTimeline() {
                         <Search
                             label="Søk etter vaktlag"
                             hideLabel={false}
-                            variant="primary"
+                            variant="simple"
                             onChange={(text) => setSearchFilter(text)}
                         />
                     </form>

@@ -124,9 +124,9 @@ const AdminLeder = () => {
                 new Date().getDate() - 10 > 0
                     ? moment().locale("en-GB").format("MMM Y")
                     : moment()
-                        .locale("en-GB")
-                        .month(moment().month() - 1)
-                        .format("MMM Y")
+                          .locale("en-GB")
+                          .month(moment().month() - 1)
+                          .format("MMM Y")
             ),
         })
 
@@ -142,7 +142,7 @@ const AdminLeder = () => {
                 <Table.DataCell>
                     Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                     {moment(vakter.start_timestamp * 1000).week() <
-                        moment(vakter.end_timestamp * 1000).week()
+                    moment(vakter.end_timestamp * 1000).week()
                         ? " - " + moment(vakter.end_timestamp * 1000).week()
                         : ""}
                     <br />
@@ -225,15 +225,17 @@ const AdminLeder = () => {
                 {["personalleder", "leveranseleder", "okonomi"].includes(
                     currentUser!.role
                 ) && (
-                        <Table.DataCell
-                            scope="row"
-                            style={{ maxWidth: "200px", minWidth: "300px" }}
-                        >
-                            {vakter.cost.length !== 0
-                                ? <MapCost cost={vakter.cost}></MapCost>
-                                : "ingen beregning foreligger"}
-                        </Table.DataCell>
-                    )}
+                    <Table.DataCell
+                        scope="row"
+                        style={{ maxWidth: "200px", minWidth: "300px" }}
+                    >
+                        {vakter.cost.length !== 0 ? (
+                            <MapCost cost={vakter.cost}></MapCost>
+                        ) : (
+                            "ingen beregning foreligger"
+                        )}
+                    </Table.DataCell>
+                )}
                 <Table.DataCell
                     scope="row"
                     style={{ maxWidth: "250px", minWidth: "200px" }}
@@ -277,9 +279,9 @@ const AdminLeder = () => {
             (value: Schedules) =>
                 value.user_id.toLowerCase() !== currentUser.id.toLowerCase() &&
                 new Date(value.start_timestamp * 1000).getMonth() ===
-                selectedMonth!.getMonth() &&
+                    selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
-                selectedMonth!.getFullYear() &&
+                    selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
                 value.user.role
                     .toLowerCase()
@@ -304,7 +306,7 @@ const AdminLeder = () => {
                     <Search
                         label="Søk etter person"
                         hideLabel={false}
-                        variant="primary"
+                        variant="simple"
                         onChange={(text) => setSearchFilter(text)}
                     />
                 </form>
@@ -355,10 +357,10 @@ const AdminLeder = () => {
                         {["personalleder", "leveranseleder"].includes(
                             currentUser!.role
                         ) && (
-                                <Table.HeaderCell scope="col">
-                                    Kostnad
-                                </Table.HeaderCell>
-                            )}
+                            <Table.HeaderCell scope="col">
+                                Kostnad
+                            </Table.HeaderCell>
+                        )}
                         <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>

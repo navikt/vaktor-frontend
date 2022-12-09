@@ -17,7 +17,11 @@ let today = Date.now() / 1000
 
 const mapAudit = (audit: Audit[]) => {
     return audit
-        .sort(((a: Audit, b: Audit) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()))
+        .sort(
+            (a: Audit, b: Audit) =>
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime()
+        )
         .map((audit: Audit, index) => {
             const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
             const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
@@ -78,8 +82,6 @@ const mapApproveStatus = (status: number) => {
     )
 }
 
-
-
 const AvstemmingOkonomi = () => {
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [currentUser, setCurrentUser] = useState<User>({} as User)
@@ -99,23 +101,29 @@ const AvstemmingOkonomi = () => {
                 new Date().getDate() - 10 > 0
                     ? moment().locale("en-GB").format("MMM Y")
                     : moment()
-                        .locale("en-GB")
-                        .month(moment().month() - 1)
-                        .format("MMM Y")
+                          .locale("en-GB")
+                          .month(moment().month() - 1)
+                          .format("MMM Y")
             ),
         })
 
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste
-            .sort((a: Schedules, b: Schedules) => (a.start_timestamp) !== (b.start_timestamp) ? (a.start_timestamp) - (b.start_timestamp) : a.user.name.localeCompare(b.user.name))
+            .sort((a: Schedules, b: Schedules) =>
+                a.start_timestamp !== b.start_timestamp
+                    ? a.start_timestamp - b.start_timestamp
+                    : a.user.name.localeCompare(b.user.name)
+            )
             .map((vakter: Schedules, i: number) => (
                 //approve_level = 2;
 
                 <Table.Row key={i}>
-                    <Table.DataCell >{i + 1}</Table.DataCell>
+                    <Table.DataCell>{i + 1}</Table.DataCell>
                     <Table.DataCell scope="row">
-                        <b> {vakter.user.name}</b ><br />
-                        {(vakter.user.id).toUpperCase()}<br />
+                        <b> {vakter.user.name}</b>
+                        <br />
+                        {vakter.user.id.toUpperCase()}
+                        <br />
                         {vakter.group.name}
                     </Table.DataCell>
                     <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
@@ -124,11 +132,12 @@ const AvstemmingOkonomi = () => {
                         <br />
                         Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                         {moment(vakter.start_timestamp * 1000).week() <
-                            moment(vakter.end_timestamp * 1000).week()
+                        moment(vakter.end_timestamp * 1000).week()
                             ? " - " + moment(vakter.end_timestamp * 1000).week()
                             : ""}
                         <br />
-                        Start: {new Date(vakter.start_timestamp * 1000).toLocaleString(
+                        Start:{" "}
+                        {new Date(vakter.start_timestamp * 1000).toLocaleString(
                             "no-NB",
                             {
                                 day: "2-digit",
@@ -139,7 +148,8 @@ const AvstemmingOkonomi = () => {
                             }
                         )}
                         <br />
-                        Slutt: {new Date(vakter.end_timestamp * 1000).toLocaleString(
+                        Slutt:{" "}
+                        {new Date(vakter.end_timestamp * 1000).toLocaleString(
                             "no-NB",
                             {
                                 day: "2-digit",
@@ -150,28 +160,37 @@ const AvstemmingOkonomi = () => {
                             }
                         )}
                         <br />
-
-                        <div style={{ marginTop: "15px", marginBottom: "15px" }}>
-                            {vakter.vakter.length !== 0
-                                ? "Endringer:"
-                                : ""}
-                            {vakter.vakter.map((endringer) => <div><b> {endringer.type}:</b> {endringer.user.name}</div>)}<br />
+                        <div
+                            style={{ marginTop: "15px", marginBottom: "15px" }}
+                        >
+                            {vakter.vakter.length !== 0 ? "Endringer:" : ""}
+                            {vakter.vakter.map((endringer, idx: number) => (
+                                <div key={idx}>
+                                    <b> {endringer.type}:</b>{" "}
+                                    {endringer.user.name}
+                                </div>
+                            ))}
+                            <br />
                         </div>
-
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
                     {["personalleder", "leveranseleder", "okonomi"].includes(
                         currentUser!.role
                     ) && (
-                            <Table.DataCell
-                                scope="row"
-                                style={{ maxWidth: "200px", minWidth: "150px" }}
-                            >
-                                {vakter.cost.length !== 0
-                                    ? <MapCost cost={vakter.cost} avstemming={true}></MapCost>
-                                    : "ingen beregning foreligger"}
-                            </Table.DataCell>
-                        )}
+                        <Table.DataCell
+                            scope="row"
+                            style={{ maxWidth: "200px", minWidth: "150px" }}
+                        >
+                            {vakter.cost.length !== 0 ? (
+                                <MapCost
+                                    cost={vakter.cost}
+                                    avstemming={true}
+                                ></MapCost>
+                            ) : (
+                                "ingen beregning foreligger"
+                            )}
+                        </Table.DataCell>
+                    )}
                     <Table.DataCell
                         scope="row"
                         style={{ maxWidth: "250px", minWidth: "200px" }}
@@ -200,7 +219,11 @@ const AvstemmingOkonomi = () => {
                         a.start_timestamp - b.start_timestamp
                 )
 
-                setItemData(itemData)
+                setItemData(
+                    itemData.filter(
+                        (data: Schedules) => data.user.ekstern === false
+                    )
+                )
                 setCurrentUser(userData)
                 setLoading(false)
             })
@@ -214,9 +237,9 @@ const AvstemmingOkonomi = () => {
         itemData.filter(
             (value: Schedules) =>
                 new Date(value.start_timestamp * 1000).getMonth() ===
-                selectedMonth!.getMonth() &&
+                    selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
-                selectedMonth!.getFullYear() &&
+                    selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
                 value.user.role
                     .toLowerCase()
@@ -227,15 +250,17 @@ const AvstemmingOkonomi = () => {
         )
     )
     return (
-        <div style={{
-            minWidth: "900px",
-            maxWidth: "90vw",
-            backgroundColor: "white",
-            marginBottom: "3vh",
-            display: "grid",
-            alignContent: "center",
-            margin: "auto",
-        }}>
+        <div
+            style={{
+                minWidth: "900px",
+                maxWidth: "90vw",
+                backgroundColor: "white",
+                marginBottom: "3vh",
+                display: "grid",
+                alignContent: "center",
+                margin: "auto",
+            }}
+        >
             <div className="min-h-96" style={{ display: "flex" }}>
                 <UNSAFE_MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
@@ -249,7 +274,7 @@ const AvstemmingOkonomi = () => {
                     <Search
                         label="Søk etter person"
                         hideLabel={false}
-                        variant="primary"
+                        variant="simple"
                         onChange={(text) => setSearchFilter(text)}
                     />
                 </form>
@@ -284,26 +309,42 @@ const AvstemmingOkonomi = () => {
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell>#</Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">
+                                Navn
+                            </Table.HeaderCell>
                             <Table.HeaderCell scope="col">
                                 Type vakt
                             </Table.HeaderCell>
-                            <Table.HeaderCell scope="col" style={{
-                                minWidth: "400px",
-                                maxWidth: "400px"
-                            }}>Periode</Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                            {["personalleder", "leveranseleder", "okonomi"].includes(
-                                currentUser!.role
-                            ) && (
-                                    <Table.HeaderCell scope="col" style={{
+                            <Table.HeaderCell
+                                scope="col"
+                                style={{
+                                    minWidth: "400px",
+                                    maxWidth: "400px",
+                                }}
+                            >
+                                Periode
+                            </Table.HeaderCell>
+                            <Table.HeaderCell scope="col">
+                                Status
+                            </Table.HeaderCell>
+                            {[
+                                "personalleder",
+                                "leveranseleder",
+                                "okonomi",
+                            ].includes(currentUser!.role) && (
+                                <Table.HeaderCell
+                                    scope="col"
+                                    style={{
                                         minWidth: "400px",
-                                        maxWidth: "400px"
-                                    }}>
-                                        Kost
-                                    </Table.HeaderCell>
-                                )}
-                            <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
+                                        maxWidth: "400px",
+                                    }}
+                                >
+                                    Kost
+                                </Table.HeaderCell>
+                            )}
+                            <Table.HeaderCell scope="col">
+                                Audit
+                            </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -318,7 +359,6 @@ const AvstemmingOkonomi = () => {
                 </Table>
             </div>
         </div>
-
     )
 }
 
