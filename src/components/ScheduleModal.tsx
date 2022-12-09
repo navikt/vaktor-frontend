@@ -5,7 +5,6 @@ import {
     Select,
     RadioGroup,
     Radio,
-    TextField,
     Modal,
     ConfirmationPanel,
     Alert,
@@ -13,9 +12,6 @@ import {
     UNSAFE_useRangeDatepicker,
 } from "@navikt/ds-react"
 import { Schedules, User } from "../types/types"
-import moment from "moment"
-import { TodayMarker } from "react-calendar-timeline"
-//import TextField from "./testComp";
 
 const update_schedule = async (
     period: Schedules,
@@ -71,11 +67,15 @@ const ScheduleModal = (props: {
             },
         })
     useEffect(() => {
+        console.log(props.schedule.start_timestamp)
+        setStartTimestamp(props.schedule.start_timestamp)
+        setEndTimestamp(props.schedule.end_timestamp)
+        setClockEnd(0)
+        setClockStart(0)
         if (Modal && Modal.setAppElement) {
             Modal.setAppElement("#__next")
         }
         Promise.all([fetch("/vaktor/api/get_my_groupmembers")])
-
             .then(async ([membersRes]) => {
                 props.setResponse(membersRes.status)
                 const groupData = await membersRes.json()
@@ -92,12 +92,8 @@ const ScheduleModal = (props: {
                 open={props.isOpen}
                 aria-label="Modal for vaktperioder"
                 onClose={() => {
-                    props.setIsOpen(!props.isOpen)
                     setConfirmState(false)
-                    setStartTimestamp(0)
-                    setEndTimestamp(0)
-                    setClockEnd(0)
-                    setClockStart(0)
+                    props.setIsOpen(!props.isOpen)
                 }}
                 aria-labelledby="modal-heading"
             >
