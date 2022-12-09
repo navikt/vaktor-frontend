@@ -19,13 +19,20 @@ import {
     Spacer,
 } from "./GroupDetailsModal"
 import moment from "moment"
+import { User } from "../types/types"
 
 const UpdateDescription = async (value: string) => {
-    await fetch(`/vaktor/api/assign_leader/?textValue=${value}`)
+    await fetch(`/vaktor/api//?textValue=${value}`)
 }
 
-const UpdateContactInfo = async (value: string) => {
-    await fetch(`/vaktor/api/assign_leader/?textValue=${value}`)
+const UpdateContactInfo = async (value: string, user: User) => {
+    user.contact_info = value
+    var fetchOptions = {
+        method: "PUT",
+        body: JSON.stringify(user),
+    }
+
+    await fetch(`/vaktor/api/update_user/`, fetchOptions)
 }
 
 const ItemDetailsModal = (props: {
@@ -36,8 +43,8 @@ const ItemDetailsModal = (props: {
     telephone?: string
     startTime?: string
     endTime?: string
-    contactInfo: string
     canEdit: boolean
+    user: User
 }) => {
     useEffect(() => {
         if (Modal && Modal.setAppElement) {
@@ -107,14 +114,17 @@ const ItemDetailsModal = (props: {
                                     maxRows={3}
                                     label="Har du noen tilbakemeldinger?"
                                     hideLabel
-                                    defaultValue={props.description}
+                                    defaultValue={props.user.contact_info}
                                     style={{ minWidth: "250px" }}
                                     onBlur={(e) =>
-                                        UpdateContactInfo(e.target.value)
+                                        UpdateContactInfo(
+                                            e.target.value,
+                                            props.user
+                                        )
                                     }
                                 />
                             ) : (
-                                props.contactInfo
+                                props.user.contact_info
                             )}
                         </div>
                         <div style={{ display: "flex", gap: "8px" }}>

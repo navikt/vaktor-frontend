@@ -21,8 +21,9 @@ import moment from "moment"
 import { Spring, animated, AnimatedProps } from "react-spring"
 import { NavigationButtons } from "./NavigationButtons"
 import { FluidValue } from "@react-spring/shared"
-import { Schedules, Vaktlag } from "../types/types"
+import { Schedules, User, Vaktlag } from "../types/types"
 import Overview from "./OverviewNoTimeline"
+import { isCryptoKey } from "util/types"
 
 const SidebarHeaderText = styled.div`
     padding-top: 25px;
@@ -77,6 +78,7 @@ function VaktorTimeline() {
     const [itemTelephone, setItemTelephone] = useState("")
     const [itemStartTime, setItemStartTime] = useState("")
     const [itemEndTime, setItemEndTime] = useState("")
+    const [itemUser, setItemUser] = useState<User | undefined>(undefined)
 
     const [searchFilter, setSearchFilter] = useState("")
 
@@ -221,10 +223,12 @@ function VaktorTimeline() {
         telephone: string,
         startTime: string,
         endTime: string,
-        groupId: string
+        groupId: string,
+        user: User
     ) => {
         setItemModalOpen(modalstate)
         setItemUserName(name)
+        setItemUser(user)
         setItemGrpName(groupName)
         setItemDescription(description)
         setItemTelephone(telephone)
@@ -257,7 +261,8 @@ function VaktorTimeline() {
                             itemObj.group.phone,
                             formattedDate(itemStart),
                             formattedDate(itemEnd),
-                            itemObj.group_id
+                            itemObj.group_id,
+                            itemObj.user
                         )
                     },
 
@@ -314,7 +319,8 @@ function VaktorTimeline() {
                                     interruptionObj.group.phone,
                                     formattedDate(interruptionStart),
                                     formattedDate(interruptionEnd),
-                                    interruptionObj.group_id
+                                    interruptionObj.group_id,
+                                    interruptionObj.user
                                 )
                             },
 
@@ -452,12 +458,8 @@ function VaktorTimeline() {
                             telephone={itemTelephone}
                             startTime={itemStartTime}
                             endTime={itemEndTime}
-                            contactInfo={"asdsad"}
-                            canEdit={
-                                userData.groups[0].id === itemGrpId
-                                    ? true
-                                    : false
-                            }
+                            canEdit={userData.id === itemUser.id ? true : false}
+                            user={itemUser}
                         />
                     )}
                 </>
