@@ -7,32 +7,26 @@ import {
     Telephone,
     Notes,
     Dialog,
+    Edit,
+    SuccessStroke,
+    SuccessColored,
 } from "@navikt/ds-icons"
 import "@navikt/ds-css"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import {
-    IconWrapper,
     InformationLine,
-    InfoTextWrapper,
     HeadingIcon,
     InfoHeadWrapper,
-    Spacer,
 } from "./GroupDetailsModal"
-import moment from "moment"
 import { User } from "../types/types"
+import UserInfoDetails from "./userInfoDetails"
 
-const UpdateDescription = async (value: string) => {
-    await fetch(`/vaktor/api//?textValue=${value}`)
-}
-
-const UpdateContactInfo = async (value: string, user: User) => {
-    user.contact_info = value
-    var fetchOptions = {
-        method: "PUT",
-        body: JSON.stringify(user),
-    }
-
-    await fetch(`/vaktor/api/update_user/`, fetchOptions)
+const iconStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "53px",
+    marginRight: "10px",
 }
 
 const ItemDetailsModal = (props: {
@@ -51,8 +45,6 @@ const ItemDetailsModal = (props: {
             Modal.setAppElement("#__next")
         }
     }, [])
-
-    var endTime = props.endTime
 
     const phonetext =
         props.telephone == "??" ? "n/a" : "(+47) " + props.telephone
@@ -85,72 +77,45 @@ const ItemDetailsModal = (props: {
                         </Heading>
                     </InformationLine>
 
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "10px",
-                        }}
-                    >
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <CoApplicant />
-                            <b>Vaktlag:</b>
-                            {props.groupName}
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <Telephone />
-                            <b>Vakttelefon:</b> {phonetext}
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <People />
-                            <b>Vakthaver:</b>
-                            {props.userName}
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <Dialog />
-                            <b>Kontaktinfo:</b>{" "}
-                            {props.canEdit ? (
-                                <Textarea
-                                    maxRows={3}
-                                    label="Har du noen tilbakemeldinger?"
-                                    hideLabel
-                                    defaultValue={props.user.contact_info}
-                                    style={{ minWidth: "250px" }}
-                                    onBlur={(e) =>
-                                        UpdateContactInfo(
-                                            e.target.value,
-                                            props.user
-                                        )
-                                    }
-                                />
-                            ) : (
-                                props.user.contact_info
-                            )}
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <Notes />
-                            <b>Beskrivelse:</b>{" "}
-                            {props.canEdit ? (
-                                <Textarea
-                                    maxRows={3}
-                                    label="Har du noen tilbakemeldinger?"
-                                    hideLabel
-                                    defaultValue={props.description}
-                                    style={{ minWidth: "250px" }}
-                                    onBlur={(e) =>
-                                        UpdateDescription(e.target.value)
-                                    }
-                                />
-                            ) : (
-                                props.description
-                            )}
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <Calender />
-                            <b>Valgt periode:</b> {props.startTime} -{" "}
-                            {props.endTime}
-                        </div>
-                    </div>
+                    <UserInfoDetails
+                        infoName="Vaktlag: "
+                        infoText={props.groupName!}
+                        icon={<CoApplicant style={iconStyle} />}
+                    />
+
+                    <UserInfoDetails
+                        infoName="Vaktnummer: "
+                        infoText={phonetext}
+                        icon={<Telephone style={iconStyle} />}
+                    />
+
+                    <UserInfoDetails
+                        infoName="Vakthaver: "
+                        infoText={props.user.name}
+                        icon={<People style={iconStyle} />}
+                    />
+
+                    <UserInfoDetails
+                        infoName="Kontaktinfo: "
+                        infoText={props.user.contact_info}
+                        editable={props.canEdit}
+                        icon={<Dialog style={iconStyle} />}
+                        user={props.user}
+                    />
+
+                    <UserInfoDetails
+                        infoName="Beskrivelse: "
+                        infoText={props.user.description}
+                        editable={props.canEdit}
+                        icon={<Notes style={iconStyle} />}
+                        user={props.user}
+                    />
+
+                    <UserInfoDetails
+                        infoName="Valgt periode: "
+                        infoText={`${props.startTime} - ${props.endTime}`}
+                        icon={<Calender style={iconStyle} />}
+                    />
                 </Modal.Content>
             </Modal>
         </>
