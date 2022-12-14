@@ -281,11 +281,12 @@ function VaktorTimeline() {
   --  Generating items (vaktplaner) from interruptions in schedules -- 
   */
 
-            let itemInterruptions = itemObj.vakter.filter((vakt: Schedules) =>
-                ["bytte", "bistand"].includes(vakt.type)
-            )
+            if (itemObj.vakter !== undefined) {
+                let itemInterruptions = itemObj.vakter.filter(
+                    (vakt: Schedules) =>
+                        ["bytte", "bistand"].includes(vakt.type)
+                )
 
-            if (itemInterruptions) {
                 itemInterruptions.map((interruptionObj: Schedules) => {
                     let interruptionColor = setInterruptionColor(
                         groupColorList,
