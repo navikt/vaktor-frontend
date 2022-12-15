@@ -61,7 +61,7 @@ const LoadingWrapper = styled.div`
 
 function VaktorTimeline() {
     const [groupData, setGroupData] = useState(null)
-    const [userData, setUserData] = useState(undefined)
+    const [userData, setUserData] = useState({} as User)
     const [itemData, setItemData] = useState(null)
     const [isLoading, setLoading] = useState(false)
 
@@ -459,7 +459,11 @@ function VaktorTimeline() {
                             telephone={itemTelephone}
                             startTime={itemStartTime}
                             endTime={itemEndTime}
-                            canEdit={userData.id === itemUser.id ? true : false}
+                            canEdit={
+                                userData.id.toUpperCase() === itemUser!.id
+                                    ? true
+                                    : false
+                            }
                             user={itemUser!}
                         />
                     )}
