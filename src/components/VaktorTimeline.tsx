@@ -143,8 +143,11 @@ function VaktorTimeline() {
   */
 
     const groupDataList: any = groupData
-    const groupsSorted = [...groupDataList].sort((a, b) =>
-        a.name > b.name ? 1 : -1
+    const groupsSorted1 = [...groupDataList].sort((a, b) =>
+        a.name < b.name ? 1 : -1
+    )
+    const groupsSorted = [...groupsSorted1].sort((a, b) =>
+        a.type === "Døgnkontinuerlig (24/7)" ? -1 : 1
     )
 
     const groups: any = []
