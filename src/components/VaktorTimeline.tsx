@@ -2,9 +2,6 @@ import Timeline, {
     TimelineHeaders,
     SidebarHeader,
     DateHeader,
-    TodayMarker,
-    CustomMarker,
-    TimelineMarkers,
 } from "react-calendar-timeline"
 import { useState, useEffect } from "react"
 import { Moment } from "moment"
@@ -24,8 +21,9 @@ import moment from "moment"
 import { Spring, animated, AnimatedProps } from "react-spring"
 import { NavigationButtons } from "./NavigationButtons"
 import { FluidValue } from "@react-spring/shared"
-import { Schedules, Vaktlag } from "../types/types"
+import { Schedules, User, Vaktlag } from "../types/types"
 import Overview from "./OverviewNoTimeline"
+import { isCryptoKey } from "util/types"
 
 const SidebarHeaderText = styled.div`
     padding-top: 25px;
@@ -62,12 +60,8 @@ const LoadingWrapper = styled.div`
 `
 
 function VaktorTimeline() {
-    var tinycolor = require("tinycolor2")
-
-    const [isTouched, setIsTouched] = useState(false)
-    const [color, setColor] = useState("")
-
     const [groupData, setGroupData] = useState(null)
+    const [userData, setUserData] = useState({} as User)
     const [itemData, setItemData] = useState(null)
     const [isLoading, setLoading] = useState(false)
 
@@ -79,10 +73,12 @@ function VaktorTimeline() {
     const [itemModalOpen, setItemModalOpen] = useState(false)
     const [itemUserName, setItemUserName] = useState("")
     const [itemGrpName, setItemGrpName] = useState("")
+    const [itemGrpId, setItemGrpId] = useState("")
     const [itemDescription, setItemDescription] = useState("")
     const [itemTelephone, setItemTelephone] = useState("")
     const [itemStartTime, setItemStartTime] = useState("")
     const [itemEndTime, setItemEndTime] = useState("")
+    const [itemUser, setItemUser] = useState<User | undefined>(undefined)
 
     const [searchFilter, setSearchFilter] = useState("")
 
@@ -115,15 +111,21 @@ function VaktorTimeline() {
     useEffect(() => {
         setLoading(true)
 
-        Promise.all([fetch("vaktor/api/groups"), fetch("vaktor/api/schedules")])
-            .then(async ([groupRes, scheduleRes]) => {
+        Promise.all([
+            fetch("vaktor/api/groups"),
+            fetch("vaktor/api/schedules"),
+            fetch("/vaktor/api/get_me"),
+        ])
+            .then(async ([groupRes, scheduleRes, userRes]) => {
                 const groupjson = await groupRes.json()
                 const schedulejson = await scheduleRes.json()
-                return [groupjson, schedulejson]
+                const userjson = await userRes.json()
+                return [groupjson, schedulejson, userjson]
             })
-            .then(([groupData, itemData]) => {
+            .then(([groupData, itemData, userData]) => {
                 setGroupData(groupData)
                 setItemData(itemData)
+                setUserData(userData)
                 setLoading(false)
             })
     }, [])
@@ -141,8 +143,11 @@ function VaktorTimeline() {
   */
 
     const groupDataList: any = groupData
-    const groupsSorted = [...groupDataList].sort((a, b) =>
-        a.name > b.name ? 1 : -1
+    const groupsSorted1 = [...groupDataList].sort((a, b) =>
+        a.name < b.name ? 1 : -1
+    )
+    const groupsSorted = [...groupsSorted1].sort((a, b) =>
+        a.type === "Døgnkontinuerlig (24/7)" ? -1 : 1
     )
 
     const groups: any = []
@@ -220,15 +225,19 @@ function VaktorTimeline() {
         description: string,
         telephone: string,
         startTime: string,
-        endTime: string
+        endTime: string,
+        groupId: string,
+        user: User
     ) => {
         setItemModalOpen(modalstate)
         setItemUserName(name)
+        setItemUser(user)
         setItemGrpName(groupName)
         setItemDescription(description)
         setItemTelephone(telephone)
         setItemStartTime(startTime)
         setItemEndTime(endTime)
+        setItemGrpId(groupId)
     }
 
     itemList
@@ -254,7 +263,9 @@ function VaktorTimeline() {
                             itemObj.user.description,
                             itemObj.group.phone,
                             formattedDate(itemStart),
-                            formattedDate(itemEnd)
+                            formattedDate(itemEnd),
+                            itemObj.group_id,
+                            itemObj.user
                         )
                     },
 
@@ -273,11 +284,12 @@ function VaktorTimeline() {
   --  Generating items (vaktplaner) from interruptions in schedules -- 
   */
 
-            let itemInterruptions = itemObj.vakter.filter((vakt: Schedules) =>
-                ["bytte", "bistand"].includes(vakt.type)
-            )
+            if (itemObj.vakter !== undefined) {
+                let itemInterruptions = itemObj.vakter.filter(
+                    (vakt: Schedules) =>
+                        ["bytte", "bistand"].includes(vakt.type)
+                )
 
-            if (itemInterruptions) {
                 itemInterruptions.map((interruptionObj: Schedules) => {
                     let interruptionColor = setInterruptionColor(
                         groupColorList,
@@ -310,7 +322,9 @@ function VaktorTimeline() {
                                     interruptionObj.user.description,
                                     interruptionObj.group.phone,
                                     formattedDate(interruptionStart),
-                                    formattedDate(interruptionEnd)
+                                    formattedDate(interruptionEnd),
+                                    interruptionObj.group_id,
+                                    interruptionObj.user
                                 )
                             },
 
@@ -360,7 +374,7 @@ function VaktorTimeline() {
                         <Search
                             label="Søk etter vaktlag"
                             hideLabel={false}
-                            variant="primary"
+                            variant="simple"
                             onChange={(text) => setSearchFilter(text)}
                         />
                     </form>
@@ -375,13 +389,13 @@ function VaktorTimeline() {
                             value: JSX.IntrinsicAttributes &
                                 AnimatedProps<{ [x: string]: any }> & {
                                     scrollTop?:
-                                    | number
-                                    | FluidValue<number, any>
-                                    | undefined
+                                        | number
+                                        | FluidValue<number, any>
+                                        | undefined
                                     scrollLeft?:
-                                    | number
-                                    | FluidValue<number, any>
-                                    | undefined
+                                        | number
+                                        | FluidValue<number, any>
+                                        | undefined
                                 }
                         ) => (
                             <AnimatedTimeline
@@ -448,6 +462,12 @@ function VaktorTimeline() {
                             telephone={itemTelephone}
                             startTime={itemStartTime}
                             endTime={itemEndTime}
+                            canEdit={
+                                userData.id.toUpperCase() === itemUser!.id
+                                    ? true
+                                    : false
+                            }
+                            user={itemUser!}
                         />
                     )}
                 </>

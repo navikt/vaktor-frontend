@@ -76,9 +76,10 @@ const UpdateSchedule = () => {
                         <Search
                             label="Søk etter person"
                             hideLabel={false}
-                            variant="primary"
+                            variant="simple"
                             onChange={(text) => setSearchFilter(text)}
-                        />
+                            onClick={(e) => false}
+                        ></Search>
                     </form>
                 </div>
                 <Table

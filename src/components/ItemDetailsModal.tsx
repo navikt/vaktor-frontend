@@ -1,138 +1,124 @@
-import { Modal, Heading, BodyLong } from "@navikt/ds-react";
+import { Modal, Heading, BodyLong, Textarea } from "@navikt/ds-react"
 import {
-  InformationColored,
-  People,
-  CoApplicant,
-  Calender,
-  Telephone,
-  Notes,
-} from "@navikt/ds-icons";
-import "@navikt/ds-css";
-import { useEffect, useState } from "react";
+    InformationColored,
+    People,
+    CoApplicant,
+    Calender,
+    Telephone,
+    Notes,
+    Dialog,
+    Edit,
+    SuccessStroke,
+    SuccessColored,
+} from "@navikt/ds-icons"
+import "@navikt/ds-css"
+import { useEffect } from "react"
 import {
-  IconWrapper,
-  InformationLine,
-  InfoTextWrapper,
-  HeadingIcon,
-  InfoHeadWrapper,
-  Spacer,
-} from "./GroupDetailsModal";
-import moment from "moment";
+    InformationLine,
+    HeadingIcon,
+    InfoHeadWrapper,
+} from "./GroupDetailsModal"
+import { User } from "../types/types"
+import UserInfoDetails from "./userInfoDetails"
+
+const iconStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "53px",
+    marginRight: "10px",
+}
 
 const ItemDetailsModal = (props: {
-  handleClose: Function;
-  groupName?: string;
-  userName?: string;
-  description?: string;
-  telephone?: string;
-  startTime?: string;
-  endTime?: string;
+    handleClose: Function
+    groupName?: string
+    userName?: string
+    description?: string
+    telephone?: string
+    startTime?: string
+    endTime?: string
+    canEdit: boolean
+    user: User
 }) => {
-  useEffect(() => {
-    if (Modal && Modal.setAppElement) {
-      Modal.setAppElement("#__next");
-    }
-  }, []);
+    useEffect(() => {
+        if (Modal && Modal.setAppElement) {
+            Modal.setAppElement("#__next")
+        }
+    }, [])
 
-  var endTime = props.endTime;
+    const phonetext =
+        props.telephone == "??" ? "n/a" : "(+47) " + props.telephone
 
-  const phonetext =
-    props.telephone == "??" ? "n/a" : "(+47) " + props.telephone;
+    return (
+        <>
+            <Modal
+                open={true}
+                aria-label="Informasjonsmodal for vaktperiode"
+                onClose={() => props.handleClose()}
+                style={{
+                    overlay: {},
+                    content: {
+                        width: "20%",
+                        minWidth: "500px",
+                        padding: "5px",
+                        paddingTop: "20px",
+                        position: "sticky",
+                    },
+                }}
+            >
+                <Modal.Content>
+                    {/*Vaktperiode Heading*/}
+                    <InformationLine>
+                        <Heading spacing level="1" size="medium">
+                            <HeadingIcon>
+                                <InformationColored />
+                            </HeadingIcon>
+                            <InfoHeadWrapper>Vaktperiode</InfoHeadWrapper>
+                        </Heading>
+                    </InformationLine>
 
-  return (
-    <>
-      <Modal
-        open={true}
-        aria-label="Informasjonsmodal for vaktperiode"
-        onClose={() => props.handleClose()}
-        style={{
-          overlay: {},
-          content: {
-            width: "20%",
-            minWidth: "500px",
-            padding: "5px",
-            paddingTop: "20px",
-            position: "sticky",
-          },
-        }}
-      >
-        <Modal.Content>
-          {/*Vaktperiode Heading*/}
-          <InformationLine>
-            <Heading spacing level="1" size="medium">
-              <HeadingIcon>
-                <InformationColored />
-              </HeadingIcon>
-              <InfoHeadWrapper>Vaktperiode</InfoHeadWrapper>
-            </Heading>
-          </InformationLine>
+                    <UserInfoDetails
+                        infoName="Vaktlag: "
+                        infoText={props.groupName!}
+                        icon={<CoApplicant style={iconStyle} />}
+                    />
 
-          <BodyLong spacing>
-            {/*Vaktlag*/}
-            <Spacer height={8} />
-            <InformationLine>
-              <IconWrapper topPosition={92}>
-                <CoApplicant />
-              </IconWrapper>
-              <InfoTextWrapper>
-                <b>Vaktlag:&nbsp; </b>
-                {props.groupName}
-              </InfoTextWrapper>
-            </InformationLine>
+                    <UserInfoDetails
+                        infoName="Vaktnummer: "
+                        infoText={phonetext}
+                        icon={<Telephone style={iconStyle} />}
+                    />
 
-            {/*Vakthaver*/}
+                    <UserInfoDetails
+                        infoName="Vakthaver: "
+                        infoText={props.user.name}
+                        icon={<People style={iconStyle} />}
+                    />
 
-            <InformationLine>
-              <IconWrapper topPosition={120}>
-                <People />
-              </IconWrapper>
-              <InfoTextWrapper>
-                <b>Vakthaver:&nbsp; </b>
-                {props.userName}
-              </InfoTextWrapper>
-            </InformationLine>
+                    <UserInfoDetails
+                        infoName="Kontaktinfo: "
+                        infoText={props.user.contact_info}
+                        editable={props.canEdit}
+                        icon={<Dialog style={iconStyle} />}
+                        user={props.user}
+                    />
 
-            {/*Vakttelefon*/}
+                    <UserInfoDetails
+                        infoName="Beskrivelse: "
+                        infoText={props.user.description}
+                        editable={props.canEdit}
+                        icon={<Notes style={iconStyle} />}
+                        user={props.user}
+                    />
 
-            <InformationLine>
-              <IconWrapper topPosition={150}>
-                <Telephone />
-              </IconWrapper>
-              <InfoTextWrapper>
-                <b>Vakttelefon:&nbsp; </b>
-
-                {phonetext}
-              </InfoTextWrapper>
-            </InformationLine>
-
-            <Spacer height={10} />
-            <InformationLine>
-              <IconWrapper topPosition={188}>
-                <Notes />
-              </IconWrapper>
-              <InfoTextWrapper>
-                <b>Beskrivelse:&nbsp; </b>
-                {props.description}
-              </InfoTextWrapper>
-            </InformationLine>
-
-            {/*Varighet på vaktperiode*/}
-            <Spacer height={10} />
-            <InformationLine>
-              <IconWrapper topPosition={228}>
-                <Calender />
-              </IconWrapper>
-              <InfoTextWrapper>
-                <b>Varighet:&nbsp; </b>
-                {props.startTime}
-                {" - "}
-                {props.endTime}
-              </InfoTextWrapper>
-            </InformationLine>
-          </BodyLong>
-        </Modal.Content>
-      </Modal>
-    </>
-  );
-};
-export default ItemDetailsModal;
+                    <UserInfoDetails
+                        infoName="Valgt periode: "
+                        infoText={`${props.startTime} - ${props.endTime}`}
+                        icon={<Calender style={iconStyle} />}
+                    />
+                </Modal.Content>
+            </Modal>
+        </>
+    )
+}
+export default ItemDetailsModal
