@@ -7,7 +7,6 @@ import {
     ReadMore,
     Search,
     Select,
-    Checkbox,
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
@@ -93,8 +92,6 @@ const AvstemmingOkonomi = () => {
     const [searchFilterRole, setSearchFilterRole] = useState("")
     const [searchFilterAction, setSearchFilterAction] = useState(5)
 
-    const [selectedRows, setSelectedRows] = useState([]);
-
     const { monthpickerProps, inputProps, selectedMonth, setSelected } =
         UNSAFE_useMonthpicker({
             fromDate: new Date("Oct 01 2022"),
@@ -119,14 +116,8 @@ const AvstemmingOkonomi = () => {
             )
             .map((vakter: Schedules, i: number) => (
                 //approve_level = 2;
+
                 <Table.Row key={i}>
-                    <Table.DataCell>
-
-
-
-                    </Table.DataCell>
-
-
                     <Table.DataCell>{i + 1}</Table.DataCell>
                     <Table.DataCell scope="row">
                         <b> {vakter.user.name}</b>
@@ -182,7 +173,6 @@ const AvstemmingOkonomi = () => {
                             <br />
                         </div>
                     </Table.DataCell>
-
                     {mapApproveStatus(vakter.approve_level)}
                     {["personalleder", "leveranseleder", "okonomi"].includes(
                         currentUser!.role
