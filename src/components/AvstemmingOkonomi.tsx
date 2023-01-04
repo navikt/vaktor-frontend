@@ -7,6 +7,7 @@ import {
     ReadMore,
     Search,
     Select,
+    Checkbox,
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
@@ -92,6 +93,8 @@ const AvstemmingOkonomi = () => {
     const [searchFilterRole, setSearchFilterRole] = useState("")
     const [searchFilterAction, setSearchFilterAction] = useState(5)
 
+    const [selectedRows, setSelectedRows] = useState([]);
+
     const { monthpickerProps, inputProps, selectedMonth, setSelected } =
         UNSAFE_useMonthpicker({
             fromDate: new Date("Oct 01 2022"),
@@ -101,9 +104,9 @@ const AvstemmingOkonomi = () => {
                 new Date().getDate() - 10 > 0
                     ? moment().locale("en-GB").format("MMM Y")
                     : moment()
-                          .locale("en-GB")
-                          .month(moment().month() - 1)
-                          .format("MMM Y")
+                        .locale("en-GB")
+                        .month(moment().month() - 1)
+                        .format("MMM Y")
             ),
         })
 
@@ -116,8 +119,14 @@ const AvstemmingOkonomi = () => {
             )
             .map((vakter: Schedules, i: number) => (
                 //approve_level = 2;
-
                 <Table.Row key={i}>
+                    <Table.DataCell>
+
+
+
+                    </Table.DataCell>
+
+
                     <Table.DataCell>{i + 1}</Table.DataCell>
                     <Table.DataCell scope="row">
                         <b> {vakter.user.name}</b>
@@ -132,7 +141,7 @@ const AvstemmingOkonomi = () => {
                         <br />
                         Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                         {moment(vakter.start_timestamp * 1000).week() <
-                        moment(vakter.end_timestamp * 1000).week()
+                            moment(vakter.end_timestamp * 1000).week()
                             ? " - " + moment(vakter.end_timestamp * 1000).week()
                             : ""}
                         <br />
@@ -173,24 +182,25 @@ const AvstemmingOkonomi = () => {
                             <br />
                         </div>
                     </Table.DataCell>
+
                     {mapApproveStatus(vakter.approve_level)}
                     {["personalleder", "leveranseleder", "okonomi"].includes(
                         currentUser!.role
                     ) && (
-                        <Table.DataCell
-                            scope="row"
-                            style={{ maxWidth: "200px", minWidth: "150px" }}
-                        >
-                            {vakter.cost.length !== 0 ? (
-                                <MapCost
-                                    cost={vakter.cost}
-                                    avstemming={true}
-                                ></MapCost>
-                            ) : (
-                                "ingen beregning foreligger"
-                            )}
-                        </Table.DataCell>
-                    )}
+                            <Table.DataCell
+                                scope="row"
+                                style={{ maxWidth: "200px", minWidth: "150px" }}
+                            >
+                                {vakter.cost.length !== 0 ? (
+                                    <MapCost
+                                        cost={vakter.cost}
+                                        avstemming={true}
+                                    ></MapCost>
+                                ) : (
+                                    "ingen beregning foreligger"
+                                )}
+                            </Table.DataCell>
+                        )}
                     <Table.DataCell
                         scope="row"
                         style={{ maxWidth: "250px", minWidth: "200px" }}
@@ -237,9 +247,9 @@ const AvstemmingOkonomi = () => {
         itemData.filter(
             (value: Schedules) =>
                 new Date(value.start_timestamp * 1000).getMonth() ===
-                    selectedMonth!.getMonth() &&
+                selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
-                    selectedMonth!.getFullYear() &&
+                selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
                 value.user.role
                     .toLowerCase()
@@ -332,16 +342,16 @@ const AvstemmingOkonomi = () => {
                                 "leveranseleder",
                                 "okonomi",
                             ].includes(currentUser!.role) && (
-                                <Table.HeaderCell
-                                    scope="col"
-                                    style={{
-                                        minWidth: "400px",
-                                        maxWidth: "400px",
-                                    }}
-                                >
-                                    Kost
-                                </Table.HeaderCell>
-                            )}
+                                    <Table.HeaderCell
+                                        scope="col"
+                                        style={{
+                                            minWidth: "400px",
+                                            maxWidth: "400px",
+                                        }}
+                                    >
+                                        Kost
+                                    </Table.HeaderCell>
+                                )}
                             <Table.HeaderCell scope="col">
                                 Audit
                             </Table.HeaderCell>
