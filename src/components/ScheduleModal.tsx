@@ -10,6 +10,7 @@ import {
     Alert,
     UNSAFE_DatePicker,
     UNSAFE_useRangeDatepicker,
+    HelpText,
 } from "@navikt/ds-react"
 import { Schedules, User } from "../types/types"
 
@@ -125,18 +126,40 @@ const ScheduleModal = (props: {
                             legend="Hva skal gjøres med opprinnelig plan"
                             onChange={(valg: string) => setAction(valg)}
                         >
-                            <Radio value="bakvakt">Legg til som bakvakt</Radio>
-                            <Radio value="bytte">
-                                Erstatt eksisterende vakt (f.eks ved bytte)
-                            </Radio>
-                            <Radio value="bistand">
-                                Sett eksisterede person som bakvakt og bistå
-                                (f.eks ved sykdom for opprinnelig vakthaver)
-                            </Radio>
-                            <Radio value="replace">
-                                Bytt hele vaktperioden med en annen (skal{" "}
-                                <b>ikke</b> brukes ved sykdom)
-                            </Radio>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Radio value="bakvakt">Legg til som bakvakt (Skal normalt <b>ikke</b> brukes)</Radio>
+                                < HelpText strategy="fixed" title="Bakvakt?" >
+                                    <b>Hvem får betalt:</b> Både opprinnelig vakthaver og den personen som legges til som bakvakt får betalt.< br />
+                                    <b>Hvem vises i vaktplanen:</b> Opprinnelig vakhaver vises i vaktplanen.
+                                </HelpText>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Radio value="bytte">
+                                    Erstatt deler av eksisterende vakt (f.eks ved bytte, dersom hele vaktperioden byttes, benytt eget valg for det under)
+                                </Radio>
+                                <HelpText strategy="fixed" title="Bytte deler av vakt?">
+                                    <b>Hvem får betalt:</b> Kun den personen med aktiv vakt får betalt.<br />
+                                    <b>Hvem vises i vaktplanen:</b> Kun den personen med aktiv vakt vises i vaktplanen. Endringen vil legge seg oppå opprinnelig vakt for angitte periode
+                                </HelpText>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Radio value="bistand">
+                                    Sett eksisterede person som bakvakt og bistå (f.eks ved sykdom for opprinnelig vakthaver)
+                                </Radio>
+                                <HelpText strategy="fixed" title="Bistand?">
+                                    <b>Hvem får betalt:</b> Både opprinnelig vakthaver og den personen som legges til som bistand får betalt.<br />
+                                    <b>Hvem vises i vaktplanen:</b> Den som bistår vises i vaktplanen for angitte periode
+                                </HelpText>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Radio value="replace">
+                                    Bytt hele vaktperioden med en annen (skal <b>ikke</b> brukes ved sykdom)
+                                </Radio>
+                                <HelpText strategy="fixed" title="Bytt hel vakt">
+                                    <b>Hvem får betalt:</b> Den som bytter til seg vakten<br />
+                                    <b>Hvem vises i vaktplanen:</b> Hele perioden byttes. Den ordinerære vakten oppdateres med angitte vakthaver
+                                </HelpText>
+                            </div>
                         </RadioGroup>
                         {action !== "replace" && (
                             <div
@@ -169,7 +192,7 @@ const ScheduleModal = (props: {
                                                 defaultValue={0}
                                                 error={
                                                     clock_start * 3600 +
-                                                        startTimestamp <
+                                                    startTimestamp <
                                                     props.schedule
                                                         .start_timestamp
                                                 }
@@ -248,7 +271,7 @@ const ScheduleModal = (props: {
                                                 defaultValue={0}
                                                 error={
                                                     clock_end * 3600 +
-                                                        endTimestamp >
+                                                    endTimestamp >
                                                     props.schedule.end_timestamp
                                                 }
                                                 onChange={(e) =>
@@ -316,36 +339,36 @@ const ScheduleModal = (props: {
                                 {(clock_start * 3600 + startTimestamp <
                                     props.schedule.start_timestamp ||
                                     clock_end * 3600 + endTimestamp >
-                                        props.schedule.end_timestamp) && (
-                                    <Alert
-                                        style={{
-                                            minWidth: "68%",
-                                            margin: "auto",
-                                        }}
-                                        variant="error"
-                                    >
-                                        <b>
-                                            {" "}
-                                            Du kan ikke sette start/slutt
-                                            utenfor valgt periode
-                                        </b>
-                                        <br />
-                                        Periode start:{" "}
-                                        {new Date(
-                                            props.schedule.start_timestamp *
+                                    props.schedule.end_timestamp) && (
+                                        <Alert
+                                            style={{
+                                                minWidth: "68%",
+                                                margin: "auto",
+                                            }}
+                                            variant="error"
+                                        >
+                                            <b>
+                                                {" "}
+                                                Du kan ikke sette start/slutt
+                                                utenfor valgt periode
+                                            </b>
+                                            <br />
+                                            Periode start:{" "}
+                                            {new Date(
+                                                props.schedule.start_timestamp *
                                                 1000
-                                        )
-                                            .toLocaleString()
-                                            .slice(0, -3)}
-                                        <br />
-                                        Periode slutt:{" "}
-                                        {new Date(
-                                            props.schedule.end_timestamp * 1000
-                                        )
-                                            .toLocaleString()
-                                            .slice(0, -3)}
-                                    </Alert>
-                                )}
+                                            )
+                                                .toLocaleString()
+                                                .slice(0, -3)}
+                                            <br />
+                                            Periode slutt:{" "}
+                                            {new Date(
+                                                props.schedule.end_timestamp * 1000
+                                            )
+                                                .toLocaleString()
+                                                .slice(0, -3)}
+                                        </Alert>
+                                    )}
                             </div>
                         )}
                         <br />
@@ -380,7 +403,7 @@ const ScheduleModal = (props: {
                                         action === "replace"
                                             ? props.schedule.start_timestamp
                                             : startTimestamp +
-                                              clock_start * 3600,
+                                            clock_start * 3600,
                                     end_timestamp:
                                         action === "replace"
                                             ? props.schedule.end_timestamp
@@ -404,8 +427,8 @@ const ScheduleModal = (props: {
                             Legg til endring
                         </Button>
                     </div>
-                </Modal.Content>
-            </Modal>
+                </Modal.Content >
+            </Modal >
         </>
     )
 }
