@@ -73,6 +73,7 @@ export interface User {
     group_id?: string
     ekstern: boolean
     contact_info: string
+    is_admin: boolean
 }
 
 export interface Audit {

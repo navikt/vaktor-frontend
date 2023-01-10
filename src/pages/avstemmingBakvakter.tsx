@@ -1,7 +1,7 @@
 import type { NextPage } from "next"
 import moment from "moment"
 import "moment/locale/nb"
-import AvstemmingOkonomi from "../components/AvstemmingOkonomi"
+import AvstemmingBakvakter from "../components/AvstemmingBakvakter"
 import { GuidePanel } from "@navikt/ds-react"
 import { User } from "../types/types"
 import { useEffect, useState } from "react"
@@ -21,7 +21,11 @@ const Home: NextPage = () => {
             })
     }, [])
 
-    if (["okonomi"].includes(userData.role) || userData.is_admin === true)
+    if (
+        ["leveranseleder"].includes(userData.role) ||
+        userData.is_admin === true ||
+        userData.id === "M131620"
+    )
         return (
             <>
                 <div className="Container">
@@ -30,7 +34,7 @@ const Home: NextPage = () => {
                             <p>Avstemming for ØT </p>
                         </GuidePanel>
                     </div>
-                    <AvstemmingOkonomi></AvstemmingOkonomi>
+                    <AvstemmingBakvakter />
                 </div>
             </>
         )
