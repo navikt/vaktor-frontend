@@ -127,7 +127,7 @@ const ScheduleModal = (props: {
                             onChange={(valg: string) => setAction(valg)}
                         >
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <Radio value="bakvakt">Legg til som bakvakt (Skal normalt <b>ikke</b> brukes)</Radio>
+                                <Radio value="bakvakt" disabled>Legg til som bakvakt (Skal normalt <b>ikke</b> brukes)</Radio>
                                 < HelpText strategy="fixed" title="Bakvakt?" >
                                     <b>Hvem får betalt:</b> Både opprinnelig vakthaver og den personen som legges til som bakvakt får betalt.< br />
                                     <b>Hvem vises i vaktplanen:</b> Opprinnelig vakhaver vises i vaktplanen.
