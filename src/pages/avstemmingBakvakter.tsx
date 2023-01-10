@@ -24,7 +24,7 @@ const Home: NextPage = () => {
     if (
         ["leveranseleder"].includes(userData.role) ||
         userData.is_admin === true ||
-        userData.id === "M131620"
+        userData.id === "m131620"
     )
         return (
             <>
