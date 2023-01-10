@@ -21,7 +21,11 @@ const Home: NextPage = () => {
             })
     }, [])
 
-    if (["okonomi", "leveranseleder"].includes(userData.role))
+    if (
+        ["leveranseleder"].includes(userData.role) ||
+        userData.is_admin === true ||
+        userData.id === "M131620"
+    )
         return (
             <>
                 <div className="Container">
