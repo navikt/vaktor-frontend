@@ -174,9 +174,9 @@ const AvstemmingOkonomi = () => {
                         </div>
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
-                    {["personalleder", "leveranseleder", "okonomi"].includes(
-                        currentUser!.role
-                    ) && (
+                    {["personalleder", "leveranseleder", "okonomi"]!.includes(
+                        currentUser.role) || currentUser.is_admin === true
+                        && (
                             <Table.DataCell
                                 scope="row"
                                 style={{ maxWidth: "200px", minWidth: "150px" }}
@@ -331,8 +331,8 @@ const AvstemmingOkonomi = () => {
                                 "personalleder",
                                 "leveranseleder",
                                 "okonomi",
-                            ].includes(currentUser!.role) ||
-                                currentUser!.is_admin) && (
+                            ].includes(currentUser.role) ||
+                                currentUser.is_admin === true) && (
                                     <Table.HeaderCell
                                         scope="col"
                                         style={{

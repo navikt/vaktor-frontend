@@ -173,69 +173,79 @@ const AdminLeder = () => {
                     style={{ maxWidth: "220px", minWidth: "220px" }}
                 >
                     <div>
-                        <Button
-                            disabled={
-                                vakter.approve_level === 4 ||
-                                vakter.approve_level === 3 ||
-                                vakter.approve_level === 2 ||
-                                vakter.end_timestamp > today
-                            }
-                            style={{
-                                height: "30px",
-                                marginBottom: "5px",
-                                minWidth: "210px",
-                            }}
-                            onClick={() => {
-                                confirm_schedule(
-                                    vakter.id,
-                                    setResponse,
-                                    setLoading
-                                )
-                            }}
-                        >
-                            {" "}
-                            Godkjenn{" "}
-                        </Button>
 
-                        <Button
-                            disabled={
-                                vakter.approve_level === 0 ||
-                                vakter.approve_level === 2 ||
-                                vakter.approve_level === 4
-                            }
-                            style={{
-                                backgroundColor: "#f96c6c",
-                                height: "30px",
-                                minWidth: "210px",
-                            }}
-                            onClick={() =>
-                                disprove_schedule(
-                                    vakter.id,
-                                    setResponse,
-                                    setLoading
-                                )
-                            }
-                        >
-                            {" "}
-                            Avgodkjenn{" "}
-                        </Button>
+                        {vakter.user_id.toLowerCase() === currentUser.id.toLowerCase()
+                            ? <></>
+                            :
+                            <>
+                                <Button
+                                    disabled={
+                                        vakter.user_id.toLowerCase() === currentUser.id.toLowerCase() ||
+                                        vakter.approve_level === 4 ||
+                                        vakter.approve_level === 3 ||
+                                        vakter.approve_level === 2 ||
+                                        vakter.end_timestamp > today
+                                    }
+                                    style={{
+                                        height: "30px",
+                                        marginBottom: "5px",
+                                        minWidth: "210px",
+                                    }}
+                                    onClick={() => {
+                                        confirm_schedule(
+                                            vakter.id,
+                                            setResponse,
+                                            setLoading
+                                        )
+                                    }}
+                                >
+                                    {" "}
+                                    Godkjenn{" "}
+                                </Button>
+
+                                <Button
+                                    disabled={
+                                        vakter.user_id.toLowerCase() === currentUser.id.toLowerCase() ||
+                                        vakter.approve_level === 0 ||
+                                        vakter.approve_level === 2 ||
+                                        vakter.approve_level === 4
+                                    }
+                                    style={{
+                                        backgroundColor: "#f96c6c",
+                                        height: "30px",
+                                        minWidth: "210px",
+                                    }}
+                                    onClick={() =>
+                                        disprove_schedule(
+                                            vakter.id,
+                                            setResponse,
+                                            setLoading
+                                        )
+                                    }
+                                >
+                                    {" "}
+                                    Avgodkjenn{" "}
+                                </Button>
+                            </>
+                        }
+
                     </div>
                 </Table.DataCell>
                 {mapApproveStatus(vakter.approve_level)}
                 {["personalleder", "leveranseleder", "okonomi"].includes(
                     currentUser!.role
-                ) && (
-                        <Table.DataCell
-                            scope="row"
-                            style={{ maxWidth: "200px", minWidth: "300px" }}
-                        >
-                            {vakter.cost.length !== 0 ? (
-                                <MapCost cost={vakter.cost}></MapCost>
-                            ) : (
-                                "ingen beregning foreligger"
-                            )}
-                        </Table.DataCell>
-                    )}
+                ) || currentUser.is_admin === true && (
+                    <Table.DataCell
+                        scope="row"
+                        style={{ maxWidth: "200px", minWidth: "300px" }}
+                    >
+                        {vakter.cost.length !== 0 ? (
+                            <MapCost cost={vakter.cost}></MapCost>
+                        ) : (
+                            "ingen beregning foreligger"
+                        )}
+                    </Table.DataCell>
+                )}
                 <Table.DataCell
                     scope="row"
                     style={{ maxWidth: "250px", minWidth: "200px" }}
@@ -277,7 +287,7 @@ const AdminLeder = () => {
     let listeAvVakter = mapVakter(
         itemData.filter(
             (value: Schedules) =>
-                value.user_id.toLowerCase() !== currentUser.id.toLowerCase() &&
+                //value.user_id.toLowerCase() !== currentUser.id.toLowerCase() &&
                 new Date(value.start_timestamp * 1000).getMonth() ===
                 selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
@@ -356,11 +366,11 @@ const AdminLeder = () => {
                         <Table.HeaderCell scope="col">Status</Table.HeaderCell>
                         {["personalleder", "leveranseleder"].includes(
                             currentUser!.role
-                        ) && (
-                                <Table.HeaderCell scope="col">
-                                    Kostnad
-                                </Table.HeaderCell>
-                            )}
+                        ) || currentUser.is_admin === true && (
+                            <Table.HeaderCell scope="col">
+                                Kostnad
+                            </Table.HeaderCell>
+                        )}
                         <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
