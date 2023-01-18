@@ -23,7 +23,7 @@ const UpdateSchedule = () => {
             fromDate: new Date("Oct 01 2022"),
             toDate: new Date("Aug 23 2025"),
             //defaultSelected: new Date("Oct 2022")
-            defaultSelected: new Date(moment().locale("en-GB").format("MMM Y")),
+            defaultSelected: new Date(moment().locale("en-GB").format("L")),
         })
 
     useEffect(() => {
@@ -120,11 +120,11 @@ const UpdateSchedule = () => {
                                     new Date(
                                         schedule.start_timestamp * 1000
                                     ).getMonth() ===
-                                        selectedMonth!.getMonth() &&
+                                    selectedMonth!.getMonth() &&
                                     new Date(
                                         schedule.start_timestamp * 1000
                                     ).getFullYear() ===
-                                        selectedMonth!.getFullYear()
+                                    selectedMonth!.getFullYear()
                             )
                             .map((schedule: Schedules, i) => {
                                 //approve_level = 0;
@@ -150,14 +150,14 @@ const UpdateSchedule = () => {
                                             {moment(
                                                 schedule.start_timestamp * 1000
                                             ).week() <
-                                            moment(
-                                                schedule.end_timestamp * 1000
-                                            ).week()
+                                                moment(
+                                                    schedule.end_timestamp * 1000
+                                                ).week()
                                                 ? " - " +
-                                                  moment(
-                                                      schedule.end_timestamp *
-                                                          1000
-                                                  ).week()
+                                                moment(
+                                                    schedule.end_timestamp *
+                                                    1000
+                                                ).week()
                                                 : ""}
                                             <br />
                                             Fra:{" "}

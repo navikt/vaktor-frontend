@@ -99,11 +99,11 @@ const AvstemmingOkonomi = () => {
             //defaultSelected: new Date("Oct 2022")
             defaultSelected: new Date(
                 new Date().getDate() - 10 > 0
-                    ? moment().locale("en-GB").format("MMM Y")
+                    ? moment().locale("en-GB").format("L")
                     : moment()
                         .locale("en-GB")
                         .month(moment().month() - 1)
-                        .format("MMM Y")
+                        .format("L")
             ),
         })
 
@@ -174,9 +174,9 @@ const AvstemmingOkonomi = () => {
                         </div>
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
-                    {["personalleder", "leveranseleder", "okonomi"].includes(
-                        currentUser!.role
-                    ) && (
+                    {["personalleder", "leveranseleder", "okonomi"]!.includes(
+                        currentUser.role) || currentUser.is_admin === true
+                        && (
                             <Table.DataCell
                                 scope="row"
                                 style={{ maxWidth: "200px", minWidth: "150px" }}
@@ -327,11 +327,12 @@ const AvstemmingOkonomi = () => {
                             <Table.HeaderCell scope="col">
                                 Status
                             </Table.HeaderCell>
-                            {[
+                            {([
                                 "personalleder",
                                 "leveranseleder",
                                 "okonomi",
-                            ].includes(currentUser!.role) && (
+                            ].includes(currentUser.role) ||
+                                currentUser.is_admin === true) && (
                                     <Table.HeaderCell
                                         scope="col"
                                         style={{
