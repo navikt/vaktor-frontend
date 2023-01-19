@@ -171,7 +171,7 @@ function VaktorTimeline() {
 
     groupsSorted
         .filter((vaktlag: Vaktlag) =>
-            vaktlag.name.toLowerCase().includes(searchFilter)
+            vaktlag.name.toLowerCase().includes(searchFilter.toLowerCase())
         )
         .map((vaktlag: any, index: number) => {
             groupColorList.push({
