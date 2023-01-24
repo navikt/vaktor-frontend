@@ -97,7 +97,7 @@ const AvstemmingBakvakter = () => {
             //defaultSelected: new Date("Oct 2022")
             defaultSelected: new Date(
                 new Date().getDate() - 10 > 0
-                    ? moment().locale("en-GB").format("MMM Y")
+                    ? moment().locale("en-GB").format("L")
                     : moment()
                           .locale("en-GB")
                           .month(moment().month() - 1)
