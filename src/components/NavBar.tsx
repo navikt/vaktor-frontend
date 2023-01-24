@@ -14,6 +14,7 @@ import {
     RouterVaktperioder,
     RouterAvstemmingOkonomi,
 } from "../types/routes"
+import { useAuth } from "../context/AuthContext"
 
 const today = new Date()
 let greetings: string | any[] = []
@@ -23,21 +24,10 @@ today.getMonth() === 11
     : (greetings = ["Hei, ", "Vooof! ", "Voff, voff, "])
 
 export default function Navbar() {
-    const [userData, setUserData] = useState<User>({} as User)
+    const { user } = useAuth()
 
-    useEffect(() => {
-        Promise.all([fetch("/vaktor/api/get_me")])
-            .then(async ([current_user]) => {
-                const userjson = await current_user.json()
-                return [userjson]
-            })
-            .then(([userData]) => {
-                setUserData(userData)
-            })
-    }, [])
-
-    //const user = useContext<UserData>(UserStateContext
-    //userData.role = "leveranseleder"
+    //const user = useContext<user>(UserStateContext
+    //user.role = "leveranseleder"
     {
         //approve_level = 2;
         return (
@@ -69,7 +59,7 @@ export default function Navbar() {
                             "leveranseleder",
                             "personalleder",
                             "okonomi",
-                        ].includes(userData.role) && (
+                        ].includes(user.role) && (
                             <h3>
                                 {
                                     greetings[
@@ -78,7 +68,7 @@ export default function Navbar() {
                                         )
                                     ]
                                 }{" "}
-                                {userData.name}
+                                {user.name}
                             </h3>
                         )}
                     </div>
@@ -88,7 +78,7 @@ export default function Navbar() {
                         "leveranseleder",
                         "personalleder",
                         "okonomi",
-                    ].includes(userData.role) && (
+                    ].includes(user.role) && (
                         <Link href="/">
                             <Button
                                 variant="tertiary"
@@ -108,7 +98,7 @@ export default function Navbar() {
                         "vaktsjef",
                         "leveranseleder",
                         "personalleder",
-                    ].includes(userData.role) && (
+                    ].includes(user.role) && (
                         <Link href="/vaktlagets_vakter">
                             <Button
                                 variant="tertiary"
@@ -125,7 +115,7 @@ export default function Navbar() {
                         </Link>
                     )}
 
-                    {["vaktsjef"].includes(userData.role) && (
+                    {["vaktsjef"].includes(user.role) && (
                         <Link href="/vaktperioder">
                             <Button
                                 variant="tertiary"
@@ -143,7 +133,7 @@ export default function Navbar() {
                     )}
 
                     {["vakthaver", "vaktsjef", "leveranseleder"].includes(
-                        userData.role
+                        user.role
                     ) && (
                         <Link href="/dine_vakter">
                             <Button
@@ -160,9 +150,9 @@ export default function Navbar() {
                     )}
 
                     {(["vaktsjef", "leveranseleder", "personalleder"].includes(
-                        userData.role
+                        user.role
                     ) ||
-                        userData.is_admin) && (
+                        user.is_admin) && (
                         <Link href="/ledergodkjenning">
                             <Button
                                 variant="tertiary"
@@ -179,8 +169,7 @@ export default function Navbar() {
                         </Link>
                     )}
 
-                    {(userData.role === "leveranseleder" ||
-                        userData.is_admin) && (
+                    {(user.role === "leveranseleder" || user.is_admin) && (
                         <Link href="/leveranseleder">
                             <Button
                                 variant="tertiary"
@@ -197,8 +186,7 @@ export default function Navbar() {
                         </Link>
                     )}
 
-                    {(["okonomi"].includes(userData.role) ||
-                        userData.is_admin) && (
+                    {(["okonomi"].includes(user.role) || user.is_admin) && (
                         <Link href="/avstemming">
                             <Button
                                 variant="tertiary"
@@ -215,14 +203,13 @@ export default function Navbar() {
                         </Link>
                     )}
                 </nav>
-
                 {[
                     "vakthaver",
                     "vaktsjef",
                     "leveranseleder",
                     "personalleder",
                     "okonomi",
-                ].includes(userData.role) ? (
+                ].includes(user.role) ? (
                     <></>
                 ) : (
                     <div style={{ marginBottom: "20px", marginTop: "-20px" }}>

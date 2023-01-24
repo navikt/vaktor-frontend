@@ -9,7 +9,7 @@ export default async function handler(
         req.headers && req.headers.authorization
             ? req.headers.authorization
             : "No Authorization header"
-    //let authorizationHeader = process.env.FAKE_TOKEN
+    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
     let type = req.query.type
     let path = `${process.env.BACKEND_URL}/api/v1/admin/all_schedules_bakvakter?type=${type}`
 

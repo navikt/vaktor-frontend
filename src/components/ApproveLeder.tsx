@@ -10,6 +10,7 @@ import {
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
+import { useAuth } from "../context/AuthContext"
 import { Audit, Schedules, User, Cost } from "../types/types"
 import MapCost from "./MapCost"
 
@@ -106,8 +107,9 @@ const mapApproveStatus = (status: number) => {
 }
 
 const AdminLeder = () => {
+    const { user } = useAuth()
+
     const [itemData, setItemData] = useState<Schedules[]>([])
-    const [currentUser, setCurrentUser] = useState<User>({} as User)
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
@@ -223,7 +225,7 @@ const AdminLeder = () => {
                 </Table.DataCell>
                 {mapApproveStatus(vakter.approve_level)}
                 {["personalleder", "leveranseleder", "okonomi"].includes(
-                    currentUser!.role
+                    user.role
                 ) && (
                     <Table.DataCell
                         scope="row"
@@ -249,23 +251,14 @@ const AdminLeder = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([
-            fetch("/vaktor/api/leader_schedules"),
-            fetch("/vaktor/api/get_me"),
-        ])
-            .then(async ([scheduleRes, userRes]) => {
-                const schedulejson = await scheduleRes.json()
-                const userjson = await userRes.json()
-                return [schedulejson, userjson]
-            })
-            .then(([itemData, userData]) => {
+        fetch("/vaktor/api/leader_schedules")
+            .then((scheduleRes) => scheduleRes.json())
+            .then((itemData) => {
                 itemData.sort(
                     (a: Schedules, b: Schedules) =>
                         a.start_timestamp - b.start_timestamp
                 )
-
                 setItemData(itemData)
-                setCurrentUser(userData)
                 setLoading(false)
             })
     }, [response])
@@ -277,7 +270,7 @@ const AdminLeder = () => {
     let listeAvVakter = mapVakter(
         itemData.filter(
             (value: Schedules) =>
-                value.user_id.toLowerCase() !== currentUser.id.toLowerCase() &&
+                value.user_id.toLowerCase() !== user.id.toLowerCase() &&
                 new Date(value.start_timestamp * 1000).getMonth() ===
                     selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
@@ -355,7 +348,7 @@ const AdminLeder = () => {
                         <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Status</Table.HeaderCell>
                         {["personalleder", "leveranseleder"].includes(
-                            currentUser!.role
+                            user.role
                         ) && (
                             <Table.HeaderCell scope="col">
                                 Kostnad

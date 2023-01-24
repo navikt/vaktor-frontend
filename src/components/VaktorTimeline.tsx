@@ -23,7 +23,7 @@ import { NavigationButtons } from "./NavigationButtons"
 import { FluidValue } from "@react-spring/shared"
 import { Schedules, User, Vaktlag } from "../types/types"
 import Overview from "./OverviewNoTimeline"
-import { isCryptoKey } from "util/types"
+import { useAuth } from "../context/AuthContext"
 
 const SidebarHeaderText = styled.div`
     padding-top: 25px;
@@ -60,8 +60,8 @@ const LoadingWrapper = styled.div`
 `
 
 function VaktorTimeline() {
+    const { user } = useAuth()
     const [groupData, setGroupData] = useState(null)
-    const [userData, setUserData] = useState({} as User)
     const [itemData, setItemData] = useState(null)
     const [isLoading, setLoading] = useState(false)
 
@@ -111,21 +111,15 @@ function VaktorTimeline() {
     useEffect(() => {
         setLoading(true)
 
-        Promise.all([
-            fetch("vaktor/api/groups"),
-            fetch("vaktor/api/schedules"),
-            fetch("/vaktor/api/get_me"),
-        ])
-            .then(async ([groupRes, scheduleRes, userRes]) => {
+        Promise.all([fetch("vaktor/api/groups"), fetch("vaktor/api/schedules")])
+            .then(async ([groupRes, scheduleRes]) => {
                 const groupjson = await groupRes.json()
                 const schedulejson = await scheduleRes.json()
-                const userjson = await userRes.json()
-                return [groupjson, schedulejson, userjson]
+                return [groupjson, schedulejson]
             })
-            .then(([groupData, itemData, userData]) => {
+            .then(([groupData, itemData]) => {
                 setGroupData(groupData)
                 setItemData(itemData)
-                setUserData(userData)
                 setLoading(false)
             })
     }, [])
@@ -171,7 +165,7 @@ function VaktorTimeline() {
 
     groupsSorted
         .filter((vaktlag: Vaktlag) =>
-            vaktlag.name.toLowerCase().includes(searchFilter)
+            vaktlag.name.toLowerCase().includes(searchFilter.toLowerCase())
         )
         .map((vaktlag: any, index: number) => {
             groupColorList.push({
@@ -463,7 +457,7 @@ function VaktorTimeline() {
                             startTime={itemStartTime}
                             endTime={itemEndTime}
                             canEdit={
-                                userData.id.toUpperCase() === itemUser!.id
+                                user.id.toUpperCase() === itemUser!.id
                                     ? true
                                     : false
                             }

@@ -16,6 +16,7 @@ import {
 import ColumnHeader from "@navikt/ds-react/esm/table/ColumnHeader"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
+import { useAuth } from "../context/AuthContext"
 import { Vaktlag, Schedules, User } from "../types/types"
 import PerioderOptions from "./PerioderOptions"
 
@@ -59,6 +60,7 @@ const createSchedule = async (
 }
 
 const Vaktperioder = () => {
+    const { user } = useAuth()
     const numWeeksInMs = 6.048e8 * 4 // 4 weeks in ms
     const [itemData, setItemData] = useState<User[]>([])
     const [response, setResponse] = useState([])
@@ -120,21 +122,19 @@ const Vaktperioder = () => {
 
     useEffect(() => {
         //setLoading(true);
-        Promise.all([fetch("/vaktor/api/get_my_groupmembers")])
-            .then(async ([scheduleRes]) => {
-                const schedulejson = await scheduleRes.json()
-                return [schedulejson]
-            })
-            .then(([itemData]) => {
-                setItemData(
-                    itemData.filter(
+        fetch(`/vaktor/api/get_my_groupmembers?group_id=${user.group_id}`)
+            .then((membersRes) => membersRes.json())
+            .then((groupMembersJson) => {
+                console.log(groupMembersJson)
+                /* setItemData(
+                    groupMembersJson.filter(
                         (user: User) => user.role !== "leveranseleder"
                     )
                 )
-                setIsMidlertidlig(itemData[0].groups[0].type === "Midlertidlig")
-                setLoading(false)
+                setIsMidlertidlig(user.groups[0].type === "Midlertidlig")
+                setLoading(false) */
             })
-    }, [response])
+    }, [response, user])
 
     if (loading === true) return <Loader></Loader>
     return (
@@ -149,8 +149,10 @@ const Vaktperioder = () => {
                         display: "grid",
                         alignItems: "center",
                         justifyContent: "space-around",
+                        gap: "20px",
                     }}
                 >
+                    <div style={{ width: "43%", margin: "auto" }}></div>
                     {isMidlertidlig ? (
                         <div style={{ margin: "auto" }}>
                             <UNSAFE_DatePicker {...datepickerProps} style={{}}>

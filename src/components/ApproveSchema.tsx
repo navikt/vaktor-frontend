@@ -114,7 +114,7 @@ const dineVakter = () => {
                     <br />
                     Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                     {moment(vakter.start_timestamp * 1000).week() <
-                        moment(vakter.end_timestamp * 1000).week()
+                    moment(vakter.end_timestamp * 1000).week()
                         ? " - " + moment(vakter.end_timestamp * 1000).week()
                         : ""}
                     <br />
@@ -188,9 +188,11 @@ const dineVakter = () => {
                 </Table.DataCell>
                 {mapApproveStatus(vakter.approve_level)}
                 <Table.DataCell style={{ minWidth: "300px" }}>
-                    {vakter.cost.length !== 0
-                        ? <MapCost cost={vakter.cost}></MapCost>
-                        : "ingen beregning foreligger"}
+                    {vakter.cost.length !== 0 ? (
+                        <MapCost cost={vakter.cost}></MapCost>
+                    ) : (
+                        "ingen beregning foreligger"
+                    )}
                 </Table.DataCell>
                 <Table.DataCell>
                     {vakter.audits.length !== 0

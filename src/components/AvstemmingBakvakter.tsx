@@ -1,5 +1,4 @@
 import {
-    Button,
     Table,
     Loader,
     UNSAFE_MonthPicker,
@@ -9,11 +8,10 @@ import {
     Select,
 } from "@navikt/ds-react"
 import moment from "moment"
-import { useEffect, useState, Dispatch } from "react"
-import { Audit, Cost, Schedules, User, Artskoder } from "../types/types"
+import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
+import { Audit, Schedules } from "../types/types"
 import MapCost from "./MapCost"
-
-let today = Date.now() / 1000
 
 const mapAudit = (audit: Audit[]) => {
     return audit
@@ -83,8 +81,8 @@ const mapApproveStatus = (status: number) => {
 }
 
 const AvstemmingBakvakter = () => {
+    const { user } = useAuth()
     const [itemData, setItemData] = useState<Schedules[]>([])
-    const [currentUser, setCurrentUser] = useState<User>({} as User)
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
@@ -163,7 +161,7 @@ const AvstemmingBakvakter = () => {
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
                     {["personalleder", "leveranseleder", "okonomi"].includes(
-                        currentUser!.role
+                        user.role
                     ) && (
                         <Table.DataCell
                             scope="row"
@@ -192,16 +190,9 @@ const AvstemmingBakvakter = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([
-            fetch(`/vaktor/api/get_all_bakvakter?type=${searchFilterType}`),
-            fetch("/vaktor/api/get_me"),
-        ])
-            .then(async ([scheduleRes, userRes]) => {
-                const schedulejson = await scheduleRes.json()
-                const userjson = await userRes.json()
-                return [schedulejson, userjson]
-            })
-            .then(([itemData, userData]) => {
+        fetch(`/vaktor/api/get_all_bakvakter?type=${searchFilterType}`)
+            .then(async (scheduleRes) => scheduleRes.json())
+            .then((itemData) => {
                 itemData.sort(
                     (a: Schedules, b: Schedules) =>
                         a.start_timestamp - b.start_timestamp
@@ -212,7 +203,6 @@ const AvstemmingBakvakter = () => {
                         (data: Schedules) => data.user.ekstern === false
                     )
                 )
-                setCurrentUser(userData)
                 setLoading(false)
             })
     }, [response, searchFilterType])
@@ -317,7 +307,7 @@ const AvstemmingBakvakter = () => {
                                 "personalleder",
                                 "leveranseleder",
                                 "okonomi",
-                            ].includes(currentUser!.role) && (
+                            ].includes(user.role) && (
                                 <Table.HeaderCell
                                     scope="col"
                                     style={{

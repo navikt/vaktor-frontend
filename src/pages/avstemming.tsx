@@ -5,23 +5,13 @@ import AvstemmingOkonomi from "../components/AvstemmingOkonomi"
 import { GuidePanel } from "@navikt/ds-react"
 import { User } from "../types/types"
 import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
 
 const Home: NextPage = () => {
-    const [userData, setUserData] = useState<User>({} as User)
-
+    const { user } = useAuth()
     moment.locale("nb")
-    useEffect(() => {
-        Promise.all([fetch("/vaktor/api/get_me")])
-            .then(async ([current_user]) => {
-                const userjson = await current_user.json()
-                return [userjson]
-            })
-            .then(([userData]) => {
-                setUserData(userData)
-            })
-    }, [])
 
-    if (["okonomi"].includes(userData.role) || userData.is_admin === true)
+    if (["okonomi"].includes(user.role) || user.is_admin === true)
         return (
             <>
                 <div className="Container">

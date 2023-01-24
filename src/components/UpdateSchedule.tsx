@@ -4,14 +4,17 @@ import {
     UNSAFE_useMonthpicker,
     UNSAFE_MonthPicker,
     Search,
+    Select,
 } from "@navikt/ds-react"
-import { useEffect, useState, useRef, RefObject, Dispatch } from "react"
-import { Schedules } from "../types/types"
+import { useEffect, useState } from "react"
+import { Schedules, User, Vaktlag } from "../types/types"
 import moment from "moment"
 import ScheduleModal from "./ScheduleModal"
 import ScheduleChanges from "./ScheduleChanges"
+import { useAuth } from "../context/AuthContext"
 
 const UpdateSchedule = () => {
+    const { user } = useAuth()
     const [scheduleData, setScheduleData] = useState<Schedules[]>([])
     const [selectedSchedule, setSchedule] = useState<Schedules>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -22,17 +25,13 @@ const UpdateSchedule = () => {
         UNSAFE_useMonthpicker({
             fromDate: new Date("Oct 01 2022"),
             toDate: new Date("Aug 23 2025"),
-            //defaultSelected: new Date("Oct 2022")
             defaultSelected: new Date(moment().locale("en-GB").format("MMM Y")),
         })
 
     useEffect(() => {
-        Promise.all([fetch("/vaktor/api/group_schedules")])
-            .then(async ([scheduleRes]) => {
-                const scheduleData = await scheduleRes.json()
-                return [scheduleData]
-            })
-            .then(([scheduleData]) => {
+        fetch("/vaktor/api/group_schedules")
+            .then((scheduleRes) => scheduleRes.json())
+            .then((scheduleData) => {
                 scheduleData.sort(
                     (a: Schedules, b: Schedules) =>
                         a.start_timestamp - b.start_timestamp
@@ -63,7 +62,10 @@ const UpdateSchedule = () => {
                     justifyContent: "space-around",
                 }}
             >
-                <div className="min-h-96" style={{ display: "flex" }}>
+                <div
+                    className="min-h-96"
+                    style={{ display: "flex", gap: "30px" }}
+                >
                     <UNSAFE_MonthPicker {...monthpickerProps}>
                         <div className="grid gap-4">
                             <UNSAFE_MonthPicker.Input
@@ -72,15 +74,26 @@ const UpdateSchedule = () => {
                             />
                         </div>
                     </UNSAFE_MonthPicker>
-                    <form style={{ width: "300px", marginLeft: "30px" }}>
+                    <form style={{ width: "300px" }}>
                         <Search
                             label="Søk etter person"
                             hideLabel={false}
                             variant="simple"
                             onChange={(text) => setSearchFilter(text)}
                             onClick={(e) => false}
-                        ></Search>
+                        />
                     </form>
+
+                    <Select
+                        label="Velg vaktlag"
+                        onChange={(e) => console.log(e.target.value)}
+                    >
+                        {user.groups.map((group: Vaktlag) => (
+                            <option key={group.id} value={group.id}>
+                                {group.name}
+                            </option>
+                        ))}
+                    </Select>
                 </div>
                 <Table
                     style={{

@@ -11,10 +11,10 @@ export default async function handler(
             : "No Authorization header"
     //
     // for local testing
-    //let authorizationHeader = process.env.FAKE_TOKEN
+    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
 
     let user = JSON.parse(req.body)
-    console.log("user: ", user)
+    //console.log("user: ", user)
 
     let path = `${process.env.BACKEND_URL}/api/v1/users/${user.id}`
 
