@@ -281,7 +281,7 @@ const AdminLeder = () => {
     let listeAvVakter = mapVakter(
         itemData.filter(
             (value: Schedules) =>
-                value.user_id.toLowerCase() !== user.id.toLowerCase() &&
+                // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
                 new Date(value.start_timestamp * 1000).getMonth() ===
                     selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
