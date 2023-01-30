@@ -122,17 +122,23 @@ const Vaktperioder = () => {
 
     useEffect(() => {
         //setLoading(true);
-        fetch(`/vaktor/api/get_my_groupmembers?group_id=${user.group_id}`)
+        let list_of_group_ids = user.groups.map((group) => group.id)
+        let body = JSON.stringify(list_of_group_ids)
+
+        fetch(`/vaktor/api/get_my_groupmembers`, {
+            method: "POST",
+            body: body,
+        })
             .then((membersRes) => membersRes.json())
             .then((groupMembersJson) => {
                 console.log(groupMembersJson)
-                /* setItemData(
+                setItemData(
                     groupMembersJson.filter(
                         (user: User) => user.role !== "leveranseleder"
                     )
                 )
                 setIsMidlertidlig(user.groups[0].type === "Midlertidlig")
-                setLoading(false) */
+                setLoading(false)
             })
     }, [response, user])
 

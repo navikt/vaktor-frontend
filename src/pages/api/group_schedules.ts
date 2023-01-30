@@ -38,10 +38,12 @@ export default async function handler(
         )
 
     let schedules = await allGroupSchedule(getCurrentUser)
-    schedules = schedules[0].concat(schedules[1])
-    console.log(schedules)
-    if (schedules.length != 0) {
-        res.status(200).json(schedules)
+    let list_of_schedules: Schedules[] = []
+
+    schedules.forEach((s) => (list_of_schedules = [...list_of_schedules, ...s]))
+
+    if (list_of_schedules.length != 0) {
+        res.status(200).json(list_of_schedules)
     } else {
         res.send("Cant get data from backend")
     }
