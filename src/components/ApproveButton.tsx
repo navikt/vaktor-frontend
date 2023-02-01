@@ -61,7 +61,7 @@ const ApproveButton: Function = (props: {
                         variant="danger"
                         onClick={() => {
                             confirm_schedule(props.vakt, props.setResponse),
-                                setOpenState(false),
+                                setOpenState(false)
                         }
 
                         }
