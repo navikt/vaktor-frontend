@@ -62,7 +62,6 @@ const ApproveButton: Function = (props: {
                         onClick={() => {
                             confirm_schedule(props.vakt, props.setResponse),
                                 setOpenState(false),
-                                console.log(props.vakt)
                         }
 
                         }

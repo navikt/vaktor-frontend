@@ -107,9 +107,7 @@ const mapApproveStatus = (status: number) => {
     )
 }
 
-const AdminLeder = (props: {
-    periods: Schedules[],
-    setResponse: Dispatch<any>
+const AdminLeder = ({
 }) => {
     const { user } = useAuth()
 
