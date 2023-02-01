@@ -12,6 +12,7 @@ import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
 import { useAuth } from "../context/AuthContext"
 import { Audit, Schedules, User, Cost } from "../types/types"
+import ApproveButton from "./ApproveButton"
 import MapCost from "./MapCost"
 
 let today = Date.now() / 1000
@@ -106,7 +107,10 @@ const mapApproveStatus = (status: number) => {
     )
 }
 
-const AdminLeder = () => {
+const AdminLeder = (props: {
+    periods: Schedules[],
+    setResponse: Dispatch<any>
+}) => {
     const { user } = useAuth()
 
     const [itemData, setItemData] = useState<Schedules[]>([])
@@ -126,11 +130,12 @@ const AdminLeder = () => {
                 new Date().getDate() - 10 > 0
                     ? moment().locale("en-GB").format("L")
                     : moment()
-                          .locale("en-GB")
-                          .month(moment().month() - 1)
-                          .format("L")
+                        .locale("en-GB")
+                        .month(moment().month() - 1)
+                        .format("L")
             ),
         })
+
 
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste.map((vakter: Schedules, i: number) => (
@@ -144,7 +149,7 @@ const AdminLeder = () => {
                 <Table.DataCell>
                     Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                     {moment(vakter.start_timestamp * 1000).week() <
-                    moment(vakter.end_timestamp * 1000).week()
+                        moment(vakter.end_timestamp * 1000).week()
                         ? " - " + moment(vakter.end_timestamp * 1000).week()
                         : ""}
                     <br />
@@ -176,40 +181,49 @@ const AdminLeder = () => {
                 >
                     <div>
                         {vakter.user_id.toLowerCase() ===
-                        user.id.toLowerCase() ? (
+                            user.id.toLowerCase() ? (
                             <></>
                         ) : (
                             <>
-                                <Button
-                                    disabled={
-                                        vakter.user_id.toLowerCase() ===
+
+                                {vakter.approve_level === 0 ? (
+                                    <>
+                                        <ApproveButton vakt={vakter.id} setResponse={setResponse}></ApproveButton>
+                                    </>
+                                ) : (
+                                    <Button
+                                        disabled={
+                                            vakter.user_id.toLowerCase() ===
                                             user.id.toLowerCase() ||
-                                        vakter.approve_level === 4 ||
-                                        vakter.approve_level === 3 ||
-                                        vakter.approve_level === 2 ||
-                                        vakter.end_timestamp > today
-                                    }
-                                    style={{
-                                        height: "30px",
-                                        marginBottom: "5px",
-                                        minWidth: "210px",
-                                    }}
-                                    onClick={() => {
-                                        confirm_schedule(
-                                            vakter.id,
-                                            setResponse,
-                                            setLoading
-                                        )
-                                    }}
-                                >
-                                    {" "}
-                                    Godkjenn{" "}
-                                </Button>
+                                            vakter.approve_level === 4 ||
+                                            vakter.approve_level === 3 ||
+                                            vakter.approve_level === 2 ||
+                                            vakter.end_timestamp > today
+                                        }
+                                        style={{
+                                            height: "30px",
+                                            marginBottom: "5px",
+                                            minWidth: "210px",
+                                        }}
+                                        onClick={() => {
+                                            confirm_schedule(
+                                                vakter.id,
+                                                setResponse,
+                                                setLoading
+                                            )
+                                        }}
+                                    >
+                                        {" "}
+                                        Godkjenn{" "}
+                                    </Button>
+
+                                )}
+
 
                                 <Button
                                     disabled={
                                         vakter.user_id.toLowerCase() ===
-                                            user.id.toLowerCase() ||
+                                        user.id.toLowerCase() ||
                                         vakter.approve_level === 0 ||
                                         vakter.approve_level === 2 ||
                                         vakter.approve_level === 4
@@ -237,7 +251,7 @@ const AdminLeder = () => {
                 {mapApproveStatus(vakter.approve_level)}
                 {["personalleder", "leveranseleder", "okonomi"].includes(
                     user.role
-                ) && (
+                ) || user.is_admin && (
                     <Table.DataCell
                         scope="row"
                         style={{ maxWidth: "200px", minWidth: "300px" }}
@@ -283,9 +297,9 @@ const AdminLeder = () => {
             (value: Schedules) =>
                 // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
                 new Date(value.start_timestamp * 1000).getMonth() ===
-                    selectedMonth!.getMonth() &&
+                selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
-                    selectedMonth!.getFullYear() &&
+                selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
                 value.user.role
                     .toLowerCase()
@@ -360,7 +374,7 @@ const AdminLeder = () => {
                         <Table.HeaderCell scope="col">Status</Table.HeaderCell>
                         {["personalleder", "leveranseleder"].includes(
                             user!.role
-                        ) && (
+                        ) || user.is_admin && (
                             <Table.HeaderCell scope="col">
                                 Kostnad
                             </Table.HeaderCell>
