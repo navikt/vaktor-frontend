@@ -202,23 +202,29 @@ const Vaktperioder = () => {
                     }}
                 >
                     <div style={{ width: "43%", margin: "auto" }}></div>
-                    {user.groups.length > 1 ? (
+                    <div style={{ display: "flex", alignContent: "center", justifyContent: "center" }}>
+                        {user.groups.length > 1 ? (
 
-                        <ToggleGroup defaultValue={user.groups[0].id} onChange={e => (setSelctedVaktlag(e))}>
 
-                            {user.groups.map((group: Vaktlag) => (
-                                <ToggleGroup.Item
-                                    key={group.id}
-                                    value={group.id}
-                                > {group.name}
-                                </ToggleGroup.Item>
-                            ))}
+                            <ToggleGroup defaultValue={user.groups[0].id} onChange={e => (setSelctedVaktlag(e))} >
 
-                        </ToggleGroup>
 
-                    ) : (
-                        <b>{user.groups[0].name}</b>
-                    )}
+                                {user.groups.map((group: Vaktlag) => (
+                                    <ToggleGroup.Item
+                                        key={group.id}
+                                        value={group.id}
+                                    > {group.name}
+                                    </ToggleGroup.Item>
+                                ))}
+
+                            </ToggleGroup>
+
+
+
+                        ) : (
+                            <b>{user.groups[0].name}</b>
+                        )}
+                    </div>
 
                     {isMidlertidlig ? (
                         <div style={{ margin: "auto", gap: "100px" }}>
@@ -518,7 +524,8 @@ const Vaktperioder = () => {
                     )}
 
                 </div>
-            )}
+            )
+            }
         </>
     )
 }

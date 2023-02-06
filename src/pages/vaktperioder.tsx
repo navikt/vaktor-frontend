@@ -20,28 +20,6 @@ const Home: NextPage = () => {
                             <p>
                                 Her kan du generere nye vaktperioder for ditt
                                 vaktlag:{" "}
-                                {user.groups.length > 1 ? (
-                                    <Select
-                                        label="Velg vaktlag"
-                                        onChange={(e) =>
-                                            console.log(e.target.value)
-                                        }
-                                    >
-                                        {user.groups.map((group: Vaktlag) => (
-                                            <option
-                                                key={group.id}
-                                                value={group.id}
-                                            >
-                                                {group.name}
-                                            </option>
-                                        ))}
-                                    </Select>
-                                ) : (
-                                    <b>{user.groups[0].name}</b>
-                                )}
-                                <br />
-                                Ditt vaktlag er av typen:{" "}
-                                <b>{user.groups[0].type}</b>
                             </p>
                         </GuidePanel>
                     </div>
