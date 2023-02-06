@@ -142,7 +142,7 @@ const Vaktperioder = () => {
 
     //// #####   Flere forms-greier
 
-    const [forms, setForms] = useState([{ name: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
+    const [forms, setForms] = useState([{ name: '', group: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
 
     const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault();
@@ -152,7 +152,7 @@ const Vaktperioder = () => {
     }
 
     const handleAddForm = () => {
-        setForms([...forms, { name: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
+        setForms([...forms, { name: '', group: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
     }
 
     const handleChildProps = (index: any, dateProps: any) => {
@@ -182,9 +182,9 @@ const Vaktperioder = () => {
                         (user: User) => user.role !== "leveranseleder"
                     )
                 )
-                setIsMidlertidlig(user.groups[0].type === "Midlertidlig")
+                //setIsMidlertidlig(user.groups[0].type === "Midlertidlig")
                 // :pointdown: må fjernes - manuell overstyring av midlertidig
-                //setIsMidlertidlig(true)
+                setIsMidlertidlig(true)
                 setLoading(false)
             })
     }, [response, user])
@@ -211,9 +211,11 @@ const Vaktperioder = () => {
                             {forms.map((form, index) => (
                                 <div key={index}>
                                     <Select label="vakthaver" value={form.name} onChange={e => {
-                                        const newForms = [...forms];
-                                        newForms[index].name = e.target.value;
-                                        setForms(newForms);
+                                        const newForms = [...forms]
+                                        newForms[index].name = e.target.value
+                                        newForms[index].group = user.groups[0].id
+                                        setForms(newForms)
+                                        console.log("User object: ", user)
                                     }}>
                                         <option value="">Velg Vakthaver</option>
                                         {mapMembersMidlertidig(itemData)}

@@ -125,26 +125,7 @@ const ScheduleModal = (props: {
                             legend="Hva skal gjøres med opprinnelig plan"
                             onChange={(valg: string) => setAction(valg)}
                         >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                }}
-                            >
-                                <Radio value="bakvakt" disabled>
-                                    Legg til som bakvakt (Skal normalt{" "}
-                                    <b>ikke</b> brukes)
-                                </Radio>
-                                <HelpText strategy="fixed" title="Bakvakt?">
-                                    <b>Hvem får betalt:</b> Både opprinnelig
-                                    vakthaver og den personen som legges til som
-                                    bakvakt får betalt.
-                                    <br />
-                                    <b>Hvem vises i vaktplanen:</b> Opprinnelig
-                                    vakhaver vises i vaktplanen.
-                                </HelpText>
-                            </div>
+
                             <div
                                 style={{
                                     display: "flex",
@@ -246,7 +227,7 @@ const ScheduleModal = (props: {
                                                 defaultValue={0}
                                                 error={
                                                     clock_start * 3600 +
-                                                        startTimestamp <
+                                                    startTimestamp <
                                                     props.schedule
                                                         .start_timestamp
                                                 }
@@ -325,7 +306,7 @@ const ScheduleModal = (props: {
                                                 defaultValue={0}
                                                 error={
                                                     clock_end * 3600 +
-                                                        endTimestamp >
+                                                    endTimestamp >
                                                     props.schedule.end_timestamp
                                                 }
                                                 onChange={(e) =>
@@ -393,36 +374,36 @@ const ScheduleModal = (props: {
                                 {(clock_start * 3600 + startTimestamp <
                                     props.schedule.start_timestamp ||
                                     clock_end * 3600 + endTimestamp >
-                                        props.schedule.end_timestamp) && (
-                                    <Alert
-                                        style={{
-                                            minWidth: "68%",
-                                            margin: "auto",
-                                        }}
-                                        variant="error"
-                                    >
-                                        <b>
-                                            {" "}
-                                            Du kan ikke sette start/slutt
-                                            utenfor valgt periode
-                                        </b>
-                                        <br />
-                                        Periode start:{" "}
-                                        {new Date(
-                                            props.schedule.start_timestamp *
+                                    props.schedule.end_timestamp) && (
+                                        <Alert
+                                            style={{
+                                                minWidth: "68%",
+                                                margin: "auto",
+                                            }}
+                                            variant="error"
+                                        >
+                                            <b>
+                                                {" "}
+                                                Du kan ikke sette start/slutt
+                                                utenfor valgt periode
+                                            </b>
+                                            <br />
+                                            Periode start:{" "}
+                                            {new Date(
+                                                props.schedule.start_timestamp *
                                                 1000
-                                        )
-                                            .toLocaleString()
-                                            .slice(0, -3)}
-                                        <br />
-                                        Periode slutt:{" "}
-                                        {new Date(
-                                            props.schedule.end_timestamp * 1000
-                                        )
-                                            .toLocaleString()
-                                            .slice(0, -3)}
-                                    </Alert>
-                                )}
+                                            )
+                                                .toLocaleString()
+                                                .slice(0, -3)}
+                                            <br />
+                                            Periode slutt:{" "}
+                                            {new Date(
+                                                props.schedule.end_timestamp * 1000
+                                            )
+                                                .toLocaleString()
+                                                .slice(0, -3)}
+                                        </Alert>
+                                    )}
                             </div>
                         )}
                         <br />
@@ -457,7 +438,7 @@ const ScheduleModal = (props: {
                                         action === "replace"
                                             ? props.schedule.start_timestamp
                                             : startTimestamp +
-                                              clock_start * 3600,
+                                            clock_start * 3600,
                                     end_timestamp:
                                         action === "replace"
                                             ? props.schedule.end_timestamp

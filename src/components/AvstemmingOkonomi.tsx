@@ -102,9 +102,9 @@ const AvstemmingOkonomi = () => {
                 new Date().getDate() - 10 > 0
                     ? moment().locale("en-GB").format("L")
                     : moment()
-                          .locale("en-GB")
-                          .month(moment().month() - 1)
-                          .format("L")
+                        .locale("en-GB")
+                        .month(moment().month() - 1)
+                        .format("L")
             ),
         })
 
@@ -127,13 +127,13 @@ const AvstemmingOkonomi = () => {
                         <br />
                         {vakter.group.name}
                     </Table.DataCell>
-                    <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
+                    <Table.DataCell scope="row">{vakter.type === "bakvakt" ? 'bistand' : vakter.type}</Table.DataCell>
                     <Table.DataCell>
                         <b>ID: {vakter.id} </b>
                         <br />
                         Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                         {moment(vakter.start_timestamp * 1000).week() <
-                        moment(vakter.end_timestamp * 1000).week()
+                            moment(vakter.end_timestamp * 1000).week()
                             ? " - " + moment(vakter.end_timestamp * 1000).week()
                             : ""}
                         <br />
@@ -167,7 +167,7 @@ const AvstemmingOkonomi = () => {
                             {vakter.vakter.length !== 0 ? "Endringer:" : ""}
                             {vakter.vakter.map((endringer, idx: number) => (
                                 <div key={idx}>
-                                    <b> {endringer.type}:</b>{" "}
+                                    <b> {endringer.type === "bakvakt" ? 'bistand' : endringer.type}:</b>{" "}
                                     {endringer.user.name}
                                 </div>
                             ))}
@@ -177,20 +177,20 @@ const AvstemmingOkonomi = () => {
                     {mapApproveStatus(vakter.approve_level)}
                     {(["okonomi"].includes(user.role) ||
                         user.is_admin === true) && (
-                        <Table.DataCell
-                            scope="row"
-                            style={{ maxWidth: "200px", minWidth: "150px" }}
-                        >
-                            {vakter.cost.length !== 0 ? (
-                                <MapCost
-                                    cost={vakter.cost}
-                                    avstemming={true}
-                                ></MapCost>
-                            ) : (
-                                "ingen beregning foreligger"
-                            )}
-                        </Table.DataCell>
-                    )}
+                            <Table.DataCell
+                                scope="row"
+                                style={{ maxWidth: "200px", minWidth: "150px" }}
+                            >
+                                {vakter.cost.length !== 0 ? (
+                                    <MapCost
+                                        cost={vakter.cost}
+                                        avstemming={true}
+                                    ></MapCost>
+                                ) : (
+                                    "ingen beregning foreligger"
+                                )}
+                            </Table.DataCell>
+                        )}
                     <Table.DataCell
                         scope="row"
                         style={{ maxWidth: "250px", minWidth: "200px" }}
@@ -229,9 +229,9 @@ const AvstemmingOkonomi = () => {
         itemData.filter(
             (value: Schedules) =>
                 new Date(value.start_timestamp * 1000).getMonth() ===
-                    selectedMonth!.getMonth() &&
+                selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
-                    selectedMonth!.getFullYear() &&
+                selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
                 value.user.role
                     .toLowerCase()
@@ -321,16 +321,16 @@ const AvstemmingOkonomi = () => {
                             </Table.HeaderCell>
                             {(["okonomi"].includes(user.role) ||
                                 user.is_admin === true) && (
-                                <Table.HeaderCell
-                                    scope="col"
-                                    style={{
-                                        minWidth: "400px",
-                                        maxWidth: "400px",
-                                    }}
-                                >
-                                    Kost
-                                </Table.HeaderCell>
-                            )}
+                                    <Table.HeaderCell
+                                        scope="col"
+                                        style={{
+                                            minWidth: "400px",
+                                            maxWidth: "400px",
+                                        }}
+                                    >
+                                        Kost
+                                    </Table.HeaderCell>
+                                )}
                             <Table.HeaderCell scope="col">
                                 Audit
                             </Table.HeaderCell>

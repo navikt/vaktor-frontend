@@ -117,15 +117,13 @@ const UpdateSchedule = () => {
                             <Table.HeaderCell scope="col">
                                 Vaktbytter
                             </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">
-                                Bakvakter
-                            </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
                         {scheduleData
                             .filter(
                                 (schedule: Schedules) =>
+                                    schedule.start_timestamp !== null &&
                                     schedule.type === "ordinær vakt" &&
                                     schedule.user.name
                                         .toLowerCase()
@@ -133,11 +131,11 @@ const UpdateSchedule = () => {
                                     new Date(
                                         schedule.start_timestamp * 1000
                                     ).getMonth() ===
-                                        selectedMonth!.getMonth() &&
+                                    selectedMonth!.getMonth() &&
                                     new Date(
                                         schedule.start_timestamp * 1000
                                     ).getFullYear() ===
-                                        selectedMonth!.getFullYear()
+                                    selectedMonth!.getFullYear()
                             )
                             .map((schedule: Schedules, i) => {
                                 //approve_level = 0;
@@ -163,14 +161,14 @@ const UpdateSchedule = () => {
                                             {moment(
                                                 schedule.start_timestamp * 1000
                                             ).week() <
-                                            moment(
-                                                schedule.end_timestamp * 1000
-                                            ).week()
+                                                moment(
+                                                    schedule.end_timestamp * 1000
+                                                ).week()
                                                 ? " - " +
-                                                  moment(
-                                                      schedule.end_timestamp *
-                                                          1000
-                                                  ).week()
+                                                moment(
+                                                    schedule.end_timestamp *
+                                                    1000
+                                                ).week()
                                                 : ""}
                                             <br />
                                             Fra:{" "}
@@ -216,6 +214,13 @@ const UpdateSchedule = () => {
                                                 )}
                                                 setResponse={setResponse}
                                             ></ScheduleChanges>
+                                            <ScheduleChanges
+                                                periods={schedule.vakter.filter(
+                                                    (vakt) =>
+                                                        vakt.type == "bakvakt"
+                                                )}
+                                                setResponse={setResponse}
+                                            ></ScheduleChanges>
                                         </Table.DataCell>
                                         <Table.DataCell
                                             style={{
@@ -231,20 +236,7 @@ const UpdateSchedule = () => {
                                                 setResponse={setResponse}
                                             ></ScheduleChanges>
                                         </Table.DataCell>
-                                        <Table.DataCell
-                                            style={{
-                                                minWidth: "210px",
-                                                maxWidth: "210px",
-                                            }}
-                                        >
-                                            <ScheduleChanges
-                                                periods={schedule.vakter.filter(
-                                                    (vakt) =>
-                                                        vakt.type == "bakvakt"
-                                                )}
-                                                setResponse={setResponse}
-                                            ></ScheduleChanges>
-                                        </Table.DataCell>
+
                                     </Table.Row>
                                 )
                             })}
