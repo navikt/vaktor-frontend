@@ -206,9 +206,9 @@ const Vaktperioder = () => {
                     <div style={{ width: "43%", margin: "auto" }}></div>
                     {user.groups.length > 1 ? (
 
-                        <ToggleGroup defaultValue="lest" onChange={e => setSelctedVaktlag(e)}>
+                        <ToggleGroup defaultValue={user.groups[0].id} onChange={e => (setSelctedVaktlag(e))}>
 
-                            {user.groups.map((group: Vaktlag) => (
+                            {user.groups.map((group: Vaktlag, index) => (
                                 <ToggleGroup.Item
                                     key={group.id}
                                     value={group.id}
