@@ -19,15 +19,21 @@ export default async function handler(
     let dateTo = req.query.dateTo
     let action = req.query.action
 
-    var bodycontent = {
-        schedule_id: schedule_id,
-        group_id: group_id,
-        user_id: String(selectedVakthaver).toUpperCase(),
-        start_timestamp: Number(dateFrom),
-        end_timestamp: Number(dateTo),
-        approve_level: 0,
-        type: action === "replace" ? "ordinær vakt" : action,
-    }
+    var bodycontent = (
+        {
+            "schedule_id": schedule_id,
+            "group_id": group_id,
+            "user_id": String(selectedVakthaver).toUpperCase(),
+            "start_timestamp": Number(dateFrom),
+            "end_timestamp": Number(dateTo),
+            "approve_level": 0,
+            "type": action === "replace" ? "ordinær vakt" : action,
+        }
+    );
+    
+    if (action === "replace")(
+        Object.assign(bodycontent, {"id": schedule_id})
+    )
 
     let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}?action=${action}`
 
@@ -49,4 +55,5 @@ export default async function handler(
             res.send("Cant get data from backend")
         }
     })
+
 }
