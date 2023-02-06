@@ -70,6 +70,7 @@ const ScheduleModal = (props: {
             },
         })
 
+
     useEffect(() => {
         if (Modal && Modal.setAppElement) {
             Modal.setAppElement("#__next")
@@ -78,12 +79,7 @@ const ScheduleModal = (props: {
         let body = JSON.stringify(list_of_group_ids)
 
         Promise.all([
-
-
-            fetch(`/vaktor/api/get_my_groupmembers`, {
-                method: "POST",
-                body: body,
-            }),
+            fetch(`/vaktor/api/get_my_groupmembers?group_id=${props.schedule.group_id}`)
         ])
             .then(async ([membersRes]) => {
                 props.setResponse(membersRes.status)

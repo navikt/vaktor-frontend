@@ -11,11 +11,12 @@ import {
     Pagination,
     Alert,
     Select,
+    ToggleGroup,
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
 import { useAuth } from "../context/AuthContext"
-import { Schedules, User } from "../types/types"
+import { Schedules, User, Vaktlag } from "../types/types"
 import DatePickeroo from "./MidlertidigeVaktperioder"
 import PerioderOptions from "./PerioderOptions"
 
@@ -76,6 +77,8 @@ const Vaktperioder = () => {
     const [rolloverTime, setRolloverTime] = useState<number>(12)
     const [amountOfWeeks, setAmountOfWeeks] = useState<number>(52)
     const [page, setPage] = useState(1)
+
+    const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
 
     const { monthpickerProps, inputProps, selectedMonth } =
         UNSAFE_useMonthpicker({
@@ -167,13 +170,8 @@ const Vaktperioder = () => {
 
     useEffect(() => {
         //setLoading(true);
-        let list_of_group_ids = user.groups.map((group) => group.id)
-        let body = JSON.stringify(list_of_group_ids)
-
-        fetch(`/vaktor/api/get_my_groupmembers`, {
-            method: "POST",
-            body: body,
-        })
+        console.log("Vaktlaget: ", selectedVaktlag)
+        fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`)
             .then((membersRes) => membersRes.json())
             .then((groupMembersJson) => {
                 console.log(groupMembersJson)
@@ -187,7 +185,7 @@ const Vaktperioder = () => {
                 //setIsMidlertidlig(true)
                 setLoading(false)
             })
-    }, [response, user])
+    }, [response, user, selectedVaktlag])
 
     if (loading === true) return <Loader></Loader>
     return (
@@ -206,6 +204,24 @@ const Vaktperioder = () => {
                     }}
                 >
                     <div style={{ width: "43%", margin: "auto" }}></div>
+                    {user.groups.length > 1 ? (
+
+                        <ToggleGroup defaultValue="lest" onChange={e => setSelctedVaktlag(e)}>
+
+                            {user.groups.map((group: Vaktlag) => (
+                                <ToggleGroup.Item
+                                    key={group.id}
+                                    value={group.id}
+                                > {group.name}
+                                </ToggleGroup.Item>
+                            ))}
+
+                        </ToggleGroup>
+
+                    ) : (
+                        <b>{user.groups[0].name}</b>
+                    )}
+
                     {isMidlertidlig ? (
                         <div style={{ margin: "auto", gap: "100px" }}>
                             {forms.map((form, index) => (
@@ -213,6 +229,7 @@ const Vaktperioder = () => {
                                     <Select label="vakthaver" value={form.name} onChange={e => {
                                         const newForms = [...forms]
                                         newForms[index].name = e.target.value
+                                        // TODO må endres dersom man kan være vaktsjef for flere vaktlag...
                                         newForms[index].group = user.groups[0].id
                                         setForms(newForms)
                                         console.log("User object: ", user)

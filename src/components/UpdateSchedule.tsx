@@ -21,6 +21,7 @@ const UpdateSchedule = () => {
     const [response, setResponse] = useState()
     const [Vakt, addVakt] = useState()
     const [searchFilter, setSearchFilter] = useState("")
+    const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
     const { monthpickerProps, inputProps, selectedMonth, setSelected } =
         UNSAFE_useMonthpicker({
             fromDate: new Date("Oct 01 2022"),
@@ -86,7 +87,7 @@ const UpdateSchedule = () => {
 
                     <Select
                         label="Velg vaktlag"
-                        onChange={(e) => console.log(e.target.value)}
+                        onChange={(e) => setSelctedVaktlag(e.target.value)}
                     >
                         {user.groups.map((group: Vaktlag) => (
                             <option key={group.id} value={group.id}>
@@ -135,7 +136,7 @@ const UpdateSchedule = () => {
                                     new Date(
                                         schedule.start_timestamp * 1000
                                     ).getFullYear() ===
-                                    selectedMonth!.getFullYear()
+                                    selectedMonth!.getFullYear() && selectedVaktlag == schedule.group_id
                             )
                             .map((schedule: Schedules, i) => {
                                 //approve_level = 0;
