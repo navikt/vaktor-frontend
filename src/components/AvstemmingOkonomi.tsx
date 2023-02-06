@@ -10,6 +10,7 @@ import {
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
+import { useAuth } from "../context/AuthContext"
 import { Audit, Cost, Schedules, User, Artskoder } from "../types/types"
 import MapCost from "./MapCost"
 
@@ -83,8 +84,8 @@ const mapApproveStatus = (status: number) => {
 }
 
 const AvstemmingOkonomi = () => {
+    const { user } = useAuth()
     const [itemData, setItemData] = useState<Schedules[]>([])
-    const [currentUser, setCurrentUser] = useState<User>({} as User)
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
@@ -126,7 +127,7 @@ const AvstemmingOkonomi = () => {
                         <br />
                         {vakter.group.name}
                     </Table.DataCell>
-                    <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
+                    <Table.DataCell scope="row">{vakter.type === "bakvakt" ? 'bistand' : vakter.type}</Table.DataCell>
                     <Table.DataCell>
                         <b>ID: {vakter.id} </b>
                         <br />
@@ -166,7 +167,7 @@ const AvstemmingOkonomi = () => {
                             {vakter.vakter.length !== 0 ? "Endringer:" : ""}
                             {vakter.vakter.map((endringer, idx: number) => (
                                 <div key={idx}>
-                                    <b> {endringer.type}:</b>{" "}
+                                    <b> {endringer.type === "bakvakt" ? 'bistand' : endringer.type}:</b>{" "}
                                     {endringer.user.name}
                                 </div>
                             ))}
@@ -174,9 +175,8 @@ const AvstemmingOkonomi = () => {
                         </div>
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
-                    {["personalleder", "leveranseleder", "okonomi"]!.includes(
-                        currentUser.role) || currentUser.is_admin === true
-                        && (
+                    {(["okonomi"].includes(user.role) ||
+                        user.is_admin === true) && (
                             <Table.DataCell
                                 scope="row"
                                 style={{ maxWidth: "200px", minWidth: "150px" }}
@@ -204,16 +204,9 @@ const AvstemmingOkonomi = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([
-            fetch("/vaktor/api/all_schedules"),
-            fetch("/vaktor/api/get_me"),
-        ])
-            .then(async ([scheduleRes, userRes]) => {
-                const schedulejson = await scheduleRes.json()
-                const userjson = await userRes.json()
-                return [schedulejson, userjson]
-            })
-            .then(([itemData, userData]) => {
+        fetch("/vaktor/api/all_schedules")
+            .then(async (scheduleRes) => scheduleRes.json())
+            .then((itemData) => {
                 itemData.sort(
                     (a: Schedules, b: Schedules) =>
                         a.start_timestamp - b.start_timestamp
@@ -224,7 +217,6 @@ const AvstemmingOkonomi = () => {
                         (data: Schedules) => data.user.ekstern === false
                     )
                 )
-                setCurrentUser(userData)
                 setLoading(false)
             })
     }, [response])
@@ -327,12 +319,8 @@ const AvstemmingOkonomi = () => {
                             <Table.HeaderCell scope="col">
                                 Status
                             </Table.HeaderCell>
-                            {([
-                                "personalleder",
-                                "leveranseleder",
-                                "okonomi",
-                            ].includes(currentUser.role) ||
-                                currentUser.is_admin === true) && (
+                            {(["okonomi"].includes(user.role) ||
+                                user.is_admin === true) && (
                                     <Table.HeaderCell
                                         scope="col"
                                         style={{

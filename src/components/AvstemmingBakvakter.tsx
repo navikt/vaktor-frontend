@@ -1,5 +1,4 @@
 import {
-    Button,
     Table,
     Loader,
     UNSAFE_MonthPicker,
@@ -9,11 +8,10 @@ import {
     Select,
 } from "@navikt/ds-react"
 import moment from "moment"
-import { useEffect, useState, Dispatch } from "react"
-import { Audit, Cost, Schedules, User, Artskoder } from "../types/types"
+import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
+import { Audit, Schedules } from "../types/types"
 import MapCost from "./MapCost"
-
-let today = Date.now() / 1000
 
 const mapAudit = (audit: Audit[]) => {
     return audit
@@ -83,8 +81,8 @@ const mapApproveStatus = (status: number) => {
 }
 
 const AvstemmingBakvakter = () => {
+    const { user } = useAuth()
     const [itemData, setItemData] = useState<Schedules[]>([])
-    const [currentUser, setCurrentUser] = useState<User>({} as User)
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
@@ -101,9 +99,9 @@ const AvstemmingBakvakter = () => {
                 new Date().getDate() - 10 > 0
                     ? moment().locale("en-GB").format("L")
                     : moment()
-                        .locale("en-GB")
-                        .month(moment().month() - 1)
-                        .format("L")
+                          .locale("en-GB")
+                          .month(moment().month() - 1)
+                          .format("MMM Y")
             ),
         })
 
@@ -132,7 +130,7 @@ const AvstemmingBakvakter = () => {
                         <br />
                         Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
                         {moment(vakter.start_timestamp * 1000).week() <
-                            moment(vakter.end_timestamp * 1000).week()
+                        moment(vakter.end_timestamp * 1000).week()
                             ? " - " + moment(vakter.end_timestamp * 1000).week()
                             : ""}
                         <br />
@@ -163,22 +161,22 @@ const AvstemmingBakvakter = () => {
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
                     {["personalleder", "leveranseleder", "okonomi"].includes(
-                        currentUser!.role
+                        user.role
                     ) && (
-                            <Table.DataCell
-                                scope="row"
-                                style={{ maxWidth: "200px", minWidth: "150px" }}
-                            >
-                                {vakter.cost ? (
-                                    <MapCost
-                                        cost={vakter.cost}
-                                        avstemming={true}
-                                    ></MapCost>
-                                ) : (
-                                    "ingen beregning foreligger"
-                                )}
-                            </Table.DataCell>
-                        )}
+                        <Table.DataCell
+                            scope="row"
+                            style={{ maxWidth: "200px", minWidth: "150px" }}
+                        >
+                            {vakter.cost ? (
+                                <MapCost
+                                    cost={vakter.cost}
+                                    avstemming={true}
+                                ></MapCost>
+                            ) : (
+                                "ingen beregning foreligger"
+                            )}
+                        </Table.DataCell>
+                    )}
                     <Table.DataCell
                         scope="row"
                         style={{ maxWidth: "250px", minWidth: "200px" }}
@@ -192,16 +190,9 @@ const AvstemmingBakvakter = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([
-            fetch(`/vaktor/api/get_all_bakvakter?type=${searchFilterType}`),
-            fetch("/vaktor/api/get_me"),
-        ])
-            .then(async ([scheduleRes, userRes]) => {
-                const schedulejson = await scheduleRes.json()
-                const userjson = await userRes.json()
-                return [schedulejson, userjson]
-            })
-            .then(([itemData, userData]) => {
+        fetch(`/vaktor/api/get_all_bakvakter?type=${searchFilterType}`)
+            .then(async (scheduleRes) => scheduleRes.json())
+            .then((itemData) => {
                 itemData.sort(
                     (a: Schedules, b: Schedules) =>
                         a.start_timestamp - b.start_timestamp
@@ -212,7 +203,6 @@ const AvstemmingBakvakter = () => {
                         (data: Schedules) => data.user.ekstern === false
                     )
                 )
-                setCurrentUser(userData)
                 setLoading(false)
             })
     }, [response, searchFilterType])
@@ -225,9 +215,9 @@ const AvstemmingBakvakter = () => {
         itemData.filter(
             (value: Schedules) =>
                 new Date(value.start_timestamp * 1000).getMonth() ===
-                selectedMonth!.getMonth() &&
+                    selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
-                selectedMonth!.getFullYear() &&
+                    selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
                 (searchFilterAction === 5
                     ? true
@@ -317,17 +307,17 @@ const AvstemmingBakvakter = () => {
                                 "personalleder",
                                 "leveranseleder",
                                 "okonomi",
-                            ].includes(currentUser!.role) && (
-                                    <Table.HeaderCell
-                                        scope="col"
-                                        style={{
-                                            minWidth: "400px",
-                                            maxWidth: "400px",
-                                        }}
-                                    >
-                                        Kost
-                                    </Table.HeaderCell>
-                                )}
+                            ].includes(user.role) && (
+                                <Table.HeaderCell
+                                    scope="col"
+                                    style={{
+                                        minWidth: "400px",
+                                        maxWidth: "400px",
+                                    }}
+                                >
+                                    Kost
+                                </Table.HeaderCell>
+                            )}
                             <Table.HeaderCell scope="col">
                                 Audit
                             </Table.HeaderCell>

@@ -4,35 +4,35 @@ import {
     UNSAFE_useMonthpicker,
     UNSAFE_MonthPicker,
     Search,
+    Select,
 } from "@navikt/ds-react"
-import { useEffect, useState, useRef, RefObject, Dispatch } from "react"
-import { Schedules } from "../types/types"
+import { useEffect, useState } from "react"
+import { Schedules, User, Vaktlag } from "../types/types"
 import moment from "moment"
 import ScheduleModal from "./ScheduleModal"
 import ScheduleChanges from "./ScheduleChanges"
+import { useAuth } from "../context/AuthContext"
 
 const UpdateSchedule = () => {
+    const { user } = useAuth()
     const [scheduleData, setScheduleData] = useState<Schedules[]>([])
     const [selectedSchedule, setSchedule] = useState<Schedules>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const [response, setResponse] = useState()
     const [Vakt, addVakt] = useState()
     const [searchFilter, setSearchFilter] = useState("")
+    const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
     const { monthpickerProps, inputProps, selectedMonth, setSelected } =
         UNSAFE_useMonthpicker({
             fromDate: new Date("Oct 01 2022"),
             toDate: new Date("Aug 23 2025"),
-            //defaultSelected: new Date("Oct 2022")
-            defaultSelected: new Date(moment().locale("en-GB").format("L")),
+            defaultSelected: new Date(moment().locale("en-GB").format("MMM Y")),
         })
 
     useEffect(() => {
-        Promise.all([fetch("/vaktor/api/group_schedules")])
-            .then(async ([scheduleRes]) => {
-                const scheduleData = await scheduleRes.json()
-                return [scheduleData]
-            })
-            .then(([scheduleData]) => {
+        fetch("/vaktor/api/group_schedules")
+            .then((scheduleRes) => scheduleRes.json())
+            .then((scheduleData) => {
                 scheduleData.sort(
                     (a: Schedules, b: Schedules) =>
                         a.start_timestamp - b.start_timestamp
@@ -63,7 +63,10 @@ const UpdateSchedule = () => {
                     justifyContent: "space-around",
                 }}
             >
-                <div className="min-h-96" style={{ display: "flex" }}>
+                <div
+                    className="min-h-96"
+                    style={{ display: "flex", gap: "30px" }}
+                >
                     <UNSAFE_MonthPicker {...monthpickerProps}>
                         <div className="grid gap-4">
                             <UNSAFE_MonthPicker.Input
@@ -72,15 +75,26 @@ const UpdateSchedule = () => {
                             />
                         </div>
                     </UNSAFE_MonthPicker>
-                    <form style={{ width: "300px", marginLeft: "30px" }}>
+                    <form style={{ width: "300px" }}>
                         <Search
                             label="Søk etter person"
                             hideLabel={false}
                             variant="simple"
                             onChange={(text) => setSearchFilter(text)}
                             onClick={(e) => false}
-                        ></Search>
+                        />
                     </form>
+
+                    <Select
+                        label="Velg vaktlag"
+                        onChange={(e) => setSelctedVaktlag(e.target.value)}
+                    >
+                        {user.groups.map((group: Vaktlag) => (
+                            <option key={group.id} value={group.id}>
+                                {group.name}
+                            </option>
+                        ))}
+                    </Select>
                 </div>
                 <Table
                     style={{
@@ -104,15 +118,13 @@ const UpdateSchedule = () => {
                             <Table.HeaderCell scope="col">
                                 Vaktbytter
                             </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">
-                                Bakvakter
-                            </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
                         {scheduleData
                             .filter(
                                 (schedule: Schedules) =>
+                                    schedule.start_timestamp !== null &&
                                     schedule.type === "ordinær vakt" &&
                                     schedule.user.name
                                         .toLowerCase()
@@ -124,7 +136,7 @@ const UpdateSchedule = () => {
                                     new Date(
                                         schedule.start_timestamp * 1000
                                     ).getFullYear() ===
-                                    selectedMonth!.getFullYear()
+                                    selectedMonth!.getFullYear() && selectedVaktlag == schedule.group_id
                             )
                             .map((schedule: Schedules, i) => {
                                 //approve_level = 0;
@@ -203,6 +215,13 @@ const UpdateSchedule = () => {
                                                 )}
                                                 setResponse={setResponse}
                                             ></ScheduleChanges>
+                                            <ScheduleChanges
+                                                periods={schedule.vakter.filter(
+                                                    (vakt) =>
+                                                        vakt.type == "bakvakt"
+                                                )}
+                                                setResponse={setResponse}
+                                            ></ScheduleChanges>
                                         </Table.DataCell>
                                         <Table.DataCell
                                             style={{
@@ -218,20 +237,7 @@ const UpdateSchedule = () => {
                                                 setResponse={setResponse}
                                             ></ScheduleChanges>
                                         </Table.DataCell>
-                                        <Table.DataCell
-                                            style={{
-                                                minWidth: "210px",
-                                                maxWidth: "210px",
-                                            }}
-                                        >
-                                            <ScheduleChanges
-                                                periods={schedule.vakter.filter(
-                                                    (vakt) =>
-                                                        vakt.type == "bakvakt"
-                                                )}
-                                                setResponse={setResponse}
-                                            ></ScheduleChanges>
-                                        </Table.DataCell>
+
                                     </Table.Row>
                                 )
                             })}

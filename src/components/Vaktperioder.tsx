@@ -7,16 +7,17 @@ import {
     HelpText,
     Radio,
     RadioGroup,
-    UNSAFE_DatePicker,
     UNSAFE_useRangeDatepicker,
     Pagination,
     Alert,
     Select,
+    ToggleGroup,
 } from "@navikt/ds-react"
-import ColumnHeader from "@navikt/ds-react/esm/table/ColumnHeader"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
-import { Vaktlag, Schedules, User } from "../types/types"
+import { useAuth } from "../context/AuthContext"
+import { Schedules, User, Vaktlag } from "../types/types"
+import DatePickeroo from "./MidlertidigeVaktperioder"
 import PerioderOptions from "./PerioderOptions"
 
 const createSchedule = async (
@@ -59,6 +60,7 @@ const createSchedule = async (
 }
 
 const Vaktperioder = () => {
+    const { user } = useAuth()
     const numWeeksInMs = 6.048e8 * 4 // 4 weeks in ms
     const [itemData, setItemData] = useState<User[]>([])
     const [response, setResponse] = useState([])
@@ -75,18 +77,8 @@ const Vaktperioder = () => {
     const [rolloverTime, setRolloverTime] = useState<number>(12)
     const [amountOfWeeks, setAmountOfWeeks] = useState<number>(52)
     const [page, setPage] = useState(1)
-    const { datepickerProps, toInputProps, fromInputProps, selectedRange } =
-        UNSAFE_useRangeDatepicker({
-            fromDate: new Date(Date.now()), //+ numWeeksInMs),
-            toDate: new Date("Feb 01 2024"),
-            defaultMonth: new Date(Date.now() + numWeeksInMs),
-            onRangeChange: (val) => {
-                if (val && val.from && val.to) {
-                    setStartTimestamp(val.from.setHours(12) / 1000)
-                    setEndTimestamp(val.to.setHours(12) / 1000)
-                }
-            },
-        })
+
+    const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
 
     const { monthpickerProps, inputProps, selectedMonth } =
         UNSAFE_useMonthpicker({
@@ -118,23 +110,80 @@ const Vaktperioder = () => {
                 )
             })
 
+    const mapMembersMidlertidig = (members: User[]) =>
+        members
+            .map((user, index) => {
+                if (user.group_order_index === undefined) {
+                    user.group_order_index = index + 1
+                }
+                user.id = user.id.toUpperCase()
+                return (
+
+                    <option value={user.name}>{user.name}</option>
+
+                )
+            })
+
+    const mapForms = (forms: any) =>
+        forms
+            .map((form: any, index: any) => {
+                return (
+                    <>
+                        {
+                            form.name !== '' ? (
+                                < Table.Row key={index} >
+                                    <Table.DataCell>{form.name}</Table.DataCell>
+                                    <Table.DataCell>{(form.fromDate !== '' ? (<>{moment.unix(form.fromDate).format("L")} kl. {moment.unix(form.fromTime - 3600).format("HH:mm")}</>) : (<></>))} </Table.DataCell>
+                                    <Table.DataCell>{(form.fromDate !== '' ? (<>{moment.unix(form.toDate).format("L")} kl. {moment.unix(form.toTime - 3600).format("HH:mm")}</>) : (<></>))}</Table.DataCell>
+                                </Table.Row >
+                            ) : (<></>)
+                        }
+                    </>
+
+                )
+            })
+
+    //// #####   Flere forms-greier
+
+    const [forms, setForms] = useState([{ name: '', group: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
+
+    const handleSubmit = (e: { preventDefault: () => void }) => {
+        e.preventDefault();
+        forms.forEach(form => {
+            console.log(form);
+        })
+    }
+
+    const handleAddForm = () => {
+        setForms([...forms, { name: '', group: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
+    }
+
+    const handleChildProps = (index: any, dateProps: any) => {
+        console.log("Parent: ", index, "Props: ", dateProps)
+        let newForms = [...forms];
+        newForms[index].fromDate = dateProps.from;
+        newForms[index].toDate = dateProps.to;
+        setForms(newForms);
+    }
+
+    //// #####   
+
     useEffect(() => {
         //setLoading(true);
-        Promise.all([fetch("/vaktor/api/get_my_groupmembers")])
-            .then(async ([scheduleRes]) => {
-                const schedulejson = await scheduleRes.json()
-                return [schedulejson]
-            })
-            .then(([itemData]) => {
+        fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`)
+            .then((membersRes) => membersRes.json())
+            .then((groupMembersJson) => {
                 setItemData(
-                    itemData.filter(
+                    groupMembersJson.filter(
                         (user: User) => user.role !== "leveranseleder"
                     )
                 )
-                setIsMidlertidlig(itemData[0].groups[0].type === "Midlertidlig")
+                setIsMidlertidlig(user.groups[0].type === "Midlertidlig")
+                // :pointdown: må fjernes - manuell overstyring av midlertidig
+                //setIsMidlertidlig(true)
                 setLoading(false)
             })
-    }, [response])
+    }, [response, user, selectedVaktlag])
 
     if (loading === true) return <Loader></Loader>
     return (
@@ -149,95 +198,135 @@ const Vaktperioder = () => {
                         display: "grid",
                         alignItems: "center",
                         justifyContent: "space-around",
+                        gap: "20px",
                     }}
                 >
+                    <div style={{ width: "43%", margin: "auto" }}></div>
+                    <div style={{ display: "flex", alignContent: "center", justifyContent: "center" }}>
+                        {user.groups.length > 1 ? (
+
+
+                            <ToggleGroup defaultValue={user.groups[0].id} onChange={e => (setSelctedVaktlag(e))} >
+
+
+                                {user.groups.map((group: Vaktlag) => (
+                                    <ToggleGroup.Item
+                                        key={group.id}
+                                        value={group.id}
+                                    > {group.name}
+                                    </ToggleGroup.Item>
+                                ))}
+
+                            </ToggleGroup>
+
+
+
+                        ) : (
+                            <b>{user.groups[0].name}</b>
+                        )}
+                    </div>
+
                     {isMidlertidlig ? (
-                        <div style={{ margin: "auto" }}>
-                            <UNSAFE_DatePicker {...datepickerProps} style={{}}>
-                                <div style={{ display: "flex", gap: "15px" }}>
-                                    <UNSAFE_DatePicker.Input
-                                        {...fromInputProps}
-                                        label="Fra"
-                                    />
-                                    <Select
-                                        label="klokken"
-                                        defaultValue={0}
-                                        onChange={(e) =>
-                                            setClockStart(
-                                                Number(e.target.value)
-                                            )
-                                        }
-                                    >
-                                        <option value={-12}>00:00</option>
-                                        <option value={-11}>01:00</option>
-                                        <option value={-10}>02:00</option>
-                                        <option value={-9}>03:00</option>
-                                        <option value={-8}>04:00</option>
-                                        <option value={-7}>05:00</option>
-                                        <option value={-6}>06:00</option>
-                                        <option value={-5}>07:00</option>
-                                        <option value={-4}>08:00</option>
-                                        <option value={-3}>09:00</option>
-                                        <option value={-2}>10:00</option>
-                                        <option value={-1}>11:00</option>
-                                        <option value={0}>12:00</option>
-                                        <option value={1}>13:00</option>
-                                        <option value={2}>14:00</option>
-                                        <option value={3}>15:00</option>
-                                        <option value={4}>16:00</option>
-                                        <option value={5}>17:00</option>
-                                        <option value={6}>18:00</option>
-                                        <option value={7}>19:00</option>
-                                        <option value={8}>20:00</option>
-                                        <option value={9}>21:00</option>
-                                        <option value={10}>22:00</option>
-                                        <option value={11}>23:00</option>
+                        <div style={{ margin: "auto", gap: "100px" }}>
+                            {forms.map((form, index) => (
+                                <div key={index}>
+                                    <Select label="vakthaver" value={form.name} onChange={e => {
+                                        const newForms = [...forms]
+                                        newForms[index].name = e.target.value
+                                        // TODO må endres dersom man kan være vaktsjef for flere vaktlag...
+                                        newForms[index].group = user.groups[0].id
+                                        setForms(newForms)
+                                        console.log("User object: ", user)
+                                    }}>
+                                        <option value="">Velg Vakthaver</option>
+                                        {mapMembersMidlertidig(itemData)}
+
                                     </Select>
+                                    <div style={{ display: "flex", justifyContent: "center", marginTop: "5px" }}>
+                                        <div>
+                                            <DatePickeroo key={index} index={index} handleChildProps={handleChildProps} />
+                                        </div>
+                                        <div style={{ display: "grid", marginLeft: "10px" }}>
+                                            <Select
+                                                label="Klokken"
+                                                defaultValue={0}
+                                                onChange={(e) => {
+                                                    const newForms = [...forms];
+                                                    newForms[index].fromTime = Number(e.target.value) * 3600;
+                                                    setForms(newForms);
+                                                }
+                                                }
+                                            >
+                                                <option value={0}>00:00</option>
+                                                <option value={1}>01:00</option>
+                                                <option value={2}>02:00</option>
+                                                <option value={3}>03:00</option>
+                                                <option value={4}>04:00</option>
+                                                <option value={5}>05:00</option>
+                                                <option value={6}>06:00</option>
+                                                <option value={7}>07:00</option>
+                                                <option value={8}>08:00</option>
+                                                <option value={9}>09:00</option>
+                                                <option value={10}>10:00</option>
+                                                <option value={11}>11:00</option>
+                                                <option value={12}>12:00</option>
+                                                <option value={13}>13:00</option>
+                                                <option value={14}>14:00</option>
+                                                <option value={15}>15:00</option>
+                                                <option value={16}>16:00</option>
+                                                <option value={17}>17:00</option>
+                                                <option value={18}>18:00</option>
+                                                <option value={19}>19:00</option>
+                                                <option value={20}>20:00</option>
+                                                <option value={21}>21:00</option>
+                                                <option value={22}>22:00</option>
+                                                <option value={23}>23:00</option>
+                                            </Select>
+                                            <Select
+                                                label="Klokken"
+                                                defaultValue={0}
+                                                onChange={(e) => {
+                                                    const newForms = [...forms];
+                                                    newForms[index].toTime = Number(e.target.value) * 3600;
+                                                    setForms(newForms);
+                                                }
+                                                }
+                                            >
+                                                <option value={0}>00:00</option>
+                                                <option value={1}>01:00</option>
+                                                <option value={2}>02:00</option>
+                                                <option value={3}>03:00</option>
+                                                <option value={4}>04:00</option>
+                                                <option value={5}>05:00</option>
+                                                <option value={6}>06:00</option>
+                                                <option value={7}>07:00</option>
+                                                <option value={8}>08:00</option>
+                                                <option value={9}>09:00</option>
+                                                <option value={10}>10:00</option>
+                                                <option value={11}>11:00</option>
+                                                <option value={12}>12:00</option>
+                                                <option value={13}>13:00</option>
+                                                <option value={14}>14:00</option>
+                                                <option value={15}>15:00</option>
+                                                <option value={16}>16:00</option>
+                                                <option value={17}>17:00</option>
+                                                <option value={18}>18:00</option>
+                                                <option value={19}>19:00</option>
+                                                <option value={20}>20:00</option>
+                                                <option value={21}>21:00</option>
+                                                <option value={22}>22:00</option>
+                                                <option value={23}>23:00</option>
+                                            </Select>
+                                        </div>
+                                    </div>{index + 1 === forms.length ? <div style={{ marginTop: "10px" }}><Button onClick={handleAddForm}>Add Form</Button> </div> : <></>}
+                                    <br />
+                                    <hr />
                                 </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "15px",
-                                    }}
-                                >
-                                    <UNSAFE_DatePicker.Input
-                                        {...toInputProps}
-                                        label="Til"
-                                    />
-                                    <Select
-                                        label="klokken"
-                                        defaultValue={0}
-                                        onChange={(e) =>
-                                            setClockEnd(Number(e.target.value))
-                                        }
-                                    >
-                                        <option value={-12}>00:00</option>
-                                        <option value={-11}>01:00</option>
-                                        <option value={-10}>02:00</option>
-                                        <option value={-9}>03:00</option>
-                                        <option value={-8}>04:00</option>
-                                        <option value={-7}>05:00</option>
-                                        <option value={-6}>06:00</option>
-                                        <option value={-5}>07:00</option>
-                                        <option value={-4}>08:00</option>
-                                        <option value={-3}>09:00</option>
-                                        <option value={-2}>10:00</option>
-                                        <option value={-1}>11:00</option>
-                                        <option value={0}>12:00</option>
-                                        <option value={1}>13:00</option>
-                                        <option value={2}>14:00</option>
-                                        <option value={3}>15:00</option>
-                                        <option value={4}>16:00</option>
-                                        <option value={5}>17:00</option>
-                                        <option value={6}>18:00</option>
-                                        <option value={7}>19:00</option>
-                                        <option value={8}>20:00</option>
-                                        <option value={9}>21:00</option>
-                                        <option value={10}>22:00</option>
-                                        <option value={11}>23:00</option>
-                                    </Select>
-                                </div>
-                            </UNSAFE_DatePicker>
+
+                            ))}
+
+
+
                         </div>
                     ) : (
                         <>
@@ -300,110 +389,143 @@ const Vaktperioder = () => {
                         </>
                     )}
 
-                    <Table
-                        style={{
-                            minWidth: "650px",
-                            maxWidth: "60vw",
-                            backgroundColor: "white",
-                            marginTop: "2vh",
-                            marginBottom: "3vh",
-                        }}
-                    >
-                        <Table.Header>
-                            <Table.Row>
-                                <Table.HeaderCell scope="col">
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "space-around",
-                                        }}
-                                    >
-                                        ID
-                                        <HelpText
-                                            title="Hva brukes ID til?"
-                                            style={{
-                                                marginLeft: "10px",
-                                            }}
-                                        >
-                                            <b>Id:</b> Brukes for å bestemme
-                                            hvilken rekkefølge vakthaverne skal
-                                            gå vakt. Den som står øverst vil få
-                                            første vakt når nye perioder
-                                            genereres
-                                        </HelpText>
-                                    </div>
-                                </Table.HeaderCell>
-                                <Table.HeaderCell scope="col">
-                                    Ident
-                                </Table.HeaderCell>
-                                <Table.HeaderCell scope="col">
-                                    Navn
-                                </Table.HeaderCell>
-                                <Table.HeaderCell scope="col">
-                                    Rolle
-                                </Table.HeaderCell>
-                                <Table.HeaderCell scope="col">
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "space-around",
-                                        }}
-                                    >
-                                        Aktiv
-                                        <HelpText
-                                            title="Hva brukes aktiv toggle til?"
-                                            style={{
-                                                marginLeft: "10px",
-                                            }}
-                                        >
-                                            <b>Aktiv toggle:</b> Toggles til av
-                                            dersom en vakthaver <b>ikke</b> skal
-                                            nkluderes i nye vaktperioder
-                                            <br />
-                                        </HelpText>
-                                    </div>
-                                </Table.HeaderCell>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {itemData ? (
-                                mapMembers(itemData)
-                            ) : (
-                                <Table.Row></Table.Row>
-                            )}
-                        </Table.Body>
-                    </Table>
-                    <Button
-                        disabled={response.length !== 0}
-                        style={{
-                            minWidth: "210px",
-                            marginBottom: "15px",
-                        }}
-                        onClick={() => {
-                            createSchedule(
-                                itemData.filter(
-                                    (user: User) =>
-                                        user.group_order_index !== 100
-                                ),
-                                setResponse, //setLoading
-                                isMidlertidlig
-                                    ? startTimestamp + clock_start * 3600
-                                    : selectedMonth!.setHours(12) / 1000,
-                                isMidlertidlig
-                                    ? endTimestamp + clock_end * 3600
-                                    : 0,
-                                isMidlertidlig,
-                                rolloverDay,
-                                amountOfWeeks,
-                                setResponseError,
-                                rolloverTime
-                            )
-                        }}
-                    >
-                        Generer vaktperioder
-                    </Button>
+                    {isMidlertidlig ? (
+                        <>
+                            <Table>
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.HeaderCell scope="col">
+                                            Navn
+                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">
+                                            Fra
+                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">
+                                            Til
+                                        </Table.HeaderCell>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                    {forms ? (
+                                        mapForms(forms)
+                                    ) : (
+                                        <Table.Row></Table.Row>
+                                    )}
+                                </Table.Body>
+                            </Table>
+                            <Button onClick={handleSubmit}>Submit All Forms</Button>
+
+                        </>
+                    ) : (
+                        <>
+                            <Table
+                                style={{
+                                    minWidth: "650px",
+                                    maxWidth: "60vw",
+                                    backgroundColor: "white",
+                                    marginTop: "2vh",
+                                    marginBottom: "3vh",
+                                }}
+                            >
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.HeaderCell scope="col">
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "space-around",
+                                                }}
+                                            >
+                                                ID
+                                                <HelpText
+                                                    title="Hva brukes ID til?"
+                                                    style={{
+                                                        marginLeft: "10px",
+                                                    }}
+                                                >
+                                                    <b>Id:</b> Brukes for å bestemme
+                                                    hvilken rekkefølge vakthaverne skal
+                                                    gå vakt. Den som står øverst vil få
+                                                    første vakt når nye perioder
+                                                    genereres
+                                                </HelpText>
+                                            </div>
+                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">
+                                            Ident
+                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">
+                                            Navn
+                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">
+                                            Rolle
+                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "space-around",
+                                                }}
+                                            >
+                                                Aktiv
+                                                <HelpText
+                                                    title="Hva brukes aktiv toggle til?"
+                                                    style={{
+                                                        marginLeft: "10px",
+                                                    }}
+                                                >
+                                                    <b>Aktiv toggle:</b> Toggles til av
+                                                    dersom en vakthaver <b>ikke</b> skal
+                                                    nkluderes i nye vaktperioder
+                                                    <br />
+                                                </HelpText>
+                                            </div>
+                                        </Table.HeaderCell>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                    {itemData ? (
+                                        mapMembers(itemData)
+                                    ) : (
+                                        <Table.Row></Table.Row>
+                                    )}
+                                </Table.Body>
+                            </Table>
+                            <Button
+                                disabled={response.length !== 0}
+                                style={{
+                                    minWidth: "210px",
+                                    marginBottom: "15px",
+                                }}
+                                onClick={() => {
+                                    createSchedule(
+                                        itemData.filter(
+                                            (user: User) =>
+                                                user.group_order_index !== 100
+                                        ),
+                                        setResponse, //setLoading
+                                        isMidlertidlig
+                                            ? startTimestamp + clock_start * 3600
+                                            : selectedMonth!.setHours(12) / 1000,
+                                        isMidlertidlig
+                                            ? endTimestamp + clock_end * 3600
+                                            : 0,
+                                        isMidlertidlig,
+                                        rolloverDay,
+                                        amountOfWeeks,
+                                        setResponseError,
+                                        rolloverTime
+                                    )
+                                }}
+                            >
+                                Generer vaktperioder
+                            </Button>
+                        </>
+                    )}
+
                 </div>
-            )}
+            )
+            }
         </>
     )
 }
@@ -475,11 +597,11 @@ const mapResponse = (
                                 {moment(
                                     schedule.start_timestamp * 1000
                                 ).week() <
-                                moment(schedule.end_timestamp * 1000).week()
+                                    moment(schedule.end_timestamp * 1000).week()
                                     ? " - " +
-                                      moment(
-                                          schedule.end_timestamp * 1000
-                                      ).week()
+                                    moment(
+                                        schedule.end_timestamp * 1000
+                                    ).week()
                                     : ""}
                                 <br />
                             </Table.DataCell>

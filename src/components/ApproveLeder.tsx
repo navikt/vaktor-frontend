@@ -7,10 +7,13 @@ import {
     ReadMore,
     Search,
     Select,
+    HelpText,
 } from "@navikt/ds-react"
 import moment from "moment"
 import { useEffect, useState, Dispatch } from "react"
+import { useAuth } from "../context/AuthContext"
 import { Audit, Schedules, User, Cost } from "../types/types"
+import ApproveButton from "./ApproveButton"
 import MapCost from "./MapCost"
 
 let today = Date.now() / 1000
@@ -105,9 +108,11 @@ const mapApproveStatus = (status: number) => {
     )
 }
 
-const AdminLeder = () => {
+const AdminLeder = ({
+}) => {
+    const { user } = useAuth()
+
     const [itemData, setItemData] = useState<Schedules[]>([])
-    const [currentUser, setCurrentUser] = useState<User>({} as User)
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
@@ -130,82 +135,131 @@ const AdminLeder = () => {
             ),
         })
 
+
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste.map((vakter: Schedules, i: number) => (
             //approve_level = 2;
 
             <Table.Row key={i}>
                 <Table.HeaderCell scope="row">
-                    {vakter.user.name}
+                    {vakter.user.name}<br />
+                    {vakter.group.name}
                 </Table.HeaderCell>
                 <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
                 <Table.DataCell>
-                    Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
-                    {moment(vakter.start_timestamp * 1000).week() <
-                        moment(vakter.end_timestamp * 1000).week()
-                        ? " - " + moment(vakter.end_timestamp * 1000).week()
-                        : ""}
-                    <br />
-                    {new Date(vakter.start_timestamp * 1000).toLocaleString(
-                        "no-NB",
-                        {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }
-                    )}
-                    <br />
-                    {new Date(vakter.end_timestamp * 1000).toLocaleString(
-                        "no-NB",
-                        {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }
-                    )}
+                    <div>
+                        Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
+                        {moment(vakter.start_timestamp * 1000).week() <
+                            moment(vakter.end_timestamp * 1000).week()
+                            ? " - " + moment(vakter.end_timestamp * 1000).week()
+                            : ""}
+                        <br />
+                        {new Date(vakter.start_timestamp * 1000).toLocaleString(
+                            "no-NB",
+                            {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }
+                        )}
+                        <br />
+                        {new Date(vakter.end_timestamp * 1000).toLocaleString(
+                            "no-NB",
+                            {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }
+                        )}
+                    </div>
                 </Table.DataCell>
-                <Table.DataCell>{vakter.group.name}</Table.DataCell>
+                <Table.DataCell>
+
+                    <div style={{ marginTop: "15px", marginBottom: "15px" }}>
+                        {/* {vakter.vakter.length !== 0 ? "Endringer:" : ""} */}
+                        {vakter.vakter.map((endringer, idx: number) => (
+                            <div key={idx}>
+                                <b> {endringer.type}:</b>{" "}
+                                {endringer.user.name} <br />
+                                {new Date(vakter.start_timestamp * 1000).toLocaleString(
+                                    "no-NB",
+                                    {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    }
+                                )}
+                                <br />
+                                {new Date(vakter.end_timestamp * 1000).toLocaleString(
+                                    "no-NB",
+                                    {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    }
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+
+                </Table.DataCell>
                 <Table.DataCell
                     style={{ maxWidth: "220px", minWidth: "220px" }}
                 >
                     <div>
-
-                        {vakter.user_id.toLowerCase() === currentUser.id.toLowerCase()
-                            ? <></>
-                            :
+                        {vakter.user_id.toLowerCase() ===
+                            user.id.toLowerCase() ? (
+                            <></>
+                        ) : (
                             <>
-                                <Button
-                                    disabled={
-                                        vakter.user_id.toLowerCase() === currentUser.id.toLowerCase() ||
-                                        vakter.approve_level === 4 ||
-                                        vakter.approve_level === 3 ||
-                                        vakter.approve_level === 2 ||
-                                        vakter.end_timestamp > today
-                                    }
-                                    style={{
-                                        height: "30px",
-                                        marginBottom: "5px",
-                                        minWidth: "210px",
-                                    }}
-                                    onClick={() => {
-                                        confirm_schedule(
-                                            vakter.id,
-                                            setResponse,
-                                            setLoading
-                                        )
-                                    }}
-                                >
-                                    {" "}
-                                    Godkjenn{" "}
-                                </Button>
+
+                                {vakter.approve_level === 0 ? (
+                                    <>
+                                        <ApproveButton vakt={vakter.id} setResponse={setResponse}></ApproveButton>
+                                    </>
+                                ) : (
+                                    <Button
+                                        disabled={
+                                            vakter.user_id.toLowerCase() ===
+                                            user.id.toLowerCase() ||
+                                            vakter.approve_level === 4 ||
+                                            vakter.approve_level === 3 ||
+                                            vakter.approve_level === 2 ||
+                                            vakter.end_timestamp > today
+                                        }
+                                        style={{
+                                            height: "30px",
+                                            marginBottom: "5px",
+                                            minWidth: "210px",
+                                        }}
+                                        onClick={() => {
+                                            confirm_schedule(
+                                                vakter.id,
+                                                setResponse,
+                                                setLoading
+                                            )
+                                        }}
+                                    >
+                                        {" "}
+                                        Godkjenn{" "}
+                                    </Button>
+
+                                )}
+
 
                                 <Button
                                     disabled={
-                                        vakter.user_id.toLowerCase() === currentUser.id.toLowerCase() ||
+                                        vakter.user_id.toLowerCase() ===
+                                        user.id.toLowerCase() ||
                                         vakter.approve_level === 0 ||
                                         vakter.approve_level === 2 ||
                                         vakter.approve_level === 4
@@ -227,14 +281,13 @@ const AdminLeder = () => {
                                     Avgodkjenn{" "}
                                 </Button>
                             </>
-                        }
-
+                        )}
                     </div>
                 </Table.DataCell>
                 {mapApproveStatus(vakter.approve_level)}
                 {["personalleder", "leveranseleder", "okonomi"].includes(
-                    currentUser!.role
-                ) || currentUser.is_admin === true && (
+                    user.role
+                ) || user.is_admin && (
                     <Table.DataCell
                         scope="row"
                         style={{ maxWidth: "200px", minWidth: "300px" }}
@@ -259,23 +312,14 @@ const AdminLeder = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([
-            fetch("/vaktor/api/leader_schedules"),
-            fetch("/vaktor/api/get_me"),
-        ])
-            .then(async ([scheduleRes, userRes]) => {
-                const schedulejson = await scheduleRes.json()
-                const userjson = await userRes.json()
-                return [schedulejson, userjson]
-            })
-            .then(([itemData, userData]) => {
+        fetch("/vaktor/api/leader_schedules")
+            .then((scheduleRes) => scheduleRes.json())
+            .then((itemData) => {
                 itemData.sort(
                     (a: Schedules, b: Schedules) =>
                         a.start_timestamp - b.start_timestamp
                 )
-
                 setItemData(itemData)
-                setCurrentUser(userData)
                 setLoading(false)
             })
     }, [response])
@@ -287,7 +331,7 @@ const AdminLeder = () => {
     let listeAvVakter = mapVakter(
         itemData.filter(
             (value: Schedules) =>
-                //value.user_id.toLowerCase() !== currentUser.id.toLowerCase() &&
+                // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
                 new Date(value.start_timestamp * 1000).getMonth() ===
                 selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() ===
@@ -361,12 +405,38 @@ const AdminLeder = () => {
                             Type vakt
                         </Table.HeaderCell>
                         <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
-                        <Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
+                        <Table.HeaderCell scope="col" ><div style={{
+                            display: "flex",
+                            alignContent: "space-around",
+                            gap: "10px"
+                        }}>
+                            <div>Endringer</div>
+                            <HelpText strategy="fixed" title="Bakvakt?">
+                                <b>Bistand</b><br />
+                                <b>Hvem får betalt:</b> Både opprinnelig
+                                vakthaver og den personen som legges til som
+                                bistand får betalt.
+                                <br />
+                                <b>Hvem vises i vaktplanen:</b> Den som
+                                bistår vises i vaktplanen for angitte
+                                periode
+                                <hr />
+                                <b>Bytte</b><br />
+                                <b>Hvem får betalt:</b> Kun den personen med
+                                aktiv vakt får betalt.
+                                <br />
+                                <b>Hvem vises i vaktplanen:</b> Kun den
+                                personen med aktiv vakt vises i vaktplanen.
+                                Endringen vil legge seg oppå opprinnelig
+                                vakt for angitte periode
+                            </HelpText>
+                        </div>
+                        </Table.HeaderCell>
                         <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Status</Table.HeaderCell>
                         {["personalleder", "leveranseleder"].includes(
-                            currentUser!.role
-                        ) || currentUser.is_admin === true && (
+                            user!.role
+                        ) || user.is_admin && (
                             <Table.HeaderCell scope="col">
                                 Kostnad
                             </Table.HeaderCell>

@@ -1,9 +1,7 @@
 import Navbar from "./NavBar"
-import { useEffect, useState } from "react"
-import { User } from "../types/types"
 import { Header, Footer } from "@navikt/status-components-react"
 import Head from "next/head"
-
+import { useAuth } from "../context/AuthContext"
 
 const today = new Date()
 // let icon_url = ""
@@ -12,29 +10,20 @@ const today = new Date()
 // ? icon_url = "santa-facicon"
 // : icon_url = "images"
 
-
-
 const Layout = ({ children }: any) => {
-    const [userData, setUserData] = useState<User>({} as User)
-    useEffect(() => {
-        Promise.all([fetch("/vaktor/api/get_me")])
-            .then(async ([current_user]) => {
-                const userjson = await current_user.json()
-                return [userjson]
-            })
-            .then(([userData]) => {
-                setUserData(userData)
-            })
-    }, [])
+    const { user } = useAuth()
+
     return (
         <div className="mainContainer">
             <Header imageURL="/vaktor/assets/navblack.png" />
 
-            {today.getMonth() === 11
-                ?
+            {today.getMonth() === 11 ? (
                 <Head>
                     <title>Vaktor - Beredskapsvakt</title>
-                    <link rel="shortcut icon" href="/vaktor/santa-favicon/favicon.ico" />
+                    <link
+                        rel="shortcut icon"
+                        href="/vaktor/santa-favicon/favicon.ico"
+                    />
                     <link
                         rel="apple-touch-icon"
                         sizes="180x180"
@@ -53,10 +42,13 @@ const Layout = ({ children }: any) => {
                         href="/vaktor/santa-favicon/favicon-16x16.png"
                     />
                 </Head>
-                :
+            ) : (
                 <Head>
                     <title>Vaktor - Beredskapsvakt</title>
-                    <link rel="shortcut icon" href="/vaktor/images/favicon.ico" />
+                    <link
+                        rel="shortcut icon"
+                        href="/vaktor/images/favicon.ico"
+                    />
                     <link
                         rel="apple-touch-icon"
                         sizes="180x180"
@@ -75,7 +67,7 @@ const Layout = ({ children }: any) => {
                         href="/vaktor/images/favicon-16x16.png"
                     />
                 </Head>
-            }
+            )}
 
             <div className="content">
                 <div className="topHeader"></div>

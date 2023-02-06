@@ -70,7 +70,7 @@ export interface User {
     description: string
     groups: Vaktlag[]
     group_order_index?: number
-    group_id?: string
+    group_id: string
     ekstern: boolean
     contact_info: string
     is_admin: boolean
