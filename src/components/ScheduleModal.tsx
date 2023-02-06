@@ -13,6 +13,7 @@ import {
     HelpText,
 } from "@navikt/ds-react"
 import { Schedules, User } from "../types/types"
+import { useAuth } from "../context/AuthContext"
 
 const update_schedule = async (
     period: Schedules,
@@ -44,6 +45,7 @@ const ScheduleModal = (props: {
     setResponse: Dispatch<any>
     addVakt: Dispatch<any>
 }) => {
+    const { user } = useAuth()
     const [groupData, setgroupData] = useState<User[]>([])
     const [selectedVakthaver, setVakthaver] = useState("")
     const [action, setAction] = useState("")
@@ -67,14 +69,21 @@ const ScheduleModal = (props: {
                 }
             },
         })
+
     useEffect(() => {
         if (Modal && Modal.setAppElement) {
             Modal.setAppElement("#__next")
         }
+        let list_of_group_ids = user.groups.map((group) => group.id)
+        let body = JSON.stringify(list_of_group_ids)
+
         Promise.all([
-            fetch(
-                `/vaktor/api/get_my_groupmembers?group_id=${props.schedule.group_id}`
-            ),
+
+
+            fetch(`/vaktor/api/get_my_groupmembers`, {
+                method: "POST",
+                body: body,
+            }),
         ])
             .then(async ([membersRes]) => {
                 props.setResponse(membersRes.status)
@@ -82,7 +91,9 @@ const ScheduleModal = (props: {
                 return [groupData]
             })
             .then(([groupData]) => {
-                setgroupData(groupData)
+                setgroupData(groupData.filter(
+                    (user: User) => user.role !== "leveranseleder"
+                ))
             })
     }, [props])
 
