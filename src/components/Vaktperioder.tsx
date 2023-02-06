@@ -170,11 +170,9 @@ const Vaktperioder = () => {
 
     useEffect(() => {
         //setLoading(true);
-        console.log("Vaktlaget: ", selectedVaktlag)
         fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`)
             .then((membersRes) => membersRes.json())
             .then((groupMembersJson) => {
-                console.log(groupMembersJson)
                 setItemData(
                     groupMembersJson.filter(
                         (user: User) => user.role !== "leveranseleder"
@@ -208,7 +206,7 @@ const Vaktperioder = () => {
 
                         <ToggleGroup defaultValue={user.groups[0].id} onChange={e => (setSelctedVaktlag(e))}>
 
-                            {user.groups.map((group: Vaktlag, index) => (
+                            {user.groups.map((group: Vaktlag) => (
                                 <ToggleGroup.Item
                                     key={group.id}
                                     value={group.id}
