@@ -166,7 +166,7 @@ const ScheduleModal = (props: {
                                 }}
                             >
                                 <Radio value="bistand">
-                                    Sett eksisterede person som bakvakt og bistå
+                                    Bistå vakthaver
                                     (f.eks ved sykdom for opprinnelig vakthaver)
                                 </Radio>
                                 <HelpText strategy="fixed" title="Bistand?">
