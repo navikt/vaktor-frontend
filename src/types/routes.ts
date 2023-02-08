@@ -1,46 +1,46 @@
 // Landing page
 export enum RouterVaktor {
-    NAME = "Oversikt",
-    PATH = "/"
+    NAME = 'Oversikt',
+    PATH = '/',
 }
 // ---
 
 // Admin
 export enum RouterAdmin {
-    NAME = "Dine Vakter",
-    PATH = "/dine_vakter"
+    NAME = 'Dine Vakter',
+    PATH = '/dine_vakter',
 }
 
 export enum RouterAdminSchedule {
-    NAME = "Vaktlagets vakter",
-    PATH = "/vaktlagets_vakter"
+    NAME = 'Vaktlagets vakter',
+    PATH = '/vaktlagets_vakter',
 }
 
 export enum RouterVaktperioder {
-    NAME = "Vaktperioder",
-    PATH = "/vaktperider"
+    NAME = 'Vaktperioder',
+    PATH = '/vaktperider',
 }
 
 export enum RouterLedergodkjenning {
-    NAME = "Ledergodkjenning",
-    PATH = "/ledergodkjenning"
+    NAME = 'Ledergodkjenning',
+    PATH = '/ledergodkjenning',
 }
 
 export enum RouterLeveranseleder {
-    NAME = "Leveranseleder",
-    PATH = "/leveranseleder"
+    NAME = 'Leveranseleder',
+    PATH = '/leveranseleder',
 }
 
 export enum RouterAvstemmingOkonomi {
-    NAME = "Avstemming",
-    PATH = "/avstemming"
+    NAME = 'Avstemming',
+    PATH = '/avstemming',
 }
 
 // ---
 
 // Error
 export enum RouterError {
-    NAME = "Error side",
-    PATH = "/Custom404"
+    NAME = 'Error side',
+    PATH = '/Custom404',
 }
 // ---

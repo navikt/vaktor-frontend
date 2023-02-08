@@ -1,0 +1,11 @@
+*.css
+*.scss
+tsconfig.json
+.next/*
+*.md
+package-lock.json
+package.json
+*.yml
+.prettierrc
+.eslintrc.json
+.vscode/settings.json

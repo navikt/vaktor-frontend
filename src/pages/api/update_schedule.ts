@@ -1,14 +1,8 @@
-import { NextApiRequest, NextApiResponse } from "next"
+import { NextApiRequest, NextApiResponse } from 'next'
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // for prod / dev
-    let authorizationHeader =
-        req.headers && req.headers.authorization
-            ? req.headers.authorization
-            : "No Authorization header"
+    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
     //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
     // for local testing
 
@@ -19,21 +13,17 @@ export default async function handler(
     let dateTo = req.query.dateTo
     let action = req.query.action
 
-    var bodycontent = (
-        {
-            "schedule_id": schedule_id,
-            "group_id": group_id,
-            "user_id": String(selectedVakthaver).toUpperCase(),
-            "start_timestamp": Number(dateFrom),
-            "end_timestamp": Number(dateTo),
-            "approve_level": 0,
-            "type": action === "replace" ? "ordinær vakt" : action,
-        }
-    );
-    
-    if (action === "replace")(
-        Object.assign(bodycontent, {"id": schedule_id})
-    )
+    var bodycontent = {
+        schedule_id: schedule_id,
+        group_id: group_id,
+        user_id: String(selectedVakthaver).toUpperCase(),
+        start_timestamp: Number(dateFrom),
+        end_timestamp: Number(dateTo),
+        approve_level: 0,
+        type: action === 'replace' ? 'ordinær vakt' : action,
+    }
+
+    if (action === 'replace') Object.assign(bodycontent, { id: schedule_id })
 
     let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}?action=${action}`
 
@@ -42,9 +32,9 @@ export default async function handler(
     const backendResponse = await fetch(path, {
         headers: {
             Authorization: authorizationHeader,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
         },
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(bodycontent),
     })
 
@@ -52,8 +42,7 @@ export default async function handler(
         if (body) {
             res.status(200).json(body)
         } else {
-            res.send("Cant get data from backend")
+            res.send('Cant get data from backend')
         }
     })
-
 }

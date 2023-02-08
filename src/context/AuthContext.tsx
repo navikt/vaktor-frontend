@@ -1,11 +1,5 @@
-import {
-    createContext,
-    useContext,
-    ReactNode,
-    useState,
-    useEffect,
-} from "react"
-import { User } from "../types/types"
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
+import { User } from '../types/types'
 
 type authContextType = {
     user: User
@@ -42,9 +36,7 @@ export const AuthProvider = ({ children }: Props) => {
 
     return (
         <>
-            <AuthContext.Provider value={value}>
-                {children}
-            </AuthContext.Provider>
+            <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
         </>
     )
 }

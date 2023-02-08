@@ -1,14 +1,8 @@
-import { NextApiRequest, NextApiResponse } from "next"
+import { NextApiRequest, NextApiResponse } from 'next'
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // for prod / dev
-    let authorizationHeader =
-        req.headers && req.headers.authorization
-            ? req.headers.authorization
-            : "No Authorization header"
+    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
     //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
     // for local testing
 
@@ -23,7 +17,7 @@ export default async function handler(
         if (body) {
             res.status(200).json(body)
         } else {
-            res.send("Cant get data from backend")
+            res.send('Cant get data from backend')
         }
     })
 }

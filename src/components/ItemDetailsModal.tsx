@@ -1,32 +1,17 @@
-import { Modal, Heading, BodyLong, Textarea } from "@navikt/ds-react"
-import {
-    InformationColored,
-    People,
-    CoApplicant,
-    Calender,
-    Telephone,
-    Notes,
-    Dialog,
-    Edit,
-    SuccessStroke,
-    SuccessColored,
-} from "@navikt/ds-icons"
-import "@navikt/ds-css"
-import { useEffect } from "react"
-import {
-    InformationLine,
-    HeadingIcon,
-    InfoHeadWrapper,
-} from "./GroupDetailsModal"
-import { User } from "../types/types"
-import UserInfoDetails from "./userInfoDetails"
+import { Modal, Heading, BodyLong, Textarea } from '@navikt/ds-react'
+import { InformationColored, People, CoApplicant, Calender, Telephone, Notes, Dialog, Edit, SuccessStroke, SuccessColored } from '@navikt/ds-icons'
+import '@navikt/ds-css'
+import { useEffect } from 'react'
+import { InformationLine, HeadingIcon, InfoHeadWrapper } from './GroupDetailsModal'
+import { User } from '../types/types'
+import UserInfoDetails from './userInfoDetails'
 
 const iconStyle = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "53px",
-    marginRight: "10px",
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '53px',
+    marginRight: '10px',
 }
 
 const ItemDetailsModal = (props: {
@@ -42,12 +27,11 @@ const ItemDetailsModal = (props: {
 }) => {
     useEffect(() => {
         if (Modal && Modal.setAppElement) {
-            Modal.setAppElement("#__next")
+            Modal.setAppElement('#__next')
         }
     }, [])
 
-    const phonetext =
-        props.telephone == "??" ? "n/a" : "(+47) " + props.telephone
+    const phonetext = props.telephone == '??' ? 'n/a' : '(+47) ' + props.telephone
 
     return (
         <>
@@ -58,11 +42,11 @@ const ItemDetailsModal = (props: {
                 style={{
                     overlay: {},
                     content: {
-                        width: "20%",
-                        minWidth: "500px",
-                        padding: "5px",
-                        paddingTop: "20px",
-                        position: "sticky",
+                        width: '20%',
+                        minWidth: '500px',
+                        padding: '5px',
+                        paddingTop: '20px',
+                        position: 'sticky',
                     },
                 }}
             >
@@ -77,23 +61,11 @@ const ItemDetailsModal = (props: {
                         </Heading>
                     </InformationLine>
 
-                    <UserInfoDetails
-                        infoName="Vaktlag: "
-                        infoText={props.groupName!}
-                        icon={<CoApplicant style={iconStyle} />}
-                    />
+                    <UserInfoDetails infoName="Vaktlag: " infoText={props.groupName!} icon={<CoApplicant style={iconStyle} />} />
 
-                    <UserInfoDetails
-                        infoName="Vaktnummer: "
-                        infoText={phonetext}
-                        icon={<Telephone style={iconStyle} />}
-                    />
+                    <UserInfoDetails infoName="Vaktnummer: " infoText={phonetext} icon={<Telephone style={iconStyle} />} />
 
-                    <UserInfoDetails
-                        infoName="Vakthaver: "
-                        infoText={props.user.name}
-                        icon={<People style={iconStyle} />}
-                    />
+                    <UserInfoDetails infoName="Vakthaver: " infoText={props.user.name} icon={<People style={iconStyle} />} />
 
                     <UserInfoDetails
                         infoName="Kontaktinfo: "

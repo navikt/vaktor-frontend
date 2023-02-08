@@ -1,12 +1,12 @@
-import { Textarea } from "@navikt/ds-react"
-import { Edit, SuccessStroke } from "@navikt/ds-icons"
-import "@navikt/ds-css"
-import { useState } from "react"
-import { User } from "../types/types"
+import { Textarea } from '@navikt/ds-react'
+import { Edit, SuccessStroke } from '@navikt/ds-icons'
+import '@navikt/ds-css'
+import { useState } from 'react'
+import { User } from '../types/types'
 
 const UpdateUserInfo = async (user: User) => {
     var fetchOptions = {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(user),
     }
 
@@ -42,9 +42,9 @@ const UserInfoDetails = (props: props) => {
     return editable ? (
         <div
             style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
             }}
         >
             {edit ? (
@@ -53,18 +53,11 @@ const UserInfoDetails = (props: props) => {
                     <p>
                         <b> {infoName}</b>
                     </p>
-                    <Textarea
-                        label=""
-                        hideLabel
-                        defaultValue={userInfo}
-                        onChange={(e) => setUserInfo(e.target.value)}
-                    />
+                    <Textarea label="" hideLabel defaultValue={userInfo} onChange={(e) => setUserInfo(e.target.value)} />
                     <SuccessStroke
-                        style={{ marginLeft: "20px" }}
+                        style={{ marginLeft: '20px' }}
                         onClick={() => {
-                            infoName == "Kontaktinfo: "
-                                ? (user.contact_info = userInfo)
-                                : (user.description = userInfo)
+                            infoName == 'Kontaktinfo: ' ? (user.contact_info = userInfo) : (user.description = userInfo)
                             UpdateUserInfo(user)
                             setEdit(false)
                         }}
@@ -76,10 +69,7 @@ const UserInfoDetails = (props: props) => {
                     <p>
                         <b> {infoName}</b>
                         {userInfo}
-                        <Edit
-                            style={{ marginLeft: "20px" }}
-                            onClick={() => setEdit(true)}
-                        />
+                        <Edit style={{ marginLeft: '20px' }} onClick={() => setEdit(true)} />
                     </p>
                 </>
             )}
@@ -87,9 +77,9 @@ const UserInfoDetails = (props: props) => {
     ) : (
         <div
             style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
             }}
         >
             {icon}
