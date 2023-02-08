@@ -15,6 +15,7 @@ import {
 } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
+import { start } from 'repl'
 import { useAuth } from '../context/AuthContext'
 import { Schedules, User, Vaktlag } from '../types/types'
 import DatePickeroo from './MidlertidigeVaktperioder'
@@ -31,7 +32,6 @@ const createSchedule = async (
     setResponseError: Dispatch<string>,
     rolloverTime: number
 ) => {
-    //setLoading(true);
     var user_order = users.sort((a: User, b: User) => a.group_order_index! - b.group_order_index!).map((user: User) => user.id) // bare en liste med identer
     var url = `/vaktor/api/create_schedule/?group_id=${users[0].groups[0].id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amountOfWeeks=${amountOfWeeks}&rolloverDay=${rolloverDay}&rolloverTime=${rolloverTime}`
     var fetchOptions = {
@@ -57,9 +57,41 @@ const createSchedule = async (
         })
 }
 
+const createTempSchedule = async (
+    user_id: string,
+    group_id: string,
+    start_timestamp: number, 
+    end_timestamp: number,
+    setResponse: Dispatch<any>,
+    setResponseError: Dispatch<string>
+
+) => {
+    var url = `/vaktor/api/create_temp_schedule/?user_id=${user_id}&group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&`
+
+    var fetchOptions = {
+        method: 'POST',
+    }
+    
+    await fetch(url, fetchOptions)
+        .then(async (r) => {
+            if (!r.ok) {
+                const rText = await r.json()
+                setResponseError(rText.detail)
+                return []
+            }
+            return r.json()
+        })
+        .then((data: Schedules) => {
+            setResponse(data)
+        })
+        .catch((error: Error) => {
+            console.error(error.name, error.message)
+            throw error /* <-- rethrow the error so consumer can still catch it */
+        })
+}
+
 const Vaktperioder = () => {
     const { user } = useAuth()
-    const numWeeksInMs = 6.048e8 * 4 // 4 weeks in ms
     const [itemData, setItemData] = useState<User[]>([])
     const [response, setResponse] = useState([])
     const [responseError, setResponseError] = useState('')
@@ -101,8 +133,12 @@ const Vaktperioder = () => {
                 user.group_order_index = index + 1
             }
             user.id = user.id.toUpperCase()
+            var options = {
+                "name": user.name,
+                "user_id": user.id
+            }
             return (
-                <option key={index} value={user.name}>
+                <option key={index} value={JSON.stringify(options)}>
                     {user.name}
                 </option>
             )
@@ -146,10 +182,11 @@ const Vaktperioder = () => {
     const [forms, setForms] = useState([
         {
             name: '',
+            user_id: '',
             group: '',
-            fromDate: '',
+            fromDate: 0,
             fromTime: 0,
-            toDate: '',
+            toDate: 0,
             toTime: 0,
         },
     ])
@@ -158,6 +195,7 @@ const Vaktperioder = () => {
         e.preventDefault()
         forms.forEach((form) => {
             console.log(form)
+            createTempSchedule(form.user_id, form.group, (form.fromDate + form.fromTime), (form.toDate + form.fromTime), setResponse, setResponseError)
         })
     }
 
@@ -166,10 +204,11 @@ const Vaktperioder = () => {
             ...forms,
             {
                 name: '',
+                user_id: '',
                 group: '',
-                fromDate: '',
+                fromDate: 0,
                 fromTime: 0,
-                toDate: '',
+                toDate: 0,
                 toTime: 0,
             },
         ])
@@ -245,7 +284,9 @@ const Vaktperioder = () => {
                                         value={form.name}
                                         onChange={(e) => {
                                             const newForms = [...forms]
-                                            newForms[index].name = e.target.value
+                                            const selectJson = JSON.parse(e.target.value)
+                                            newForms[index].name = selectJson.name
+                                            newForms[index].user_id = selectJson.user_id
                                             // TODO må endres dersom man kan være vaktsjef for flere vaktlag...
                                             newForms[index].group = user.groups[0].id
                                             setForms(newForms)
