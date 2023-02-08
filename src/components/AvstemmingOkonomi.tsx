@@ -168,7 +168,30 @@ const AvstemmingOkonomi = () => {
                             {vakter.vakter.map((endringer, idx: number) => (
                                 <div key={idx}>
                                     <b> {endringer.type === "bakvakt" ? 'bistand' : endringer.type}:</b>{" "}
-                                    {endringer.user.name}
+                                    {endringer.user.name}<br />
+                                    Start:{" "}
+                                    {new Date(endringer.start_timestamp * 1000).toLocaleString(
+                                        "no-NB",
+                                        {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        }
+                                    )}
+                                    <br />
+                                    Slutt:{" "}
+                                    {new Date(endringer.end_timestamp * 1000).toLocaleString(
+                                        "no-NB",
+                                        {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        }
+                                    )}
                                 </div>
                             ))}
                             <br />
