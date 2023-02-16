@@ -1,4 +1,4 @@
-import { Button, Table, Loader, ReadMore } from '@navikt/ds-react'
+import { Button, Table, Loader, ReadMore, Select, UNSAFE_MonthPicker, UNSAFE_useMonthpicker } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { Audit, Schedules } from '../types/types'
@@ -86,12 +86,27 @@ const mapApproveStatus = (status: number) => {
 }
 
 const DineVakter = () => {
-    const [itemData, setItemData] = useState()
+    const [itemData, setItemData] = useState<Schedules[]>([])
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
+    const [searchFilterAction, setSearchFilterAction] = useState(5)
+
+    const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
+        fromDate: new Date('Oct 01 2022'),
+        toDate: new Date('Aug 23 2025'),
+        defaultSelected: new Date(
+            new Date().getDate() - 10 > 0
+                ? moment().locale('en-GB').format('ll')
+                : moment()
+                      .locale('en-GB')
+                      .month(moment().month() - 1)
+                      .format('ll')
+        ),
+    })
+
     const mapVakter = (vaktliste: Schedules[]) =>
-        vaktliste.map((vakter, index) => (
+        vaktliste.map((vakter: Schedules, index: number) => (
             //approve_level = 2;
             <Table.Row key={vakter.id}>
                 <Table.HeaderCell scope="row">{vakter.group.name}</Table.HeaderCell>
@@ -174,6 +189,18 @@ const DineVakter = () => {
     }, [response])
 
     if (loading === true) return <Loader></Loader>
+    if (selectedMonth === undefined) setSelected(new Date())
+    if (itemData === undefined) return <></>
+
+    let listeAvVakter = mapVakter(
+        itemData.filter(
+            (value: Schedules) =>
+                // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
+                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
+                (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
+        )
+    )
 
     return (
         <>
@@ -183,11 +210,32 @@ const DineVakter = () => {
                     maxWidth: '1200px',
                     backgroundColor: 'white',
                     marginBottom: '3vh',
-                    display: 'flex',
+                    display: 'grid',
                     alignContent: 'center',
                     margin: 'auto',
                 }}
             >
+                {' '}
+                {console.log(moment().locale('en-GB').format('L'))}
+                <div style={{ display: 'flex' }}>
+                    <UNSAFE_MonthPicker {...monthpickerProps}>
+                        <div className="grid gap-4">
+                            <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+                        </div>
+                    </UNSAFE_MonthPicker>
+                    <div></div>
+
+                    <div style={{ width: '200px', marginLeft: '30px' }}>
+                        <Select label="Filtrer på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
+                            <option value={5}>Alle</option>
+                            <option value={0}>Trenger godkjenning</option>
+                            <option value={1}>Godkjent av ansatt</option>
+                            <option value={2}>Venter på utregning</option>
+                            <option value={3}>Godkjent av vaktsjef</option>
+                            <option value={4}>Overført til lønn</option>
+                        </Select>
+                    </div>
+                </div>
                 <Table>
                     <Table.Header>
                         <Table.Row>
@@ -199,7 +247,15 @@ const DineVakter = () => {
                             <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
-                    <Table.Body>{itemData ? mapVakter(itemData) : <Table.Row></Table.Row>}</Table.Body>
+                    <Table.Body>
+                        {listeAvVakter.length > 0 ? (
+                            listeAvVakter
+                        ) : (
+                            <Table.Row>
+                                <Table.DataCell>Ingen vakter funnet!</Table.DataCell>
+                            </Table.Row>
+                        )}
+                    </Table.Body>
                 </Table>
             </div>
         </>
