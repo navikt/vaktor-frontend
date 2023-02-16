@@ -34,6 +34,7 @@ spec:
                     - "NAVident"
                     - "azp_name"
             singlePageApplication: false
+            allowAllUsers: true
         sidecar:
             enabled: true
             # everything below is optional, defaults shown
