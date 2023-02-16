@@ -216,7 +216,6 @@ const DineVakter = () => {
                 }}
             >
                 {' '}
-                {console.log(moment().locale('en-GB').format('L'))}
                 <div style={{ display: 'flex' }}>
                     <UNSAFE_MonthPicker {...monthpickerProps}>
                         <div className="grid gap-4">
