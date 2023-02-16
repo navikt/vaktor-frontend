@@ -15,7 +15,7 @@ const Layout = ({ children }: any) => {
 
     return (
         <div className="mainContainer">
-            <Header imageURL="/vaktor/assets/navblack.png" userID={user.id} userName={user.name} />
+            <Header imageURL="/vaktor/assets/navblack.png" userID="" userName="" />
 
             {today.getMonth() === 11 ? (
                 <Head>
