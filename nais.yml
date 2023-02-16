@@ -30,11 +30,12 @@ spec:
             enabled: true
             tenant: nav.no
             claims:
+                groups:
+                    - id: 2d7f1c0d-5784-4f81-8bb2-8f3a79f8f949
                 extra:
                     - "NAVident"
                     - "azp_name"
             singlePageApplication: false
-            allowAllUsers: true
         sidecar:
             enabled: true
             # everything below is optional, defaults shown
