@@ -13,7 +13,7 @@
   "dependencies": {
     "@navikt/ds-css": "^2.2.0",
     "@navikt/ds-react": "^2.2.0",
-    "@navikt/status-components-react": "^0.1.1",
+    "@navikt/status-components-react": "0.1.0",
     "components": "^0.1.0",
     "interactjs": "^1.10.17",
     "moment": "^2.29.4",
