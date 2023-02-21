@@ -1,4 +1,4 @@
-import Timeline, { TimelineHeaders, SidebarHeader, DateHeader } from 'react-calendar-timeline'
+import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, TodayMarker, CustomMarker, CursorMarker } from 'react-calendar-timeline'
 import { useState, useEffect } from 'react'
 import { Moment } from 'moment'
 import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './SetColors'
@@ -14,6 +14,9 @@ import { FluidValue } from '@react-spring/shared'
 import { Schedules, User, Vaktlag } from '../types/types'
 import Overview from './OverviewNoTimeline'
 import { useAuth } from '../context/AuthContext'
+
+let today = Date.now()
+let tomorrow = new Date(Date.now() + 3600 * 1000 * 24)
 
 const SidebarHeaderText = styled.div`
     padding-top: 25px;
@@ -292,8 +295,74 @@ function VaktorTimeline() {
   --  Returning timeline component -- 
   */
 
+    const verticalLineClassNamesForTime = (timeStart: Date, timeEnd: Date) => {
+        const currentTimeStart = moment(timeStart)
+        const currentTimeEnd = moment(timeEnd)
+
+        let classes = []
+
+        // check for public holidays
+        for (let holiday of holidays) {
+            if (holiday.isSame(currentTimeStart, 'day') && holiday.isSame(currentTimeEnd, 'day')) {
+                classes.push('holiday')
+                console.log('Helligdag: ', currentTimeStart)
+            }
+        }
+        return classes
+    }
+
+    const helgedager = []
+
+    const format = 'DD.MM.YYYY'
+    const holidays = [
+        moment('01.01.2022', format), // Lørdag 1. januar: 1. nyttårsdag
+        moment('10.04.2022', format), // Søndag 10. april: Palmesøndag
+        moment('14.04.2022', format), // Torsdag 14. april: Skjærtorsdag
+        moment('15.04.2022', format), // Fredag 15. april: Langfredag
+        moment('17.04.2022', format), // Søndag 17. april: 1. påskedag
+        moment('18.04.2022', format), // Mandag 18. april: 2. påskedag
+        moment('01.05.2022', format), // Søndag 1. mai: Offentlig høytidsdag
+        moment('17.05.2022', format), // Tirsdag 17. mai: Grunnlovsdag
+        moment('26.05.2022', format), // Torsdag 26. mai: Kristi Himmelfartsdag
+        moment('04.06.2022', format), // Lørdag 4. juni: 1. pinsedag
+        moment('05.06.2022', format), // Søndag 5. juni: 2. pinsedag
+        moment('25.12.2022', format), // Mandag 25. desember: 1. juledag
+        moment('26.12.2022', format), // Tirsdag 26. desember: 2. juledag
+        moment('01.01.2023', format), // Søndag 1. januar: 1. nyttårsdag
+        moment('02.04.2023', format), // Søndag 2. april: Palmesøndag
+        moment('06.04.2023', format), // Torsdag 6. april: Skjærtorsdag
+        moment('07.04.2023', format), // Fredag 7. april: Langfredag
+        moment('09.04.2023', format), // Søndag 9. april: 1. påskedag
+        moment('10.04.2023', format), // Mandag 10. april: 2. påskedag
+        moment('01.05.2023', format), // Mandag 1. mai: Offentlig høytidsdag
+        moment('17.05.2023', format), // Onsdag 17. mai: Grunnlovsdag
+        moment('18.05.2023', format), // Torsdag 18. mai: Kristi Himmelfartsdag
+        moment('28.05.2023', format), // Søndag 28. mai: 1. pinsedag
+        moment('29.05.2023', format), // Mandag 29. mai: 2. pinsedag
+        moment('25.12.2023', format), // Mandag 25. desember: 1. juledag
+        moment('26.12.2023', format), // Tirsdag 26. desember: 2. juledag
+        moment('01.01.2024', format), // Tirsdag 1. januar: 1. nyttårsdag
+        moment('24.03.2024', format), // Søndag 24. mars: Palmesøndag
+        moment('28.03.2024', format), // Torsdag 28. mars: Skjærtorsdag
+        moment('29.03.2024', format), // Fredag 29. mars: Langfredag
+        moment('31.03.2024', format), // Søndag 31. mars: 1. påskedag
+        moment('01.04.2024', format), // Mandag 1. april: 2. påskedag
+        moment('01.05.2024', format), // Onsdag 1. mai: Offentlig høytidsdag
+        moment('17.05.2024', format), // Fredag 17. mai: Grunnlovsdag
+        moment('09.05.2024', format), // Torsdag 9. mai: Kristi Himmelfartsdag
+        moment('19.05.2024', format), // Søndag 19. mai: 1. pinsedag
+        moment('20.05.2024', format), // Mandag 20. mai: 2. pinsedag
+        moment('25.12.2024', format), // Onsdag 25. desember: 1. juledag
+        moment('26.12.2024', format), // Torsdag 26. desember: 2. juledag
+    ]
+
     const AnimatedTimeline = animated(({ animatedVisibleTimeStart, animatedVisibleTimeEnd, visibleTimeStart, visibleTimeEnd, ...props }) => (
-        <Timeline visibleTimeStart={animatedVisibleTimeStart} visibleTimeEnd={animatedVisibleTimeEnd} {...props} />
+        <Timeline
+            visibleTimeStart={animatedVisibleTimeStart}
+            visibleTimeEnd={animatedVisibleTimeEnd}
+            verticalLineClassNamesForTime={verticalLineClassNamesForTime}
+            {...props}
+        />
     ))
 
     return (
@@ -352,6 +421,19 @@ function VaktorTimeline() {
                                         }}
                                     </SidebarHeader>
                                     <DateHeader unit="primaryHeader" />
+                                    <CustomMarker date={today}>
+                                        {/* custom renderer for this marker */}
+                                        {({ styles, date }) => {
+                                            const customStyles = {
+                                                ...styles,
+                                                backgroundColor: 'red',
+                                                width: '10px',
+                                                zindex: '100',
+                                            }
+                                            return <div style={customStyles} />
+                                        }}
+                                    </CustomMarker>
+                                    <CursorMarker />
                                     <DateHeader />
                                 </TimelineHeaders>
                             </AnimatedTimeline>
