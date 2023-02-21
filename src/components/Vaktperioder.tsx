@@ -60,18 +60,17 @@ const createSchedule = async (
 const createTempSchedule = async (
     user_id: string,
     group_id: string,
-    start_timestamp: number, 
+    start_timestamp: number,
     end_timestamp: number,
     setResponse: Dispatch<any>,
     setResponseError: Dispatch<string>
-
 ) => {
     var url = `/vaktor/api/create_temp_schedule/?user_id=${user_id}&group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&`
-
+    console.log('tiden: ', start_timestamp, end_timestamp)
     var fetchOptions = {
         method: 'POST',
     }
-    
+
     await fetch(url, fetchOptions)
         .then(async (r) => {
             if (!r.ok) {
@@ -134,8 +133,8 @@ const Vaktperioder = () => {
             }
             user.id = user.id.toUpperCase()
             var options = {
-                "name": user.name,
-                "user_id": user.id
+                name: user.name,
+                user_id: user.id,
             }
             return (
                 <option key={index} value={JSON.stringify(options)}>
@@ -146,6 +145,7 @@ const Vaktperioder = () => {
 
     const mapForms = (forms: any) =>
         forms.map((form: any, index: any) => {
+            // NB! be careful for Day time saving ( clock settings)
             return (
                 <>
                     {form.name !== '' ? (
@@ -194,8 +194,7 @@ const Vaktperioder = () => {
     const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault()
         forms.forEach((form) => {
-            console.log(form)
-            createTempSchedule(form.user_id, form.group, (form.fromDate + form.fromTime), (form.toDate + form.fromTime), setResponse, setResponseError)
+            createTempSchedule(form.user_id, form.group, form.fromDate + form.fromTime, form.toDate + form.toTime, setResponse, setResponseError)
         })
     }
 
@@ -281,7 +280,6 @@ const Vaktperioder = () => {
                                 <div key={index}>
                                     <Select
                                         label="vakthaver"
-                                        value={form.name}
                                         onChange={(e) => {
                                             const newForms = [...forms]
                                             const selectJson = JSON.parse(e.target.value)
@@ -293,7 +291,9 @@ const Vaktperioder = () => {
                                             console.log('User object: ', user)
                                         }}
                                     >
-                                        <option value="">Velg Vakthaver</option>
+                                        <option disabled selected>
+                                            Velg Vakthaver
+                                        </option>
                                         {mapMembersMidlertidig(itemData)}
                                     </Select>
                                     <div
