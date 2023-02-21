@@ -229,7 +229,7 @@ const Vaktperioder = () => {
             .then((membersRes) => membersRes.json())
             .then((groupMembersJson) => {
                 setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))
-                setIsMidlertidlig(user.groups[0].type === 'Midlertidlig')
+                setIsMidlertidlig(user.groups.filter((group) => group.id == selectedVaktlag)[0].type === 'Midlertidlig')
                 // :pointdown: må fjernes - manuell overstyring av midlertidig
                 //setIsMidlertidlig(true)
                 setLoading(false)
