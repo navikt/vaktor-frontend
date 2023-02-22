@@ -1,8 +1,6 @@
 $row-background-even: transparent;
 $row-background-odd: rgba(0, 0, 0, 0.05);
-
 $header-color: #e5e5e5;
-
 $border-color-headers: #cfcfcf;
 $border-color-grid: #e1e1e1;
 $border-width: 1px;
@@ -10,7 +8,8 @@ $thick-border-width: 2px;
 $sidebar-color: #ffffff;
 $sidebar-background-color: #c52020;
 $list-item-padding: 0 4px;
-$weekend: rgba(254, 169, 149, 0.1);
+
+$weekend: rgba(254, 169, 149, 0.3);
 
 .groupsClickable {
   width: 100%;
@@ -24,7 +23,7 @@ $weekend: rgba(254, 169, 149, 0.1);
 .sticky {
   position: sticky;
   top: 0;
-  z-index: 2000;
+  z-index: 50;
 }
 
 .react-calendar-timeline {
@@ -35,7 +34,11 @@ $weekend: rgba(254, 169, 149, 0.1);
   .sticky {
     position: sticky;
     top: 0;
-    z-index: 2000;
+    z-index: 50;
+  }
+
+  .holiday{
+    background-color: rgba(255, 0, 0, 0.20);
   }
 
   .rct-outer {
@@ -55,6 +58,7 @@ $weekend: rgba(254, 169, 149, 0.1);
   }
 
   .rct-item {
+    overflow: hidden;
     &:hover {
       z-index: 88;
     }
@@ -70,9 +74,7 @@ $weekend: rgba(254, 169, 149, 0.1);
       padding-left: 15px;
       padding-right: 15px;
       margin-top: 5px;
-
       text-overflow: ellipsis;
-
       font-size: 1px;
     }
   }
