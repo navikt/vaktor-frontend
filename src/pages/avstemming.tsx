@@ -1,17 +1,17 @@
-import type { NextPage } from "next"
-import moment from "moment"
-import "moment/locale/nb"
-import AvstemmingOkonomi from "../components/AvstemmingOkonomi"
-import { GuidePanel } from "@navikt/ds-react"
-import { User } from "../types/types"
-import { useEffect, useState } from "react"
-import { useAuth } from "../context/AuthContext"
+import type { NextPage } from 'next'
+import moment from 'moment'
+import 'moment/locale/nb'
+import AvstemmingOkonomi from '../components/AvstemmingOkonomi'
+import { GuidePanel } from '@navikt/ds-react'
+import { User } from '../types/types'
+import { useEffect, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 
 const Home: NextPage = () => {
     const { user } = useAuth()
-    moment.locale("nb")
+    moment.locale('nb')
 
-    if (["okonomi"].includes(user.role) || user.is_admin === true)
+    if (['okonomi'].includes(user.role) || user.is_admin === true)
         return (
             <>
                 <div className="Container">

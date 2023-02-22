@@ -1,15 +1,9 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { Schedules, User, Vaktlag } from "../../types/types"
+import { NextApiRequest, NextApiResponse } from 'next'
+import { Schedules, User, Vaktlag } from '../../types/types'
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // for prod / dev
-    let authorizationHeader =
-        req.headers && req.headers.authorization
-            ? req.headers.authorization
-            : "No Authorization header"
+    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
     //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
     // for local testing
 
@@ -17,7 +11,7 @@ export default async function handler(
 
     const getCurrentUser = await fetch(path, {
         headers: { Authorization: authorizationHeader },
-        method: "GET",
+        method: 'GET',
     }).then((res) => res.json())
 
     //let groupPath = `${process.env.BACKEND_URL}/api/v1/groups/${getCurrentUser.groups[0].id}/schedules`
@@ -25,7 +19,7 @@ export default async function handler(
     const getGroupSchedule = async (groupPath: string) =>
         await fetch(groupPath, {
             headers: { Authorization: authorizationHeader },
-            method: "GET",
+            method: 'GET',
         })
 
     const allGroupSchedule = async (user: User) =>
@@ -45,6 +39,6 @@ export default async function handler(
     if (list_of_schedules.length != 0) {
         res.status(200).json(list_of_schedules)
     } else {
-        res.send("Cant get data from backend")
+        res.send('Cant get data from backend')
     }
 }

@@ -2,20 +2,25 @@ import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
+    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
+    //let authorizationHeader = process.env.FAKE_TOKEN
     //
     // for local testing
 
     let start_timestamp = req.query.start_timestamp
     let end_timestamp = req.query.end_timestamp
     let group_id = req.query.group_id
-    let midlertidlig_vakt = req.query.midlertidlig_vakt
-    let amountOfWeeks = req.query.amountOfWeeks
-    let rolloverDay = req.query.rolloverDay
-    let rolloverTime = req.query.rolloverTime
-    let user_order = JSON.parse(req.body)
+    let user_id = req.query.user_id
 
-    let path = `${process.env.BACKEND_URL}/api/v1/schedules/?group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amount_of_weeks=${amountOfWeeks}&rollover_day=${rolloverDay}&rollover_time=${rolloverTime}`
+    let body = {
+        "user_id": user_id,
+        "group_id": group_id,
+        "start_timestamp": start_timestamp,
+        "end_timestamp": end_timestamp
+    }
+
+    let path = `${process.env.BACKEND_URL}/api/v1/schedules/create_temp_schedule`
+    console.log("API body: ", body)
 
     const backendResponse = await fetch(path, {
         headers: {
@@ -23,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         },
         method: 'POST',
-        body: JSON.stringify(user_order),
+        body: JSON.stringify(body),
     })
 
     if (backendResponse.ok) {

@@ -1,38 +1,22 @@
-import {
-    Table,
-    Loader,
-    UNSAFE_MonthPicker,
-    UNSAFE_useMonthpicker,
-    ReadMore,
-    Search,
-    Select,
-} from "@navikt/ds-react"
-import moment from "moment"
-import { useEffect, useState } from "react"
-import { useAuth } from "../context/AuthContext"
-import { Audit, Schedules } from "../types/types"
-import MapCost from "./MapCost"
+import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, ReadMore, Search, Select } from '@navikt/ds-react'
+import moment from 'moment'
+import { useEffect, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { Audit, Schedules } from '../types/types'
+import MapCost from './MapCost'
 
 const mapAudit = (audit: Audit[]) => {
     return audit
-        .sort(
-            (a: Audit, b: Audit) =>
-                new Date(a.timestamp).getTime() -
-                new Date(b.timestamp).getTime()
-        )
+        .sort((a: Audit, b: Audit) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
         .map((audit: Audit, index) => {
             const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
             const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
             return (
                 <div key={audit.id}>
                     <ReadMore
-                        header={auditTimestamp.slice(0, 20).replace("T", " ")}
+                        header={auditTimestamp.slice(0, 20).replace('T', ' ')}
                         size="small"
-                        style={
-                            audit.action.includes("Avgodkjent")
-                                ? { color: "red" }
-                                : { color: "green" }
-                        }
+                        style={audit.action.includes('Avgodkjent') ? { color: 'red' } : { color: 'green' }}
                     >
                         {audit.action} - {audit.user.name}
                     </ReadMore>
@@ -42,28 +26,28 @@ const mapAudit = (audit: Audit[]) => {
 }
 
 const mapApproveStatus = (status: number) => {
-    let statusText = ""
-    let statusColor = ""
+    let statusText = ''
+    let statusColor = ''
     switch (status) {
         case 1:
-            statusText = "Godkjent av ansatt"
-            statusColor = "#66CBEC"
+            statusText = 'Godkjent av ansatt'
+            statusColor = '#66CBEC'
             break
         case 2:
-            statusText = "Venter på utregning"
-            statusColor = "#99DEAD"
+            statusText = 'Venter på utregning'
+            statusColor = '#99DEAD'
             break
         case 3:
-            statusText = "Godkjent av vaktsjef"
-            statusColor = "#99DEAD"
+            statusText = 'Godkjent av vaktsjef'
+            statusColor = '#99DEAD'
             break
         case 4:
-            statusText = "Overført til lønn"
-            statusColor = "#E18071"
+            statusText = 'Overført til lønn'
+            statusColor = '#E18071'
             break
         default:
-            statusText = "Trenger godkjenning"
-            statusColor = "#FFFFFF"
+            statusText = 'Trenger godkjenning'
+            statusColor = '#FFFFFF'
             break
     }
 
@@ -71,8 +55,8 @@ const mapApproveStatus = (status: number) => {
         <Table.DataCell
             style={{
                 backgroundColor: statusColor,
-                maxWidth: "150",
-                minWidth: "150",
+                maxWidth: '150',
+                minWidth: '150',
             }}
         >
             {statusText}
@@ -86,31 +70,28 @@ const AvstemmingBakvakter = () => {
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
-    const [searchFilter, setSearchFilter] = useState("")
-    const [searchFilterType, setSearchFilterType] = useState("bakvakt")
+    const [searchFilter, setSearchFilter] = useState('')
+    const [searchFilterType, setSearchFilterType] = useState('bakvakt')
     const [searchFilterAction, setSearchFilterAction] = useState(5)
 
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } =
-        UNSAFE_useMonthpicker({
-            fromDate: new Date("Oct 01 2022"),
-            toDate: new Date("Aug 23 2025"),
-            //defaultSelected: new Date("Oct 2022")
-            defaultSelected: new Date(
-                new Date().getDate() - 10 > 0
-                    ? moment().locale("en-GB").format("L")
-                    : moment()
-                          .locale("en-GB")
-                          .month(moment().month() - 1)
-                          .format("MMM Y")
-            ),
-        })
+    const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
+        fromDate: new Date('Oct 01 2022'),
+        toDate: new Date('Aug 23 2025'),
+        //defaultSelected: new Date("Oct 2022")
+        defaultSelected: new Date(
+            new Date().getDate() - 10 > 0
+                ? moment().locale('en-GB').format('L')
+                : moment()
+                      .locale('en-GB')
+                      .month(moment().month() - 1)
+                      .format('MMM Y')
+        ),
+    })
 
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste
             .sort((a: Schedules, b: Schedules) =>
-                a.start_timestamp !== b.start_timestamp
-                    ? a.start_timestamp - b.start_timestamp
-                    : a.user.name.localeCompare(b.user.name)
+                a.start_timestamp !== b.start_timestamp ? a.start_timestamp - b.start_timestamp : a.user.name.localeCompare(b.user.name)
             )
             .map((vakter: Schedules, i: number) => (
                 //approve_level = 2;
@@ -128,62 +109,38 @@ const AvstemmingBakvakter = () => {
                     <Table.DataCell>
                         <b>ID: {vakter.id} </b>
                         <br />
-                        Uke {moment(vakter.start_timestamp * 1000).week()}{" "}
-                        {moment(vakter.start_timestamp * 1000).week() <
-                        moment(vakter.end_timestamp * 1000).week()
-                            ? " - " + moment(vakter.end_timestamp * 1000).week()
-                            : ""}
+                        Uke {moment(vakter.start_timestamp * 1000).week()}{' '}
+                        {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
+                            ? ' - ' + moment(vakter.end_timestamp * 1000).week()
+                            : ''}
                         <br />
-                        Start:{" "}
-                        {new Date(vakter.start_timestamp * 1000).toLocaleString(
-                            "no-NB",
-                            {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            }
-                        )}
+                        Start:{' '}
+                        {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
                         <br />
-                        Slutt:{" "}
-                        {new Date(vakter.end_timestamp * 1000).toLocaleString(
-                            "no-NB",
-                            {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            }
-                        )}
+                        Slutt:{' '}
+                        {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
                         <br />
                     </Table.DataCell>
                     {mapApproveStatus(vakter.approve_level)}
-                    {["personalleder", "leveranseleder", "okonomi"].includes(
-                        user.role
-                    ) && (
-                        <Table.DataCell
-                            scope="row"
-                            style={{ maxWidth: "200px", minWidth: "150px" }}
-                        >
-                            {vakter.cost ? (
-                                <MapCost
-                                    cost={vakter.cost}
-                                    avstemming={true}
-                                ></MapCost>
-                            ) : (
-                                "ingen beregning foreligger"
-                            )}
+                    {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) && (
+                        <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
+                            {vakter.cost ? <MapCost cost={vakter.cost} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
                         </Table.DataCell>
                     )}
-                    <Table.DataCell
-                        scope="row"
-                        style={{ maxWidth: "250px", minWidth: "200px" }}
-                    >
-                        {vakter.audits
-                            ? mapAudit(vakter.audits)
-                            : "Ingen hendelser"}
+                    <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
+                        {vakter.audits ? mapAudit(vakter.audits) : 'Ingen hendelser'}
                     </Table.DataCell>
                 </Table.Row>
             ))
@@ -193,16 +150,9 @@ const AvstemmingBakvakter = () => {
         fetch(`/vaktor/api/get_all_bakvakter?type=${searchFilterType}`)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {
-                itemData.sort(
-                    (a: Schedules, b: Schedules) =>
-                        a.start_timestamp - b.start_timestamp
-                )
+                itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
-                setItemData(
-                    itemData.filter(
-                        (data: Schedules) => data.user.ekstern === false
-                    )
-                )
+                setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
                 setLoading(false)
             })
     }, [response, searchFilterType])
@@ -214,63 +164,42 @@ const AvstemmingBakvakter = () => {
     let listeAvVakter = mapVakter(
         itemData.filter(
             (value: Schedules) =>
-                new Date(value.start_timestamp * 1000).getMonth() ===
-                    selectedMonth!.getMonth() &&
-                new Date(value.start_timestamp * 1000).getFullYear() ===
-                    selectedMonth!.getFullYear() &&
+                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
-                (searchFilterAction === 5
-                    ? true
-                    : value.approve_level === searchFilterAction)
+                (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
         )
     )
     return (
         <div
             style={{
-                minWidth: "900px",
-                maxWidth: "90vw",
-                backgroundColor: "white",
-                marginBottom: "3vh",
-                display: "grid",
-                alignContent: "center",
-                margin: "auto",
+                minWidth: '900px',
+                maxWidth: '90vw',
+                backgroundColor: 'white',
+                marginBottom: '3vh',
+                display: 'grid',
+                alignContent: 'center',
+                margin: 'auto',
             }}
         >
-            <div className="min-h-96" style={{ display: "flex" }}>
+            <div className="min-h-96" style={{ display: 'flex' }}>
                 <UNSAFE_MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
-                        <UNSAFE_MonthPicker.Input
-                            {...inputProps}
-                            label="Velg måned"
-                        />
+                        <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
                     </div>
                 </UNSAFE_MonthPicker>
-                <form style={{ width: "300px", marginLeft: "30px" }}>
-                    <Search
-                        label="Søk etter person"
-                        hideLabel={false}
-                        variant="simple"
-                        onChange={(text) => setSearchFilter(text)}
-                    />
+                <form style={{ width: '300px', marginLeft: '30px' }}>
+                    <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
-                <div style={{ width: "200px", marginLeft: "30px" }}>
-                    <Select
-                        label="Velg vakttype"
-                        onChange={(e) => setSearchFilterType(e.target.value)}
-                        value={searchFilterType}
-                    >
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <Select label="Velg vakttype" onChange={(e) => setSearchFilterType(e.target.value)} value={searchFilterType}>
                         <option value="bakvakt">Bakvakt</option>
                         <option value="bistand">Bistand</option>
                         <option value="bytte">Bytte</option>
                     </Select>
                 </div>
-                <div style={{ width: "200px", marginLeft: "30px" }}>
-                    <Select
-                        label="Filter på status"
-                        onChange={(e) =>
-                            setSearchFilterAction(Number(e.target.value))
-                        }
-                    >
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
                         <option value={5}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
                         <option value={1}>Godkjent av ansatt</option>
@@ -285,52 +214,34 @@ const AvstemmingBakvakter = () => {
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell>#</Table.HeaderCell>
-                            <Table.HeaderCell scope="col">
-                                Navn
-                            </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">
-                                Type vakt
-                            </Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
                             <Table.HeaderCell
                                 scope="col"
                                 style={{
-                                    minWidth: "400px",
-                                    maxWidth: "400px",
+                                    minWidth: '400px',
+                                    maxWidth: '400px',
                                 }}
                             >
                                 Periode
                             </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">
-                                Status
-                            </Table.HeaderCell>
-                            {[
-                                "personalleder",
-                                "leveranseleder",
-                                "okonomi",
-                            ].includes(user.role) && (
+                            <Table.HeaderCell scope="col">Status</Table.HeaderCell>
+                            {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) && (
                                 <Table.HeaderCell
                                     scope="col"
                                     style={{
-                                        minWidth: "400px",
-                                        maxWidth: "400px",
+                                        minWidth: '400px',
+                                        maxWidth: '400px',
                                     }}
                                 >
                                     Kost
                                 </Table.HeaderCell>
                             )}
-                            <Table.HeaderCell scope="col">
-                                Audit
-                            </Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {listeAvVakter.length === 0 ? (
-                            <h3 style={{ margin: "auto", color: "red" }}>
-                                Ingen treff
-                            </h3>
-                        ) : (
-                            listeAvVakter
-                        )}
+                        {listeAvVakter.length === 0 ? <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3> : listeAvVakter}
                     </Table.Body>
                 </Table>
             </div>

@@ -12,13 +12,14 @@ import {
     Alert,
     Select,
     ToggleGroup,
-} from "@navikt/ds-react"
-import moment from "moment"
-import { useEffect, useState, Dispatch } from "react"
-import { useAuth } from "../context/AuthContext"
-import { Schedules, User, Vaktlag } from "../types/types"
-import DatePickeroo from "./MidlertidigeVaktperioder"
-import PerioderOptions from "./PerioderOptions"
+} from '@navikt/ds-react'
+import moment from 'moment'
+import { useEffect, useState, Dispatch } from 'react'
+import { start } from 'repl'
+import { useAuth } from '../context/AuthContext'
+import { Schedules, User, Vaktlag } from '../types/types'
+import DatePickeroo from './MidlertidigeVaktperioder'
+import PerioderOptions from './PerioderOptions'
 
 const createSchedule = async (
     users: User[],
@@ -31,14 +32,43 @@ const createSchedule = async (
     setResponseError: Dispatch<string>,
     rolloverTime: number
 ) => {
-    //setLoading(true);
-    var user_order = users
-        .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
-        .map((user: User) => user.id) // bare en liste med identer
+    var user_order = users.sort((a: User, b: User) => a.group_order_index! - b.group_order_index!).map((user: User) => user.id) // bare en liste med identer
     var url = `/vaktor/api/create_schedule/?group_id=${users[0].groups[0].id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amountOfWeeks=${amountOfWeeks}&rolloverDay=${rolloverDay}&rolloverTime=${rolloverTime}`
     var fetchOptions = {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify(user_order),
+    }
+
+    await fetch(url, fetchOptions)
+        .then(async (r) => {
+            if (!r.ok) {
+                const rText = await r.json()
+                setResponseError(rText.detail)
+                return []
+            }
+            return r.json()
+        })
+        .then((data: Schedules) => {
+            setResponse(data)
+        })
+        .catch((error: Error) => {
+            console.error(error.name, error.message)
+            throw error /* <-- rethrow the error so consumer can still catch it */
+        })
+}
+
+const createTempSchedule = async (
+    user_id: string,
+    group_id: string,
+    start_timestamp: number,
+    end_timestamp: number,
+    setResponse: Dispatch<any>,
+    setResponseError: Dispatch<string>
+) => {
+    var url = `/vaktor/api/create_temp_schedule/?user_id=${user_id}&group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&`
+    console.log('tiden: ', start_timestamp, end_timestamp)
+    var fetchOptions = {
+        method: 'POST',
     }
 
     await fetch(url, fetchOptions)
@@ -61,15 +91,12 @@ const createSchedule = async (
 
 const Vaktperioder = () => {
     const { user } = useAuth()
-    const numWeeksInMs = 6.048e8 * 4 // 4 weeks in ms
     const [itemData, setItemData] = useState<User[]>([])
     const [response, setResponse] = useState([])
-    const [responseError, setResponseError] = useState("")
+    const [responseError, setResponseError] = useState('')
     const [loading, setLoading] = useState(false)
     const [isMidlertidlig, setIsMidlertidlig] = useState(true)
-    const [startTimestamp, setStartTimestamp] = useState<number>(
-        new Date("Jan 01 2023").setHours(12) / 1000
-    )
+    const [startTimestamp, setStartTimestamp] = useState<number>(new Date('Jan 01 2023').setHours(12) / 1000)
     const [endTimestamp, setEndTimestamp] = useState<number>(0)
     const [clock_start, setClockStart] = useState<number>(0)
     const [clock_end, setClockEnd] = useState<number>(0)
@@ -80,105 +107,129 @@ const Vaktperioder = () => {
 
     const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
 
-    const { monthpickerProps, inputProps, selectedMonth } =
-        UNSAFE_useMonthpicker({
-            required: true,
-            fromDate: new Date("Jan 01 2023"),
-            toDate: new Date("Feb 01 2025"),
-            defaultYear: new Date("Jan 01 2023"),
-            defaultSelected: new Date("Jan 01 2023"),
-        })
+    const { monthpickerProps, inputProps, selectedMonth } = UNSAFE_useMonthpicker({
+        required: true,
+        fromDate: new Date('Jan 01 2023'),
+        toDate: new Date('Feb 01 2025'),
+        defaultYear: new Date('Jan 01 2023'),
+        defaultSelected: new Date('Jan 01 2023'),
+    })
 
     const mapMembers = (members: User[]) =>
         members
-            .sort(
-                (a: User, b: User) =>
-                    a.group_order_index! - b.group_order_index!
-            )
+            .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
             .map((user, index) => {
                 if (user.group_order_index === undefined) {
                     user.group_order_index = index + 1
                 }
                 user.id = user.id.toUpperCase()
-                return (
-                    <PerioderOptions
-                        member={user}
-                        key={index}
-                        itemData={members}
-                        setItemData={setItemData}
-                    ></PerioderOptions>
-                )
+                return <PerioderOptions member={user} key={index} itemData={members} setItemData={setItemData}></PerioderOptions>
             })
 
     const mapMembersMidlertidig = (members: User[]) =>
-        members
-            .map((user, index) => {
-                if (user.group_order_index === undefined) {
-                    user.group_order_index = index + 1
-                }
-                user.id = user.id.toUpperCase()
-                return (
-
-                    <option value={user.name}>{user.name}</option>
-
-                )
-            })
+        members.map((user, index) => {
+            if (user.group_order_index === undefined) {
+                user.group_order_index = index + 1
+            }
+            user.id = user.id.toUpperCase()
+            var options = {
+                name: user.name,
+                user_id: user.id,
+            }
+            return (
+                <option key={index} value={JSON.stringify(options)}>
+                    {user.name}
+                </option>
+            )
+        })
 
     const mapForms = (forms: any) =>
-        forms
-            .map((form: any, index: any) => {
-                return (
-                    <>
-                        {
-                            form.name !== '' ? (
-                                < Table.Row key={index} >
-                                    <Table.DataCell>{form.name}</Table.DataCell>
-                                    <Table.DataCell>{(form.fromDate !== '' ? (<>{moment.unix(form.fromDate).format("L")} kl. {moment.unix(form.fromTime - 3600).format("HH:mm")}</>) : (<></>))} </Table.DataCell>
-                                    <Table.DataCell>{(form.fromDate !== '' ? (<>{moment.unix(form.toDate).format("L")} kl. {moment.unix(form.toTime - 3600).format("HH:mm")}</>) : (<></>))}</Table.DataCell>
-                                </Table.Row >
-                            ) : (<></>)
-                        }
-                    </>
-
-                )
-            })
+        forms.map((form: any, index: any) => {
+            // NB! be careful for Day time saving ( clock settings)
+            return (
+                <>
+                    {form.name !== '' ? (
+                        <Table.Row key={index}>
+                            <Table.DataCell>{form.name}</Table.DataCell>
+                            <Table.DataCell>
+                                {form.fromDate !== '' ? (
+                                    <>
+                                        {moment.unix(form.fromDate).format('L')} kl. {moment.unix(form.fromTime - 3600).format('HH:mm')}
+                                    </>
+                                ) : (
+                                    <></>
+                                )}{' '}
+                            </Table.DataCell>
+                            <Table.DataCell>
+                                {form.fromDate !== '' ? (
+                                    <>
+                                        {moment.unix(form.toDate).format('L')} kl. {moment.unix(form.toTime - 3600).format('HH:mm')}
+                                    </>
+                                ) : (
+                                    <></>
+                                )}
+                            </Table.DataCell>
+                        </Table.Row>
+                    ) : (
+                        <></>
+                    )}
+                </>
+            )
+        })
 
     //// #####   Flere forms-greier
 
-    const [forms, setForms] = useState([{ name: '', group: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
+    const [forms, setForms] = useState([
+        {
+            name: '',
+            user_id: '',
+            group: '',
+            fromDate: 0,
+            fromTime: 0,
+            toDate: 0,
+            toTime: 0,
+        },
+    ])
 
     const handleSubmit = (e: { preventDefault: () => void }) => {
-        e.preventDefault();
-        forms.forEach(form => {
-            console.log(form);
+        e.preventDefault()
+        forms.forEach((form) => {
+            createTempSchedule(form.user_id, form.group, form.fromDate + form.fromTime, form.toDate + form.toTime, setResponse, setResponseError)
         })
     }
 
     const handleAddForm = () => {
-        setForms([...forms, { name: '', group: '', fromDate: '', fromTime: 0, toDate: '', toTime: 0 }]);
+        setForms([
+            ...forms,
+            {
+                name: '',
+                user_id: '',
+                group: '',
+                fromDate: 0,
+                fromTime: 0,
+                toDate: 0,
+                toTime: 0,
+            },
+        ])
     }
 
     const handleChildProps = (index: any, dateProps: any) => {
-        console.log("Parent: ", index, "Props: ", dateProps)
-        let newForms = [...forms];
-        newForms[index].fromDate = dateProps.from;
-        newForms[index].toDate = dateProps.to;
-        setForms(newForms);
+        console.log('Parent: ', index, 'Props: ', dateProps)
+        let newForms = [...forms]
+        newForms[index].fromDate = dateProps.from
+        newForms[index].toDate = dateProps.to
+        setForms(newForms)
     }
 
-    //// #####   
+    //// #####
 
     useEffect(() => {
         //setLoading(true);
         fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`)
             .then((membersRes) => membersRes.json())
             .then((groupMembersJson) => {
-                setItemData(
-                    groupMembersJson.filter(
-                        (user: User) => user.role !== "leveranseleder"
-                    )
-                )
-                setIsMidlertidlig(user.groups[0].type === "Midlertidlig")
+                setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))
+                setIsMidlertidlig(user.groups.filter((group) => group.id == selectedVaktlag)[0].type === 'Midlertidlig')
                 // :pointdown: må fjernes - manuell overstyring av midlertidig
                 //setIsMidlertidlig(true)
                 setLoading(false)
@@ -188,74 +239,87 @@ const Vaktperioder = () => {
     if (loading === true) return <Loader></Loader>
     return (
         <>
-            {response.length !== 0 || responseError !== "" ? (
+            {response.length !== 0 || responseError !== '' ? (
                 mapResponse(response, page, setPage, responseError)
             ) : (
                 <div
                     style={{
-                        marginTop: "2vh",
-                        marginBottom: "3vh",
-                        display: "grid",
-                        alignItems: "center",
-                        justifyContent: "space-around",
-                        gap: "20px",
+                        marginTop: '2vh',
+                        marginBottom: '3vh',
+                        display: 'grid',
+                        alignItems: 'center',
+                        justifyContent: 'space-around',
+                        gap: '20px',
                     }}
                 >
-                    <div style={{ width: "43%", margin: "auto" }}></div>
-                    <div style={{ display: "flex", alignContent: "center", justifyContent: "center" }}>
+                    <div style={{ width: '43%', margin: 'auto' }}></div>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignContent: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
                         {user.groups.length > 1 ? (
-
-
-                            <ToggleGroup defaultValue={user.groups[0].id} onChange={e => (setSelctedVaktlag(e))} >
-
-
+                            <ToggleGroup defaultValue={user.groups[0].id} onChange={(e) => setSelctedVaktlag(e)}>
                                 {user.groups.map((group: Vaktlag) => (
-                                    <ToggleGroup.Item
-                                        key={group.id}
-                                        value={group.id}
-                                    > {group.name}
+                                    <ToggleGroup.Item key={group.id} value={group.id}>
+                                        {' '}
+                                        {group.name}
                                     </ToggleGroup.Item>
                                 ))}
-
                             </ToggleGroup>
-
-
-
                         ) : (
                             <b>{user.groups[0].name}</b>
                         )}
                     </div>
 
                     {isMidlertidlig ? (
-                        <div style={{ margin: "auto", gap: "100px" }}>
+                        <div style={{ margin: 'auto', gap: '100px' }}>
                             {forms.map((form, index) => (
                                 <div key={index}>
-                                    <Select label="vakthaver" value={form.name} onChange={e => {
-                                        const newForms = [...forms]
-                                        newForms[index].name = e.target.value
-                                        // TODO må endres dersom man kan være vaktsjef for flere vaktlag...
-                                        newForms[index].group = user.groups[0].id
-                                        setForms(newForms)
-                                        console.log("User object: ", user)
-                                    }}>
-                                        <option value="">Velg Vakthaver</option>
+                                    <Select
+                                        label="vakthaver"
+                                        onChange={(e) => {
+                                            const newForms = [...forms]
+                                            const selectJson = JSON.parse(e.target.value)
+                                            newForms[index].name = selectJson.name
+                                            newForms[index].user_id = selectJson.user_id
+                                            // TODO må endres dersom man kan være vaktsjef for flere vaktlag...
+                                            newForms[index].group = user.groups[0].id
+                                            setForms(newForms)
+                                            console.log('User object: ', user)
+                                        }}
+                                    >
+                                        <option disabled selected>
+                                            Velg Vakthaver
+                                        </option>
                                         {mapMembersMidlertidig(itemData)}
-
                                     </Select>
-                                    <div style={{ display: "flex", justifyContent: "center", marginTop: "5px" }}>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            marginTop: '5px',
+                                        }}
+                                    >
                                         <div>
                                             <DatePickeroo key={index} index={index} handleChildProps={handleChildProps} />
                                         </div>
-                                        <div style={{ display: "grid", marginLeft: "10px" }}>
+                                        <div
+                                            style={{
+                                                display: 'grid',
+                                                marginLeft: '10px',
+                                            }}
+                                        >
                                             <Select
                                                 label="Klokken"
                                                 defaultValue={0}
                                                 onChange={(e) => {
-                                                    const newForms = [...forms];
-                                                    newForms[index].fromTime = Number(e.target.value) * 3600;
-                                                    setForms(newForms);
-                                                }
-                                                }
+                                                    const newForms = [...forms]
+                                                    newForms[index].fromTime = Number(e.target.value) * 3600
+                                                    setForms(newForms)
+                                                }}
                                             >
                                                 <option value={0}>00:00</option>
                                                 <option value={1}>01:00</option>
@@ -286,11 +350,10 @@ const Vaktperioder = () => {
                                                 label="Klokken"
                                                 defaultValue={0}
                                                 onChange={(e) => {
-                                                    const newForms = [...forms];
-                                                    newForms[index].toTime = Number(e.target.value) * 3600;
-                                                    setForms(newForms);
-                                                }
-                                                }
+                                                    const newForms = [...forms]
+                                                    newForms[index].toTime = Number(e.target.value) * 3600
+                                                    setForms(newForms)
+                                                }}
                                             >
                                                 <option value={0}>00:00</option>
                                                 <option value={1}>01:00</option>
@@ -318,70 +381,51 @@ const Vaktperioder = () => {
                                                 <option value={23}>23:00</option>
                                             </Select>
                                         </div>
-                                    </div>{index + 1 === forms.length ? <div style={{ marginTop: "10px" }}><Button onClick={handleAddForm}>Add Form</Button> </div> : <></>}
+                                    </div>
+                                    {index + 1 === forms.length ? (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <Button onClick={handleAddForm}>Add Form</Button>{' '}
+                                        </div>
+                                    ) : (
+                                        <></>
+                                    )}
                                     <br />
                                     <hr />
                                 </div>
-
                             ))}
-
-
-
                         </div>
                     ) : (
                         <>
                             <div
                                 style={{
-                                    display: "flex",
-                                    gap: "40px",
-                                    marginTop: "15px",
+                                    display: 'flex',
+                                    gap: '40px',
+                                    marginTop: '15px',
                                 }}
                             >
-                                <UNSAFE_MonthPicker
-                                    {...monthpickerProps}
-                                    style={{}}
-                                >
+                                <UNSAFE_MonthPicker {...monthpickerProps} style={{}}>
                                     <div
                                         style={{
-                                            display: "flex",
-                                            gap: "15px",
-                                            alignItems: "center",
-                                            justifyContent: "center",
+                                            display: 'flex',
+                                            gap: '15px',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
                                         }}
                                     >
-                                        <UNSAFE_MonthPicker.Input
-                                            {...inputProps}
-                                            label="Fra"
-                                        />
+                                        <UNSAFE_MonthPicker.Input {...inputProps} label="Fra" />
                                     </div>
                                 </UNSAFE_MonthPicker>
 
-                                <RadioGroup
-                                    legend="Angi dag for vaktbytte: "
-                                    onChange={(val: any) => setRolloverDay(val)}
-                                    defaultValue="2"
-                                >
+                                <RadioGroup legend="Angi dag for vaktbytte: " onChange={(val: any) => setRolloverDay(val)} defaultValue="2">
                                     <Radio value="0">Mandag</Radio>
                                     <Radio value="2">Onsdag</Radio>
                                 </RadioGroup>
-                                <RadioGroup
-                                    legend="Angi tid for vaktbytte: "
-                                    onChange={(val: any) =>
-                                        setRolloverTime(val)
-                                    }
-                                    defaultValue="12"
-                                >
+                                <RadioGroup legend="Angi tid for vaktbytte: " onChange={(val: any) => setRolloverTime(val)} defaultValue="12">
                                     <Radio value="7">07:00</Radio>
                                     <Radio value="8">08:00</Radio>
                                     <Radio value="12">12:00</Radio>
                                 </RadioGroup>
-                                <RadioGroup
-                                    legend="Opprett vaktplan for: "
-                                    onChange={(val: any) =>
-                                        setAmountOfWeeks(val)
-                                    }
-                                    defaultValue="52"
-                                >
+                                <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
                                     <Radio value="26">6 måneder</Radio>
                                     <Radio value="52">12 måneder</Radio>
                                 </RadioGroup>
@@ -394,37 +438,24 @@ const Vaktperioder = () => {
                             <Table>
                                 <Table.Header>
                                     <Table.Row>
-                                        <Table.HeaderCell scope="col">
-                                            Navn
-                                        </Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">
-                                            Fra
-                                        </Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">
-                                            Til
-                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">Fra</Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">Til</Table.HeaderCell>
                                     </Table.Row>
                                 </Table.Header>
-                                <Table.Body>
-                                    {forms ? (
-                                        mapForms(forms)
-                                    ) : (
-                                        <Table.Row></Table.Row>
-                                    )}
-                                </Table.Body>
+                                <Table.Body>{forms ? mapForms(forms) : <Table.Row></Table.Row>}</Table.Body>
                             </Table>
                             <Button onClick={handleSubmit}>Submit All Forms</Button>
-
                         </>
                     ) : (
                         <>
                             <Table
                                 style={{
-                                    minWidth: "650px",
-                                    maxWidth: "60vw",
-                                    backgroundColor: "white",
-                                    marginTop: "2vh",
-                                    marginBottom: "3vh",
+                                    minWidth: '650px',
+                                    maxWidth: '60vw',
+                                    backgroundColor: 'white',
+                                    marginTop: '2vh',
+                                    marginBottom: '3vh',
                                 }}
                             >
                                 <Table.Header>
@@ -432,84 +463,61 @@ const Vaktperioder = () => {
                                         <Table.HeaderCell scope="col">
                                             <div
                                                 style={{
-                                                    display: "flex",
-                                                    alignItems: "space-around",
+                                                    display: 'flex',
+                                                    alignItems: 'space-around',
                                                 }}
                                             >
                                                 ID
                                                 <HelpText
                                                     title="Hva brukes ID til?"
                                                     style={{
-                                                        marginLeft: "10px",
+                                                        marginLeft: '10px',
                                                     }}
                                                 >
-                                                    <b>Id:</b> Brukes for å bestemme
-                                                    hvilken rekkefølge vakthaverne skal
-                                                    gå vakt. Den som står øverst vil få
-                                                    første vakt når nye perioder
-                                                    genereres
+                                                    <b>Id:</b> Brukes for å bestemme hvilken rekkefølge vakthaverne skal gå vakt. Den som står øverst
+                                                    vil få første vakt når nye perioder genereres
                                                 </HelpText>
                                             </div>
                                         </Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">
-                                            Ident
-                                        </Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">
-                                            Navn
-                                        </Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">
-                                            Rolle
-                                        </Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">Ident</Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                                        <Table.HeaderCell scope="col">Rolle</Table.HeaderCell>
                                         <Table.HeaderCell scope="col">
                                             <div
                                                 style={{
-                                                    display: "flex",
-                                                    alignItems: "space-around",
+                                                    display: 'flex',
+                                                    alignItems: 'space-around',
                                                 }}
                                             >
                                                 Aktiv
                                                 <HelpText
                                                     title="Hva brukes aktiv toggle til?"
                                                     style={{
-                                                        marginLeft: "10px",
+                                                        marginLeft: '10px',
                                                     }}
                                                 >
-                                                    <b>Aktiv toggle:</b> Toggles til av
-                                                    dersom en vakthaver <b>ikke</b> skal
-                                                    nkluderes i nye vaktperioder
+                                                    <b>Aktiv toggle:</b> Toggles til av dersom en vakthaver <b>ikke</b> skal nkluderes i nye
+                                                    vaktperioder
                                                     <br />
                                                 </HelpText>
                                             </div>
                                         </Table.HeaderCell>
                                     </Table.Row>
                                 </Table.Header>
-                                <Table.Body>
-                                    {itemData ? (
-                                        mapMembers(itemData)
-                                    ) : (
-                                        <Table.Row></Table.Row>
-                                    )}
-                                </Table.Body>
+                                <Table.Body>{itemData ? mapMembers(itemData) : <Table.Row></Table.Row>}</Table.Body>
                             </Table>
                             <Button
                                 disabled={response.length !== 0}
                                 style={{
-                                    minWidth: "210px",
-                                    marginBottom: "15px",
+                                    minWidth: '210px',
+                                    marginBottom: '15px',
                                 }}
                                 onClick={() => {
                                     createSchedule(
-                                        itemData.filter(
-                                            (user: User) =>
-                                                user.group_order_index !== 100
-                                        ),
+                                        itemData.filter((user: User) => user.group_order_index !== 100),
                                         setResponse, //setLoading
-                                        isMidlertidlig
-                                            ? startTimestamp + clock_start * 3600
-                                            : selectedMonth!.setHours(12) / 1000,
-                                        isMidlertidlig
-                                            ? endTimestamp + clock_end * 3600
-                                            : 0,
+                                        isMidlertidlig ? startTimestamp + clock_start * 3600 : selectedMonth!.setHours(12) / 1000,
+                                        isMidlertidlig ? endTimestamp + clock_end * 3600 : 0,
                                         isMidlertidlig,
                                         rolloverDay,
                                         amountOfWeeks,
@@ -522,33 +530,26 @@ const Vaktperioder = () => {
                             </Button>
                         </>
                     )}
-
                 </div>
-            )
-            }
+            )}
         </>
     )
 }
 
 export default Vaktperioder
 
-const mapResponse = (
-    schedules: Schedules[],
-    page: number,
-    setPage: Dispatch<number>,
-    error: string
-) => {
+const mapResponse = (schedules: Schedules[], page: number, setPage: Dispatch<number>, error: string) => {
     const rowsPerPage = 10
     let sortData = schedules
     sortData = sortData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
-    if (error !== "") {
+    if (error !== '') {
         return (
-            <div style={{ height: "60vh" }}>
+            <div style={{ height: '60vh' }}>
                 <Alert
                     style={{
-                        maxWidth: "50%",
-                        minWidth: "550px",
-                        margin: "auto",
+                        maxWidth: '50%',
+                        minWidth: '550px',
+                        margin: 'auto',
                     }}
                     variant="error"
                 >
@@ -562,12 +563,12 @@ const mapResponse = (
         <div
             className="grid gap-4"
             style={{
-                maxWidth: "650px",
-                margin: "auto",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "20px",
+                maxWidth: '650px',
+                margin: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '20px',
             }}
         >
             <Alert variant="success">Disse vaktene ble opprettet:</Alert>
@@ -584,37 +585,25 @@ const mapResponse = (
                             <Table.HeaderCell
                                 scope="row"
                                 style={{
-                                    minWidth: "210px",
-                                    maxWidth: "210px",
+                                    minWidth: '210px',
+                                    maxWidth: '210px',
                                 }}
                             >
                                 {schedule.user.name}
                             </Table.HeaderCell>
 
                             <Table.DataCell>
-                                Uke:{" "}
-                                {moment(schedule.start_timestamp * 1000).week()}{" "}
-                                {moment(
-                                    schedule.start_timestamp * 1000
-                                ).week() <
-                                    moment(schedule.end_timestamp * 1000).week()
-                                    ? " - " +
-                                    moment(
-                                        schedule.end_timestamp * 1000
-                                    ).week()
-                                    : ""}
+                                Uke: {moment(schedule.start_timestamp * 1000).week()}{' '}
+                                {moment(schedule.start_timestamp * 1000).week() < moment(schedule.end_timestamp * 1000).week()
+                                    ? ' - ' + moment(schedule.end_timestamp * 1000).week()
+                                    : ''}
                                 <br />
                             </Table.DataCell>
                         </Table.Row>
                     ))}
                 </Table.Body>
             </Table>
-            <Pagination
-                page={page}
-                onPageChange={setPage}
-                count={Math.ceil(schedules.length / rowsPerPage)}
-                style={{ marginLeft: "0" }}
-            />
+            <Pagination page={page} onPageChange={setPage} count={Math.ceil(schedules.length / rowsPerPage)} style={{ marginLeft: '0' }} />
         </div>
     )
 }

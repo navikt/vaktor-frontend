@@ -6,12 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "npx prettier --write .",
+    "prepare": "husky install"
   },
   "dependencies": {
-    "@navikt/ds-css": "^2.0.1",
-    "@navikt/ds-react": "^2.0.1",
-    "@navikt/status-components-react": "^0.0.16",
+    "@navikt/ds-css": "^2.2.0",
+    "@navikt/ds-react": "^2.2.0",
+    "@navikt/status-components-react": "0.1.0",
     "components": "^0.1.0",
     "interactjs": "^1.10.17",
     "moment": "^2.29.4",
@@ -34,6 +36,7 @@
     "@types/styled-components": "^5.1.26",
     "eslint": "8.23.1",
     "eslint-config-next": "12.3.0",
+    "husky": "^8.0.3",
     "typescript": "4.8.3"
   }
 }

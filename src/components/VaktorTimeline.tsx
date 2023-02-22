@@ -1,29 +1,22 @@
-import Timeline, {
-    TimelineHeaders,
-    SidebarHeader,
-    DateHeader,
-} from "react-calendar-timeline"
-import { useState, useEffect } from "react"
-import { Moment } from "moment"
-import {
-    colorPicker,
-    setGrpColor,
-    setBorderColor,
-    setTextColor,
-    setInterruptionColor,
-} from "./SetColors"
-import { Information } from "@navikt/ds-icons"
-import GroupDetailsModal from "./GroupDetailsModal"
-import ItemDetailsModal from "./ItemDetailsModal"
-import { BodyShort, Label, Loader, Button, Search } from "@navikt/ds-react"
-import styled from "styled-components"
-import moment from "moment"
-import { Spring, animated, AnimatedProps } from "react-spring"
-import { NavigationButtons } from "./NavigationButtons"
-import { FluidValue } from "@react-spring/shared"
-import { Schedules, User, Vaktlag } from "../types/types"
-import Overview from "./OverviewNoTimeline"
-import { useAuth } from "../context/AuthContext"
+import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, TodayMarker, CustomMarker, CursorMarker } from 'react-calendar-timeline'
+import { useState, useEffect } from 'react'
+import { Moment } from 'moment'
+import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './SetColors'
+import { Information } from '@navikt/ds-icons'
+import GroupDetailsModal from './GroupDetailsModal'
+import ItemDetailsModal from './ItemDetailsModal'
+import { BodyShort, Label, Loader, Button, Search } from '@navikt/ds-react'
+import styled from 'styled-components'
+import moment from 'moment'
+import { Spring, animated, AnimatedProps } from 'react-spring'
+import { NavigationButtons } from './NavigationButtons'
+import { FluidValue } from '@react-spring/shared'
+import { Schedules, User, Vaktlag } from '../types/types'
+import Overview from './OverviewNoTimeline'
+import { useAuth } from '../context/AuthContext'
+
+let today = Date.now()
+let tomorrow = new Date(Date.now() + 3600 * 1000 * 24)
 
 const SidebarHeaderText = styled.div`
     padding-top: 25px;
@@ -66,29 +59,25 @@ function VaktorTimeline() {
     const [isLoading, setLoading] = useState(false)
 
     const [grpModalOpen, setGrpModalOpen] = useState(false)
-    const [grpName, setGrpName] = useState("")
-    const [grpType, setGrpType] = useState("")
-    const [grpPhone, setGrpPhone] = useState("")
+    const [grpName, setGrpName] = useState('')
+    const [grpType, setGrpType] = useState('')
+    const [grpPhone, setGrpPhone] = useState('')
 
     const [itemModalOpen, setItemModalOpen] = useState(false)
-    const [itemUserName, setItemUserName] = useState("")
-    const [itemGrpName, setItemGrpName] = useState("")
-    const [itemGrpId, setItemGrpId] = useState("")
-    const [itemDescription, setItemDescription] = useState("")
-    const [itemTelephone, setItemTelephone] = useState("")
-    const [itemStartTime, setItemStartTime] = useState("")
-    const [itemEndTime, setItemEndTime] = useState("")
+    const [itemUserName, setItemUserName] = useState('')
+    const [itemGrpName, setItemGrpName] = useState('')
+    const [itemGrpId, setItemGrpId] = useState('')
+    const [itemDescription, setItemDescription] = useState('')
+    const [itemTelephone, setItemTelephone] = useState('')
+    const [itemStartTime, setItemStartTime] = useState('')
+    const [itemEndTime, setItemEndTime] = useState('')
     const [itemUser, setItemUser] = useState<User | undefined>(undefined)
 
-    const [searchFilter, setSearchFilter] = useState("")
+    const [searchFilter, setSearchFilter] = useState('')
 
-    const [visibleTimeStart, setVisibleTimeStart] = useState(
-        moment().startOf("isoWeek").valueOf()
-    )
-    const [visibleTimeEnd, setVisibleTimeEnd] = useState(
-        moment().startOf("isoWeek").add(7, "day").valueOf()
-    )
-    const [timeUnit, setTimeUnit] = useState("week")
+    const [visibleTimeStart, setVisibleTimeStart] = useState(moment().startOf('isoWeek').valueOf())
+    const [visibleTimeEnd, setVisibleTimeEnd] = useState(moment().startOf('isoWeek').add(7, 'day').valueOf())
+    const [timeUnit, setTimeUnit] = useState('week')
 
     const date = (timestamp: number) => {
         let formatDate = moment.unix(timestamp)
@@ -96,14 +85,11 @@ function VaktorTimeline() {
     }
 
     const formattedDate = (date: number | Moment) => {
-        let formattedDate = moment(date).format("DD/MM/YY HH:mm")
+        let formattedDate = moment(date).format('DD/MM/YY HH:mm')
         return formattedDate
     }
 
-    const handleTimeChange = (
-        visibleTimeStart: number,
-        visibleTimeEnd: number
-    ) => {
+    const handleTimeChange = (visibleTimeStart: number, visibleTimeEnd: number) => {
         setVisibleTimeStart(visibleTimeStart)
         setVisibleTimeEnd(visibleTimeEnd)
     }
@@ -111,7 +97,7 @@ function VaktorTimeline() {
     useEffect(() => {
         setLoading(true)
 
-        Promise.all([fetch("vaktor/api/groups"), fetch("vaktor/api/schedules")])
+        Promise.all([fetch('vaktor/api/groups'), fetch('vaktor/api/schedules')])
             .then(async ([groupRes, scheduleRes]) => {
                 const groupjson = await groupRes.json()
                 const schedulejson = await scheduleRes.json()
@@ -137,12 +123,8 @@ function VaktorTimeline() {
   */
 
     const groupDataList: any = groupData
-    const groupsSorted1 = [...groupDataList].sort((a, b) =>
-        a.name < b.name ? 1 : -1
-    )
-    const groupsSorted = [...groupsSorted1].sort((a, b) =>
-        a.type === "Døgnkontinuerlig (24/7)" ? -1 : 1
-    )
+    const groupsSorted1 = [...groupDataList].sort((a, b) => (a.name < b.name ? 1 : -1))
+    const groupsSorted = [...groupsSorted1].sort((a, b) => (a.type === 'Døgnkontinuerlig (24/7)' ? -1 : 1))
 
     const groups: any = []
     const groupColorList: any = []
@@ -151,12 +133,7 @@ function VaktorTimeline() {
         return title.length > 22 ? <>{title.substring(0, 21)}&hellip;</> : title
     }
 
-    const updateGrpModal = (
-        modalstate: boolean,
-        groupname: string,
-        grouptype: string,
-        groupPhone: string
-    ) => {
+    const updateGrpModal = (modalstate: boolean, groupname: string, grouptype: string, groupPhone: string) => {
         setGrpModalOpen(modalstate)
         setGrpName(groupname)
         setGrpType(grouptype)
@@ -164,9 +141,7 @@ function VaktorTimeline() {
     }
 
     groupsSorted
-        .filter((vaktlag: Vaktlag) =>
-            vaktlag.name.toLowerCase().includes(searchFilter.toLowerCase())
-        )
+        .filter((vaktlag: Vaktlag) => vaktlag.name.toLowerCase().includes(searchFilter.toLowerCase()))
         .map((vaktlag: any, index: number) => {
             groupColorList.push({
                 group: vaktlag.id,
@@ -178,17 +153,7 @@ function VaktorTimeline() {
 
             groups.push({
                 title: (
-                    <div
-                        className="groupsClickable"
-                        onClick={() =>
-                            updateGrpModal(
-                                !grpModalOpen,
-                                groupName,
-                                groupType,
-                                groupPhone
-                            )
-                        }
-                    >
+                    <div className="groupsClickable" onClick={() => updateGrpModal(!grpModalOpen, groupName, groupType, groupPhone)}>
                         <SidebarText>
                             <Label>{groupTitle(groupName)}</Label>
                             <SidebarIcon>
@@ -209,7 +174,7 @@ function VaktorTimeline() {
     const itemList: any = itemData
     const items: any = []
     const itemTitle = (name: string) => {
-        return timeUnit === "year" ? "" : name
+        return timeUnit === 'year' ? '' : name
     }
 
     const updateItemModal = (
@@ -235,7 +200,7 @@ function VaktorTimeline() {
     }
 
     itemList
-        .filter((vakt: Schedules) => vakt.type === "ordinær vakt")
+        .filter((vakt: Schedules) => vakt.type === 'ordinær vakt')
         .map((itemObj: Schedules) => {
             let itemColor = setGrpColor(groupColorList, itemObj.group_id)
             let borderColor = setBorderColor(itemColor)
@@ -267,9 +232,9 @@ function VaktorTimeline() {
                         background: itemColor,
                         color: textColor,
                         borderColor: borderColor,
-                        borderWidth: "2.5px",
-                        fontSize: "12px",
-                        borderRadius: "20px",
+                        borderWidth: '2.5px',
+                        fontSize: '12px',
+                        borderRadius: '20px',
                     },
                 },
             })
@@ -279,39 +244,27 @@ function VaktorTimeline() {
   */
 
             if (itemObj.vakter !== undefined) {
-                let itemInterruptions = itemObj.vakter.filter(
-                    (vakt: Schedules) =>
-                        ["bytte", "bistand"].includes(vakt.type)
-                )
+                let itemInterruptions = itemObj.vakter.filter((vakt: Schedules) => ['bytte', 'bistand'].includes(vakt.type))
 
                 itemInterruptions.map((interruptionObj: Schedules) => {
-                    let interruptionColor = setInterruptionColor(
-                        groupColorList,
-                        interruptionObj.group_id
-                    )
+                    let interruptionColor = setInterruptionColor(groupColorList, interruptionObj.group_id)
                     let textColor = setTextColor(interruptionColor)
                     let borderColor = setBorderColor(interruptionColor)
-                    let interruptionStart = date(
-                        interruptionObj.start_timestamp
-                    )
+                    let interruptionStart = date(interruptionObj.start_timestamp)
                     let interruptionEnd = date(interruptionObj.end_timestamp)
 
                     items.push({
                         id: interruptionObj.id,
                         start_time: interruptionStart,
                         end_time: interruptionEnd,
-                        title: (
-                            <BodyShort>{interruptionObj.user.name}</BodyShort>
-                        ),
+                        title: <BodyShort>{interruptionObj.user.name}</BodyShort>,
                         group: interruptionObj.group_id,
                         itemProps: {
                             //fjernet til innholdet i interruptions er likt som schedule
                             onMouseDown: () => {
                                 updateItemModal(
                                     !itemModalOpen,
-                                    interruptionObj.user.id === "A123456"
-                                        ? interruptionObj.group.phone
-                                        : interruptionObj.user.name,
+                                    interruptionObj.user.id === 'A123456' ? interruptionObj.group.phone : interruptionObj.user.name,
                                     interruptionObj.group.name,
                                     interruptionObj.user.description,
                                     interruptionObj.group.phone,
@@ -326,11 +279,11 @@ function VaktorTimeline() {
                                 background: interruptionColor,
                                 color: textColor,
                                 borderColor: borderColor,
-                                borderWidth: "2.5px",
-                                fontSize: "12px",
-                                borderRadius: "20px",
+                                borderWidth: '2.5px',
+                                fontSize: '12px',
+                                borderRadius: '20px',
                                 zIndex: 100,
-                                overflow: "hidden",
+                                overflow: 'hidden',
                             },
                         },
                     })
@@ -342,35 +295,84 @@ function VaktorTimeline() {
   --  Returning timeline component -- 
   */
 
-    const AnimatedTimeline = animated(
-        ({
-            animatedVisibleTimeStart,
-            animatedVisibleTimeEnd,
-            visibleTimeStart,
-            visibleTimeEnd,
-            ...props
-        }) => (
-            <Timeline
-                visibleTimeStart={animatedVisibleTimeStart}
-                visibleTimeEnd={animatedVisibleTimeEnd}
-                {...props}
-            />
-        )
-    )
+    const verticalLineClassNamesForTime = (timeStart: Date, timeEnd: Date) => {
+        const currentTimeStart = moment(timeStart)
+        const currentTimeEnd = moment(timeEnd)
+
+        let classes = []
+
+        // check for public holidays
+        for (let holiday of holidays) {
+            if (holiday.isSame(currentTimeStart, 'day') && holiday.isSame(currentTimeEnd, 'day')) {
+                classes.push('holiday')
+                console.log('Helligdag: ', currentTimeStart)
+            }
+        }
+        return classes
+    }
+
+    const helgedager = []
+
+    const format = 'DD.MM.YYYY'
+    const holidays = [
+        moment('01.01.2022', format), // Lørdag 1. januar: 1. nyttårsdag
+        moment('10.04.2022', format), // Søndag 10. april: Palmesøndag
+        moment('14.04.2022', format), // Torsdag 14. april: Skjærtorsdag
+        moment('15.04.2022', format), // Fredag 15. april: Langfredag
+        moment('17.04.2022', format), // Søndag 17. april: 1. påskedag
+        moment('18.04.2022', format), // Mandag 18. april: 2. påskedag
+        moment('01.05.2022', format), // Søndag 1. mai: Offentlig høytidsdag
+        moment('17.05.2022', format), // Tirsdag 17. mai: Grunnlovsdag
+        moment('26.05.2022', format), // Torsdag 26. mai: Kristi Himmelfartsdag
+        moment('04.06.2022', format), // Lørdag 4. juni: 1. pinsedag
+        moment('05.06.2022', format), // Søndag 5. juni: 2. pinsedag
+        moment('25.12.2022', format), // Mandag 25. desember: 1. juledag
+        moment('26.12.2022', format), // Tirsdag 26. desember: 2. juledag
+        moment('01.01.2023', format), // Søndag 1. januar: 1. nyttårsdag
+        moment('02.04.2023', format), // Søndag 2. april: Palmesøndag
+        moment('06.04.2023', format), // Torsdag 6. april: Skjærtorsdag
+        moment('07.04.2023', format), // Fredag 7. april: Langfredag
+        moment('09.04.2023', format), // Søndag 9. april: 1. påskedag
+        moment('10.04.2023', format), // Mandag 10. april: 2. påskedag
+        moment('01.05.2023', format), // Mandag 1. mai: Offentlig høytidsdag
+        moment('17.05.2023', format), // Onsdag 17. mai: Grunnlovsdag
+        moment('18.05.2023', format), // Torsdag 18. mai: Kristi Himmelfartsdag
+        moment('28.05.2023', format), // Søndag 28. mai: 1. pinsedag
+        moment('29.05.2023', format), // Mandag 29. mai: 2. pinsedag
+        moment('25.12.2023', format), // Mandag 25. desember: 1. juledag
+        moment('26.12.2023', format), // Tirsdag 26. desember: 2. juledag
+        moment('01.01.2024', format), // Tirsdag 1. januar: 1. nyttårsdag
+        moment('24.03.2024', format), // Søndag 24. mars: Palmesøndag
+        moment('28.03.2024', format), // Torsdag 28. mars: Skjærtorsdag
+        moment('29.03.2024', format), // Fredag 29. mars: Langfredag
+        moment('31.03.2024', format), // Søndag 31. mars: 1. påskedag
+        moment('01.04.2024', format), // Mandag 1. april: 2. påskedag
+        moment('01.05.2024', format), // Onsdag 1. mai: Offentlig høytidsdag
+        moment('17.05.2024', format), // Fredag 17. mai: Grunnlovsdag
+        moment('09.05.2024', format), // Torsdag 9. mai: Kristi Himmelfartsdag
+        moment('19.05.2024', format), // Søndag 19. mai: 1. pinsedag
+        moment('20.05.2024', format), // Mandag 20. mai: 2. pinsedag
+        moment('25.12.2024', format), // Onsdag 25. desember: 1. juledag
+        moment('26.12.2024', format), // Torsdag 26. desember: 2. juledag
+    ]
+
+    const AnimatedTimeline = animated(({ animatedVisibleTimeStart, animatedVisibleTimeEnd, visibleTimeStart, visibleTimeEnd, ...props }) => (
+        <Timeline
+            visibleTimeStart={animatedVisibleTimeStart}
+            visibleTimeEnd={animatedVisibleTimeEnd}
+            verticalLineClassNamesForTime={verticalLineClassNamesForTime}
+            {...props}
+        />
+    ))
 
     return (
         <div>
-            {itemData[0].user_id === "A123456" ? (
+            {itemData[0].user_id === 'A123456' ? (
                 <Overview groups={groupsSorted} />
             ) : (
                 <>
-                    <form style={{ width: "400px", marginBottom: "10px" }}>
-                        <Search
-                            label="Søk etter vaktlag"
-                            hideLabel={false}
-                            variant="simple"
-                            onChange={(text) => setSearchFilter(text)}
-                        />
+                    <form style={{ width: '400px', marginBottom: '10px' }}>
+                        <Search label="Søk etter vaktlag" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                     </form>
 
                     <Spring
@@ -382,14 +384,8 @@ function VaktorTimeline() {
                         {(
                             value: JSX.IntrinsicAttributes &
                                 AnimatedProps<{ [x: string]: any }> & {
-                                    scrollTop?:
-                                        | number
-                                        | FluidValue<number, any>
-                                        | undefined
-                                    scrollLeft?:
-                                        | number
-                                        | FluidValue<number, any>
-                                        | undefined
+                                    scrollTop?: number | FluidValue<number, any> | undefined
+                                    scrollLeft?: number | FluidValue<number, any> | undefined
                                 }
                         ) => (
                             <AnimatedTimeline
@@ -404,21 +400,14 @@ function VaktorTimeline() {
                                 buffer={1}
                                 visibleTimeStart={visibleTimeStart}
                                 visibleTimeEnd={visibleTimeEnd}
-                                onTimeChange={() =>
-                                    handleTimeChange(
-                                        visibleTimeStart,
-                                        visibleTimeEnd
-                                    )
-                                }
+                                onTimeChange={() => handleTimeChange(visibleTimeStart, visibleTimeEnd)}
                                 {...value}
                             >
                                 <TimelineHeaders className="sticky">
                                     <NavigationButtons
                                         timeStart={visibleTimeStart}
                                         timeUnit={timeUnit}
-                                        setVisibleTimeStart={
-                                            setVisibleTimeStart
-                                        }
+                                        setVisibleTimeStart={setVisibleTimeStart}
                                         setVisibleTimeEnd={setVisibleTimeEnd}
                                         setTimeUnit={setTimeUnit}
                                     />
@@ -426,14 +415,25 @@ function VaktorTimeline() {
                                         {({ getRootProps }) => {
                                             return (
                                                 <div {...getRootProps()}>
-                                                    <SidebarHeaderText>
-                                                        Vaktlag:
-                                                    </SidebarHeaderText>
+                                                    <SidebarHeaderText>Vaktlag:</SidebarHeaderText>
                                                 </div>
                                             )
                                         }}
                                     </SidebarHeader>
                                     <DateHeader unit="primaryHeader" />
+                                    <CustomMarker date={today}>
+                                        {/* custom renderer for this marker */}
+                                        {({ styles, date }) => {
+                                            const customStyles = {
+                                                ...styles,
+                                                backgroundColor: 'red',
+                                                width: '10px',
+                                                zindex: '100',
+                                            }
+                                            return <div style={customStyles} />
+                                        }}
+                                    </CustomMarker>
+                                    <CursorMarker />
                                     <DateHeader />
                                 </TimelineHeaders>
                             </AnimatedTimeline>
@@ -456,11 +456,7 @@ function VaktorTimeline() {
                             telephone={itemTelephone}
                             startTime={itemStartTime}
                             endTime={itemEndTime}
-                            canEdit={
-                                user.id.toUpperCase() === itemUser!.id
-                                    ? true
-                                    : false
-                            }
+                            canEdit={user.id.toUpperCase() === itemUser!.id ? true : false}
                             user={itemUser!}
                         />
                     )}

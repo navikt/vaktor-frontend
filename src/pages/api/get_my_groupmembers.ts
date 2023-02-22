@@ -1,15 +1,9 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { User } from "../../types/types"
+import { NextApiRequest, NextApiResponse } from 'next'
+import { User } from '../../types/types'
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // for prod / dev
-    let authorizationHeader =
-        req.headers && req.headers.authorization
-            ? req.headers.authorization
-            : "No Authorization header";
+    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
     //let authorizationHeader = process.env.FAKE_TOKEN
 
     // for local testing
@@ -19,7 +13,7 @@ export default async function handler(
     const getGroupMembers = async (groupPath: string) =>
         await fetch(groupPath, {
             headers: { Authorization: authorizationHeader },
-            method: "GET",
+            method: 'GET',
         })
 
     const allGroupMembers = async (group_ids: string) => {
@@ -30,14 +24,11 @@ export default async function handler(
 
     let members: User[] = await allGroupMembers(group_id)
 
-    let unique = members.filter(
-        (value, index, self) =>
-            index === self.findIndex((t) => t.id === value.id)
-    )
+    let unique = members.filter((value, index, self) => index === self.findIndex((t) => t.id === value.id))
 
     if (members.length != 0) {
         res.status(200).json(unique)
     } else {
-        res.send("Cant get data from backend")
+        res.send('Cant get data from backend')
     }
 }
