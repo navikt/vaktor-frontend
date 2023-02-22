@@ -16,11 +16,9 @@ import Overview from './OverviewNoTimeline'
 import { useAuth } from '../context/AuthContext'
 
 let today = Date.now()
-let tomorrow = new Date(Date.now() + 3600 * 1000 * 24)
 
 const SidebarHeaderText = styled.div`
     padding-top: 25px;
-
     margin: auto;
     font-weight: bold;
     vertical-align: middle;
@@ -40,7 +38,6 @@ const SidebarIcon = styled.div`
     top: 4px;
     left: 200px;
     width: 250px;
-
     opacity: 0.6;
 `
 
@@ -163,7 +160,7 @@ function VaktorTimeline() {
                     </div>
                 ),
                 id: vaktlag.id,
-                stackItems: false,
+                stackItems: vaktlag.type === 'Midlertidlig',
             })
         })
 
@@ -282,7 +279,7 @@ function VaktorTimeline() {
                                 borderWidth: '2.5px',
                                 fontSize: '12px',
                                 borderRadius: '20px',
-                                zIndex: 100,
+                                maxWidth: '100%',
                                 overflow: 'hidden',
                             },
                         },
