@@ -16,6 +16,7 @@ import {
     BodyLong,
     Heading,
 } from '@navikt/ds-react'
+import { findSourceMap } from 'module'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { start } from 'repl'
@@ -69,7 +70,7 @@ const createTempSchedule = async (
     setResponseError: Dispatch<string>
 ) => {
     var url = `/vaktor/api/create_temp_schedule/?user_id=${user_id}&group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&`
-    console.log('tiden: ', start_timestamp, end_timestamp)
+    console.log('createTempSchedule: ', user_id, start_timestamp, end_timestamp)
     var fetchOptions = {
         method: 'POST',
     }
@@ -200,7 +201,10 @@ const Vaktperioder = () => {
         e.preventDefault()
         forms.forEach((form) => {
             if (form.user_id !== '' && form.fromDate !== 0 && form.toDate !== 0) {
+                console.log('Opprettet vakt: ', form.user_id)
                 createTempSchedule(form.user_id, form.group, form.fromDate + form.fromTime, form.toDate + form.toTime, setResponse, setResponseError)
+            } else {
+                console.log('Dette burde jo ikke skje da: ', form.name)
             }
         })
         {
@@ -224,7 +228,6 @@ const Vaktperioder = () => {
     }
 
     const handleChildProps = (index: any, dateProps: any) => {
-        console.log('Parent: ', index, 'Props: ', dateProps)
         let newForms = [...forms]
         newForms[index].fromDate = dateProps.from
         newForms[index].toDate = dateProps.to
@@ -319,9 +322,8 @@ const Vaktperioder = () => {
                                             newForms[index].name = selectJson.name
                                             newForms[index].user_id = selectJson.user_id
                                             // TODO må endres dersom man kan være vaktsjef for flere vaktlag...
-                                            newForms[index].group = user.groups[0].id
+                                            newForms[index].group = selectedVaktlag
                                             setForms(newForms)
-                                            console.log('User object: ', user)
                                         }}
                                     >
                                         <option disabled selected>

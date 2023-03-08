@@ -302,7 +302,6 @@ function VaktorTimeline() {
         for (let holiday of holidays) {
             if (holiday.isSame(currentTimeStart, 'day') && holiday.isSame(currentTimeEnd, 'day')) {
                 classes.push('holiday')
-                console.log('Helligdag: ', currentTimeStart)
             }
         }
         return classes
