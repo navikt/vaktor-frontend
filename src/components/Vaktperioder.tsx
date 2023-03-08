@@ -260,9 +260,8 @@ const Vaktperioder = () => {
                                 setResponse([])
                                 setForms([])
                                 setResponseError('')
-                                window.location.reload(true)
+                                window.location.reload()
                             }}
-                            aria-labelledby="modal-heading"
                         >
                             <Modal.Content>
                                 <Heading spacing level="2" size="medium">
