@@ -12,6 +12,9 @@ import {
     Alert,
     Select,
     ToggleGroup,
+    Modal,
+    BodyLong,
+    Heading,
 } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
@@ -105,6 +108,8 @@ const Vaktperioder = () => {
     const [amountOfWeeks, setAmountOfWeeks] = useState<number>(52)
     const [page, setPage] = useState(1)
 
+    const [open, setOpen] = useState(false)
+
     const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
 
     const { monthpickerProps, inputProps, selectedMonth } = UNSAFE_useMonthpicker({
@@ -194,8 +199,13 @@ const Vaktperioder = () => {
     const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault()
         forms.forEach((form) => {
-            createTempSchedule(form.user_id, form.group, form.fromDate + form.fromTime, form.toDate + form.toTime, setResponse, setResponseError)
+            if (form.user_id !== '' && form.fromDate !== 0 && form.toDate !== 0) {
+                createTempSchedule(form.user_id, form.group, form.fromDate + form.fromTime, form.toDate + form.toTime, setResponse, setResponseError)
+            }
         })
+        {
+            setOpen(true)
+        }
     }
 
     const handleAddForm = () => {
@@ -224,7 +234,7 @@ const Vaktperioder = () => {
     //// #####
 
     useEffect(() => {
-        //setLoading(true);
+        Modal.setAppElement('#__next')
         fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`)
             .then((membersRes) => membersRes.json())
             .then((groupMembersJson) => {
@@ -240,7 +250,31 @@ const Vaktperioder = () => {
     return (
         <>
             {response.length !== 0 || responseError !== '' ? (
-                mapResponse(response, page, setPage, responseError)
+                isMidlertidlig ? (
+                    <>
+                        <Modal
+                            open={open}
+                            aria-label="Modal demo"
+                            onClose={() => {
+                                setOpen((x) => !x)
+                                setResponse([])
+                                setForms([])
+                                setResponseError('')
+                                window.location.reload(true)
+                            }}
+                            aria-labelledby="modal-heading"
+                        >
+                            <Modal.Content>
+                                <Heading spacing level="2" size="medium">
+                                    Disse vaktene ble opprettet:
+                                </Heading>
+                                <BodyLong spacing>{mapForms(forms)}</BodyLong>
+                            </Modal.Content>
+                        </Modal>
+                    </>
+                ) : (
+                    mapResponse(response, page, setPage, responseError)
+                )
             ) : (
                 <div
                     style={{
@@ -384,7 +418,7 @@ const Vaktperioder = () => {
                                     </div>
                                     {index + 1 === forms.length ? (
                                         <div style={{ marginTop: '10px' }}>
-                                            <Button onClick={handleAddForm}>Add Form</Button>{' '}
+                                            <Button onClick={handleAddForm}>Legg til Vakt</Button>{' '}
                                         </div>
                                     ) : (
                                         <></>
@@ -445,7 +479,7 @@ const Vaktperioder = () => {
                                 </Table.Header>
                                 <Table.Body>{forms ? mapForms(forms) : <Table.Row></Table.Row>}</Table.Body>
                             </Table>
-                            <Button onClick={handleSubmit}>Submit All Forms</Button>
+                            <Button onClick={handleSubmit}>Opprett vakter</Button>
                         </>
                     ) : (
                         <>
