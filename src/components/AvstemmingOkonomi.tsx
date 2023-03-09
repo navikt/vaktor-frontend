@@ -200,6 +200,26 @@ const AvstemmingOkonomi = () => {
                 (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
         )
     )
+
+    // Calculate the total cost
+    let totalCost_filtered = itemData.filter(
+        (value: Schedules) =>
+            new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
+            value.user.name.toLowerCase().includes(searchFilter) &&
+            value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase()) &&
+            (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
+    )
+
+    const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
+        return (
+            accumulator +
+            currentSchedule.cost.reduce((costAccumulator, currentCost) => {
+                return costAccumulator + currentCost.total_cost
+            }, 0)
+        )
+    }, 0)
+
     return (
         <div
             style={{
@@ -212,6 +232,10 @@ const AvstemmingOkonomi = () => {
                 margin: 'auto',
             }}
         >
+            <div style={{ textAlign: 'end' }}>
+                <h3>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</h3>
+            </div>
+
             <div className="min-h-96" style={{ display: 'flex' }}>
                 <UNSAFE_MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
