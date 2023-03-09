@@ -462,9 +462,9 @@ const Vaktperioder = () => {
                     ) : (
                         <>
                             {lastVakt ? (
-                                <>
+                                <div style={{ display: 'grid', justifyContent: 'center', alignItems: 'center' }}>
                                     <div>
-                                        Utvid vaktperiode fra siste vakt: <b>{new Date(lastVakt.end_timestamp * 1000).toLocaleString()}</b>
+                                        <h3>Utvid vaktperiode fra siste vakt: {new Date(lastVakt.end_timestamp * 1000).toLocaleString()}</h3>
                                     </div>
                                     <div
                                         style={{
@@ -487,10 +487,12 @@ const Vaktperioder = () => {
                                             <Radio value="52">12 måneder</Radio>
                                         </RadioGroup>
                                     </div>
-                                </>
+                                </div>
                             ) : (
-                                <>
-                                    <div>Ingen eksisterende vakter funnet, opprett ny vaktperiode</div>
+                                <div style={{ display: 'grid', justifyContent: 'center', alignItems: 'center' }}>
+                                    <div>
+                                        <h3>Ingen eksisterende vakter funnet, opprett ny vaktperiode</h3>
+                                    </div>
                                     <div
                                         style={{
                                             display: 'flex',
@@ -525,7 +527,7 @@ const Vaktperioder = () => {
                                             <Radio value="52">12 måneder</Radio>
                                         </RadioGroup>
                                     </div>
-                                </>
+                                </div>
                             )}
                         </>
                     )}
