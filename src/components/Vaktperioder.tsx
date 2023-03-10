@@ -12,7 +12,11 @@ import {
     Alert,
     Select,
     ToggleGroup,
+    Modal,
+    BodyLong,
+    Heading,
 } from '@navikt/ds-react'
+import { findSourceMap } from 'module'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { start } from 'repl'
@@ -23,6 +27,7 @@ import PerioderOptions from './PerioderOptions'
 
 const createSchedule = async (
     users: User[],
+    group: string,
     setResponse: Dispatch<any>,
     start_timestamp: number,
     end_timestamp: number,
@@ -33,7 +38,7 @@ const createSchedule = async (
     rolloverTime: number
 ) => {
     var user_order = users.sort((a: User, b: User) => a.group_order_index! - b.group_order_index!).map((user: User) => user.id) // bare en liste med identer
-    var url = `/vaktor/api/create_schedule/?group_id=${users[0].groups[0].id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amountOfWeeks=${amountOfWeeks}&rolloverDay=${rolloverDay}&rolloverTime=${rolloverTime}`
+    var url = `/vaktor/api/create_schedule/?group_id=${group}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amountOfWeeks=${amountOfWeeks}&rolloverDay=${rolloverDay}&rolloverTime=${rolloverTime}`
     var fetchOptions = {
         method: 'POST',
         body: JSON.stringify(user_order),
@@ -66,7 +71,7 @@ const createTempSchedule = async (
     setResponseError: Dispatch<string>
 ) => {
     var url = `/vaktor/api/create_temp_schedule/?user_id=${user_id}&group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&`
-    console.log('tiden: ', start_timestamp, end_timestamp)
+    console.log('createTempSchedule: ', user_id, start_timestamp, end_timestamp)
     var fetchOptions = {
         method: 'POST',
     }
@@ -105,7 +110,10 @@ const Vaktperioder = () => {
     const [amountOfWeeks, setAmountOfWeeks] = useState<number>(52)
     const [page, setPage] = useState(1)
 
+    const [open, setOpen] = useState(false)
+
     const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
+    const [lastVakt, setLastVakt] = useState<Schedules | undefined>()
 
     const { monthpickerProps, inputProps, selectedMonth } = UNSAFE_useMonthpicker({
         required: true,
@@ -194,8 +202,16 @@ const Vaktperioder = () => {
     const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault()
         forms.forEach((form) => {
-            createTempSchedule(form.user_id, form.group, form.fromDate + form.fromTime, form.toDate + form.toTime, setResponse, setResponseError)
+            if (form.user_id !== '' && form.fromDate !== 0 && form.toDate !== 0) {
+                console.log('Opprettet vakt: ', form.user_id)
+                createTempSchedule(form.user_id, form.group, form.fromDate + form.fromTime, form.toDate + form.toTime, setResponse, setResponseError)
+            } else {
+                console.log('Dette burde jo ikke skje da: ', form.name)
+            }
         })
+        {
+            setOpen(true)
+        }
     }
 
     const handleAddForm = () => {
@@ -214,7 +230,6 @@ const Vaktperioder = () => {
     }
 
     const handleChildProps = (index: any, dateProps: any) => {
-        console.log('Parent: ', index, 'Props: ', dateProps)
         let newForms = [...forms]
         newForms[index].fromDate = dateProps.from
         newForms[index].toDate = dateProps.to
@@ -224,23 +239,74 @@ const Vaktperioder = () => {
     //// #####
 
     useEffect(() => {
-        //setLoading(true);
-        fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`)
-            .then((membersRes) => membersRes.json())
-            .then((groupMembersJson) => {
-                setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))
-                setIsMidlertidlig(user.groups.filter((group) => group.id == selectedVaktlag)[0].type === 'Midlertidlig')
-                // :pointdown: må fjernes - manuell overstyring av midlertidig
-                //setIsMidlertidlig(true)
-                setLoading(false)
+        Modal.setAppElement('#__next')
+
+        Promise.all([
+            fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`),
+            fetch(`/vaktor/api/last_schedule?group_id=${selectedVaktlag}`),
+        ])
+            .then(async ([membersRes, scheduleRes]) => {
+                const membersjson = await membersRes.json().catch((error) => {
+                    console.error(`Error parsing JSON from 'membersRes': ${error.message}`)
+                    return null
+                })
+
+                const schedulejson = await scheduleRes.json().catch((error) => {
+                    console.error(`Error parsing JSON from 'scheduleRes': ${error.message}`)
+                    return null
+                })
+
+                return [membersjson, schedulejson]
+            })
+            .then(([groupMembersJson, lastVaktJson]) => {
+                if (!groupMembersJson || !lastVaktJson) {
+                    console.error('Error fetching data')
+                    setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))
+                    setIsMidlertidlig(user.groups.filter((group) => group.id == selectedVaktlag)[0].type === 'Midlertidlig')
+                    setLastVakt(undefined)
+                    setLoading(false)
+                    //return
+                } else {
+                    setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))
+                    setIsMidlertidlig(user.groups.filter((group) => group.id == selectedVaktlag)[0].type === 'Midlertidlig')
+                    setLastVakt(lastVaktJson)
+                    setLoading(false)
+                }
+            })
+            .catch((error) => {
+                console.error(`Error fetching data: ${error.message}`)
             })
     }, [response, user, selectedVaktlag])
 
     if (loading === true) return <Loader></Loader>
+
     return (
         <>
             {response.length !== 0 || responseError !== '' ? (
-                mapResponse(response, page, setPage, responseError)
+                isMidlertidlig ? (
+                    <>
+                        <Modal
+                            open={open}
+                            aria-label="Modal demo"
+                            onClose={() => {
+                                setOpen((x) => !x)
+                                setResponse([])
+                                setForms([])
+                                setResponseError('')
+                                window.location.reload()
+                            }}
+                        >
+                            <Modal.Content>
+                                <Heading spacing level="2" size="medium">
+                                    Disse vaktene ble opprettet:
+                                </Heading>
+                                <BodyLong spacing>{mapForms(forms)}</BodyLong>
+                            </Modal.Content>
+                        </Modal>
+                    </>
+                ) : (
+                    mapResponse(response, page, setPage, responseError)
+                )
             ) : (
                 <div
                     style={{
@@ -286,9 +352,8 @@ const Vaktperioder = () => {
                                             newForms[index].name = selectJson.name
                                             newForms[index].user_id = selectJson.user_id
                                             // TODO må endres dersom man kan være vaktsjef for flere vaktlag...
-                                            newForms[index].group = user.groups[0].id
+                                            newForms[index].group = selectedVaktlag
                                             setForms(newForms)
-                                            console.log('User object: ', user)
                                         }}
                                     >
                                         <option disabled selected>
@@ -384,7 +449,7 @@ const Vaktperioder = () => {
                                     </div>
                                     {index + 1 === forms.length ? (
                                         <div style={{ marginTop: '10px' }}>
-                                            <Button onClick={handleAddForm}>Add Form</Button>{' '}
+                                            <Button onClick={handleAddForm}>Legg til Vakt</Button>{' '}
                                         </div>
                                     ) : (
                                         <></>
@@ -396,40 +461,74 @@ const Vaktperioder = () => {
                         </div>
                     ) : (
                         <>
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    gap: '40px',
-                                    marginTop: '15px',
-                                }}
-                            >
-                                <UNSAFE_MonthPicker {...monthpickerProps} style={{}}>
+                            {lastVakt ? (
+                                <div style={{ display: 'grid', justifyContent: 'center', alignItems: 'center' }}>
+                                    <div>
+                                        <h3>Utvid vaktperiode fra siste vakt: {new Date(lastVakt.end_timestamp * 1000).toLocaleString()}</h3>
+                                    </div>
                                     <div
                                         style={{
                                             display: 'flex',
-                                            gap: '15px',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
+                                            gap: '40px',
+                                            marginTop: '15px',
                                         }}
                                     >
-                                        <UNSAFE_MonthPicker.Input {...inputProps} label="Fra" />
+                                        <RadioGroup legend="Angi dag for vaktbytte: " onChange={(val: any) => setRolloverDay(val)} defaultValue="2">
+                                            <Radio value="0">Mandag</Radio>
+                                            <Radio value="2">Onsdag</Radio>
+                                        </RadioGroup>
+                                        <RadioGroup legend="Angi tid for vaktbytte: " onChange={(val: any) => setRolloverTime(val)} defaultValue="12">
+                                            <Radio value="7">07:00</Radio>
+                                            <Radio value="8">08:00</Radio>
+                                            <Radio value="12">12:00</Radio>
+                                        </RadioGroup>
+                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
+                                            <Radio value="26">6 måneder</Radio>
+                                            <Radio value="52">12 måneder</Radio>
+                                        </RadioGroup>
                                     </div>
-                                </UNSAFE_MonthPicker>
-
-                                <RadioGroup legend="Angi dag for vaktbytte: " onChange={(val: any) => setRolloverDay(val)} defaultValue="2">
-                                    <Radio value="0">Mandag</Radio>
-                                    <Radio value="2">Onsdag</Radio>
-                                </RadioGroup>
-                                <RadioGroup legend="Angi tid for vaktbytte: " onChange={(val: any) => setRolloverTime(val)} defaultValue="12">
-                                    <Radio value="7">07:00</Radio>
-                                    <Radio value="8">08:00</Radio>
-                                    <Radio value="12">12:00</Radio>
-                                </RadioGroup>
-                                <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
-                                    <Radio value="26">6 måneder</Radio>
-                                    <Radio value="52">12 måneder</Radio>
-                                </RadioGroup>
-                            </div>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'grid', justifyContent: 'center', alignItems: 'center' }}>
+                                    <div>
+                                        <h3>Ingen eksisterende vakter funnet, opprett ny vaktperiode</h3>
+                                    </div>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            gap: '40px',
+                                            marginTop: '15px',
+                                        }}
+                                    >
+                                        {' '}
+                                        <UNSAFE_MonthPicker {...monthpickerProps} style={{}}>
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    gap: '15px',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                <UNSAFE_MonthPicker.Input {...inputProps} label="Fra" />
+                                            </div>
+                                        </UNSAFE_MonthPicker>
+                                        <RadioGroup legend="Angi dag for vaktbytte: " onChange={(val: any) => setRolloverDay(val)} defaultValue="2">
+                                            <Radio value="0">Mandag</Radio>
+                                            <Radio value="2">Onsdag</Radio>
+                                        </RadioGroup>
+                                        <RadioGroup legend="Angi tid for vaktbytte: " onChange={(val: any) => setRolloverTime(val)} defaultValue="12">
+                                            <Radio value="7">07:00</Radio>
+                                            <Radio value="8">08:00</Radio>
+                                            <Radio value="12">12:00</Radio>
+                                        </RadioGroup>
+                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
+                                            <Radio value="26">6 måneder</Radio>
+                                            <Radio value="52">12 måneder</Radio>
+                                        </RadioGroup>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
 
@@ -445,7 +544,7 @@ const Vaktperioder = () => {
                                 </Table.Header>
                                 <Table.Body>{forms ? mapForms(forms) : <Table.Row></Table.Row>}</Table.Body>
                             </Table>
-                            <Button onClick={handleSubmit}>Submit All Forms</Button>
+                            <Button onClick={handleSubmit}>Opprett vakter</Button>
                         </>
                     ) : (
                         <>
@@ -496,7 +595,7 @@ const Vaktperioder = () => {
                                                         marginLeft: '10px',
                                                     }}
                                                 >
-                                                    <b>Aktiv toggle:</b> Toggles til av dersom en vakthaver <b>ikke</b> skal nkluderes i nye
+                                                    <b>Aktiv toggle:</b> Toggles til av dersom en vakthaver <b>ikke</b> skal inkluderes i nye
                                                     vaktperioder
                                                     <br />
                                                 </HelpText>
@@ -515,9 +614,10 @@ const Vaktperioder = () => {
                                 onClick={() => {
                                     createSchedule(
                                         itemData.filter((user: User) => user.group_order_index !== 100),
+                                        selectedVaktlag,
                                         setResponse, //setLoading
-                                        isMidlertidlig ? startTimestamp + clock_start * 3600 : selectedMonth!.setHours(12) / 1000,
-                                        isMidlertidlig ? endTimestamp + clock_end * 3600 : 0,
+                                        lastVakt ? Number(lastVakt.end_timestamp) : selectedMonth!.setHours(12) / 1000,
+                                        0,
                                         isMidlertidlig,
                                         rolloverDay,
                                         amountOfWeeks,

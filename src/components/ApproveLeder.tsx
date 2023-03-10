@@ -179,12 +179,11 @@ const AdminLeder = ({}) => {
                             <>
                                 {vakter.approve_level === 0 ? (
                                     <>
-                                        <ApproveButton vakt={vakter.id} setResponse={setResponse}></ApproveButton>
+                                        <ApproveButton vakt={vakter} setResponse={setResponse}></ApproveButton>
                                     </>
                                 ) : (
                                     <Button
                                         disabled={
-                                            vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
                                             vakter.approve_level === 4 ||
                                             vakter.approve_level === 3 ||
                                             vakter.approve_level === 2 ||

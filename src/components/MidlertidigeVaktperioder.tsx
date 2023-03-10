@@ -15,7 +15,6 @@ function DatePickeroo({ index, handleChildProps }: props) {
 
     const handleDateChange = (from: Number, to: Number) => {
         handleChildProps(index, { from: from, to: to })
-        console.log('Uhh: ', handleChildProps)
     }
 
     const { datepickerProps, toInputProps, fromInputProps, selectedRange } = UNSAFE_useRangeDatepicker({
