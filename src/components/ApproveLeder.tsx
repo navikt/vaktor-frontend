@@ -152,7 +152,7 @@ const AdminLeder = ({}) => {
                         {vakter.vakter.map((endringer, idx: number) => (
                             <div key={idx}>
                                 <b> {endringer.type}:</b> {endringer.user.name} <br />
-                                {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
+                                {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
                                     day: '2-digit',
                                     month: '2-digit',
                                     year: 'numeric',
@@ -160,7 +160,7 @@ const AdminLeder = ({}) => {
                                     minute: '2-digit',
                                 })}
                                 <br />
-                                {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
+                                {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
                                     day: '2-digit',
                                     month: '2-digit',
                                     year: 'numeric',
