@@ -225,12 +225,12 @@ const AdminLeder = ({}) => {
                     </div>
                 </Table.DataCell>
                 {mapApproveStatus(vakter.approve_level)}
-                {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) ||
-                    (user.is_admin && (
-                        <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
-                            {vakter.cost.length !== 0 ? <MapCost cost={vakter.cost}></MapCost> : 'ingen beregning foreligger'}
-                        </Table.DataCell>
-                    ))}
+                {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) || user.is_admin ? (
+                    <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
+                        {vakter.cost.length !== 0 ? <MapCost cost={vakter.cost}></MapCost> : 'ingen beregning foreligger'}
+                    </Table.DataCell>
+                ) : null}
+
                 <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
                     {vakter.audits.length !== 0 ? mapAudit(vakter.audits) : 'Ingen hendelser'}
                 </Table.DataCell>
@@ -332,8 +332,10 @@ const AdminLeder = ({}) => {
                         </Table.HeaderCell>
                         <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                        {['personalleder', 'leveranseleder'].includes(user!.role) ||
-                            (user.is_admin && <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>)}
+                        {['personalleder', 'leveranseleder'].includes(user!.role) || user.is_admin ? (
+                            <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>
+                        ) : null}
+
                         <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
