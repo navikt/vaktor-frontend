@@ -1,6 +1,6 @@
 import { Button, Popover } from '@navikt/ds-react'
 import { Dispatch, useRef, useState } from 'react'
-import { Schedules } from '../types/types'
+import { Schedules } from '../../types/types'
 
 const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
     await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)

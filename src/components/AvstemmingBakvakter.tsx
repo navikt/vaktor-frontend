@@ -3,7 +3,7 @@ import moment from 'moment'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Audit, Schedules } from '../types/types'
-import MapCost from './MapCost'
+import MapCost from './utils/mapCost'
 
 const mapAudit = (audit: Audit[]) => {
     return audit

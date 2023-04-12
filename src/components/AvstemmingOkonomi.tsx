@@ -1,31 +1,12 @@
-import { Button, Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, ReadMore, Search, Select } from '@navikt/ds-react'
+import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select } from '@navikt/ds-react'
 import moment from 'moment'
-import { useEffect, useState, Dispatch } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Audit, Cost, Schedules, User, Artskoder } from '../types/types'
-import MapCost from './MapCost'
+import { Schedules } from '../types/types'
+import MapCost from './utils/mapCost'
+import MapAudit from './utils/mapAudit'
 
 let today = Date.now() / 1000
-
-const mapAudit = (audit: Audit[]) => {
-    return audit
-        .sort((a: Audit, b: Audit) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-        .map((audit: Audit, index) => {
-            const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
-            const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
-            return (
-                <div key={audit.id}>
-                    <ReadMore
-                        header={auditTimestamp.slice(0, 20).replace('T', ' ')}
-                        size="small"
-                        style={audit.action.includes('Avgodkjent') ? { color: 'red' } : { color: 'green' }}
-                    >
-                        {audit.action} - {audit.user.name}
-                    </ReadMore>
-                </div>
-            )
-        })
-}
 
 const mapApproveStatus = (status: number) => {
     let statusText = ''
@@ -169,7 +150,7 @@ const AvstemmingOkonomi = () => {
                         </Table.DataCell>
                     )}
                     <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
-                        {vakter.audits.length !== 0 ? mapAudit(vakter.audits) : 'Ingen hendelser'}
+                        {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
                     </Table.DataCell>
                 </Table.Row>
             ))

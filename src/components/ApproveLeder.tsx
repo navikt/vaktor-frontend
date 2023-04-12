@@ -1,10 +1,11 @@
-import { Button, Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, ReadMore, Search, Select, HelpText } from '@navikt/ds-react'
+import { Button, Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, HelpText } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Audit, Schedules, User, Cost } from '../types/types'
-import ApproveButton from './ApproveButton'
-import MapCost from './MapCost'
+import { Schedules } from '../types/types'
+import ApproveButton from './utils/ApproveButton'
+import MapCost from './utils/mapCost'
+import MapAudit from './utils/mapAudit'
 
 let today = Date.now() / 1000
 
@@ -27,24 +28,6 @@ const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>
             setLoading(false)
             setResponse(data)
         })
-}
-
-const mapAudit = (audit: Audit[]) => {
-    return audit.map((audit: Audit, index) => {
-        const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
-        const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
-        return (
-            <div key={audit.id}>
-                <ReadMore
-                    header={auditTimestamp.slice(0, 20).replace('T', ' ')}
-                    size="small"
-                    style={audit.action.includes('Avgodkjent') ? { color: 'red' } : { color: 'green' }}
-                >
-                    {audit.action} - {audit.user.name}
-                </ReadMore>
-            </div>
-        )
-    })
 }
 
 const mapApproveStatus = (status: number) => {
@@ -232,7 +215,7 @@ const AdminLeder = ({}) => {
                 ) : null}
 
                 <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
-                    {vakter.audits.length !== 0 ? mapAudit(vakter.audits) : 'Ingen hendelser'}
+                    {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
                 </Table.DataCell>
             </Table.Row>
         ))
