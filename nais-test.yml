@@ -6,6 +6,13 @@ metadata:
     labels:
         team: navdig
 spec:
+  accessPolicy:
+          inbound:
+              rules:
+                  - application: vaktor
+          outbound:
+              rules:
+                  - application: vaktor
     image: {{ image }}
     port: 3000
     ingresses:
