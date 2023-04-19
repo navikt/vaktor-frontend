@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from 'next'
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // for prod / dev
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    // for local testing
 
-    let path = `https://fullmaktsregister-api.intern.dev.nav.no/api/v1/fullmakter`
+    let path = `${process.env.BACKEND_URL}/api/v1/admin/get_fullmakter`
+
     const backendResponse = await fetch(path, {
         headers: { Authorization: authorizationHeader },
     })
