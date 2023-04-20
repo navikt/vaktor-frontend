@@ -1,5 +1,4 @@
-import { Table } from '@navikt/ds-react'
-import { Cost, Artskoder, Schedules } from '../types/types'
+import { Cost, Artskoder } from '../../types/types'
 
 const mapCostStatus = (status: number) => {
     let statusText = ''

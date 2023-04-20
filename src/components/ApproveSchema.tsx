@@ -1,8 +1,9 @@
-import { Button, Table, Loader, ReadMore, Select, UNSAFE_MonthPicker, UNSAFE_useMonthpicker } from '@navikt/ds-react'
+import { Button, Table, Loader, Select, UNSAFE_MonthPicker, UNSAFE_useMonthpicker } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
-import { Audit, Schedules } from '../types/types'
-import MapCost from './MapCost'
+import { Schedules } from '../types/types'
+import MapCost from './utils/mapCost'
+import MapAudit from './utils/mapAudit'
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -26,24 +27,6 @@ const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>
             setLoading(false)
             setResponse(data)
         })
-}
-
-const mapAudit = (audit: Audit[]) => {
-    return audit.map((audit: Audit, index) => {
-        const tmp_timestamp = new Date(audit.timestamp).getTime() + 3600000
-        const auditTimestamp = new Date(tmp_timestamp).toLocaleString()
-        return (
-            <div key={audit.id}>
-                <ReadMore
-                    header={auditTimestamp.slice(0, 20).replace('T', ' ')}
-                    size="small"
-                    style={audit.action.includes('Avgodkjent') ? { color: 'red' } : { color: 'green' }}
-                >
-                    {audit.action} - {audit.user.name}
-                </ReadMore>
-            </div>
-        )
-    })
 }
 
 const mapApproveStatus = (status: number) => {
@@ -169,7 +152,7 @@ const DineVakter = () => {
                 <Table.DataCell style={{ minWidth: '300px' }}>
                     {vakter.cost.length !== 0 ? <MapCost cost={vakter.cost}></MapCost> : 'ingen beregning foreligger'}
                 </Table.DataCell>
-                <Table.DataCell>{vakter.audits.length !== 0 ? mapAudit(vakter.audits) : 'Ingen hendelser'}</Table.DataCell>
+                <Table.DataCell>{vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}</Table.DataCell>
             </Table.Row>
         ))
 
