@@ -10,6 +10,9 @@ spec:
         inbound:
             rules:
                 - application: vaktor-plan
+                - application: ida # Allow IDA users to test this proxy in dev.
+                  namespace: traktor
+                  cluster: prod-fss #IDA users come from the production environment.
         outbound:
             rules:
                 - application: vaktor-plan
