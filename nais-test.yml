@@ -16,6 +16,9 @@ spec:
         outbound:
             rules:
                 - application: vaktor-plan
+                - application: fullmaktsregister-external-proxy
+                  namespace: team-nof
+                  cluster: dev-gcp
     image: {{ image }}
     port: 3000
     ingresses:
