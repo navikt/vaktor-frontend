@@ -2,18 +2,22 @@ import { Button, Popover } from '@navikt/ds-react'
 import { Dispatch, useRef, useState } from 'react'
 import { Schedules } from '../../types/types'
 
-const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
-    await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
-        .then((r) => r.json())
-        .then((data) => {
-            setResponse(data)
-        })
+interface Props {
+    vakt: Schedules
+    setResponse: Dispatch<any>
+    confirmSchedule: (scheduleId: string, setResponse: Dispatch<any>) => Promise<void>
 }
-let today = Date.now() / 1000
 
-const ApproveButton: Function = (props: { vakt: Schedules; setResponse: Dispatch<any> }) => {
+const ApproveButton: React.FC<Props> = ({ vakt, setResponse, confirmSchedule }) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
+
+    const handleApproveClick = async () => {
+        setOpenState(false)
+        await confirmSchedule(vakt.id, setResponse)
+    }
+
+    const isDisabled = vakt.end_timestamp > Date.now() / 1000 || vakt.approve_level === 4 || vakt.approve_level === 3 || vakt.approve_level === 2
 
     return (
         <>
@@ -28,12 +32,7 @@ const ApproveButton: Function = (props: { vakt: Schedules; setResponse: Dispatch
                 }}
                 size="small"
                 ref={buttonRef}
-                disabled={
-                    props.vakt.end_timestamp > today ||
-                    props.vakt.approve_level === 4 ||
-                    props.vakt.approve_level === 3 ||
-                    props.vakt.approve_level === 2
-                }
+                disabled={isDisabled}
             >
                 Godkjenn
             </Button>
@@ -56,9 +55,7 @@ const ApproveButton: Function = (props: { vakt: Schedules; setResponse: Dispatch
                         }}
                         size="small"
                         variant="danger"
-                        onClick={() => {
-                            confirm_schedule(props.vakt.id, props.setResponse), setOpenState(false)
-                        }}
+                        onClick={handleApproveClick}
                     >
                         Godkjenn!
                     </Button>
