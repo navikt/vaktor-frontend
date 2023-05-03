@@ -192,41 +192,27 @@ const AdminLeder = ({}) => {
                             <>
                                 {vakter.approve_level === 0 ? (
                                     <>
-                                        <ApproveButton vakt={vakter} setResponse={setResponse} confirmSchedule={confirm_schedule}></ApproveButton>
+                                        <ApproveButton
+                                            vakt={vakter}
+                                            setResponse={setResponse}
+                                            confirmSchedule={confirm_schedule}
+                                            setLoading={setLoading}
+                                            loading={loading}
+                                        />
                                     </>
                                 ) : (
-                                    <Button
-                                        onClick={() => {
-                                            setLoading(true)
-                                            confirm_schedule(vakter.id, setResponse)
-                                                .then(() => {
-                                                    setLoading(false)
-                                                    setOpenState(false)
-                                                })
-                                                .catch(() => {
-                                                    setLoading(false)
-                                                })
-                                        }}
-                                        style={{
-                                            height: '30px',
-                                            marginBottom: '5px',
-                                            minWidth: '210px',
-                                        }}
-                                        size="small"
-                                        disabled={
-                                            loading ||
-                                            vakter.end_timestamp > today ||
-                                            vakter.approve_level === 4 ||
-                                            vakter.approve_level === 3 ||
-                                            vakter.approve_level === 2
-                                        }
-                                    >
-                                        {loading ? <Loader /> : 'Godkjenn'}
-                                    </Button>
+                                    <ApproveButton
+                                        vakt={vakter}
+                                        setResponse={setResponse}
+                                        confirmSchedule={confirm_schedule}
+                                        setLoading={setLoading}
+                                        loading={loading}
+                                    />
                                 )}
 
                                 <Button
                                     disabled={
+                                        loading ||
                                         vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
                                         vakter.approve_level === 0 ||
                                         vakter.approve_level === 2 ||
@@ -240,7 +226,7 @@ const AdminLeder = ({}) => {
                                     onClick={() => disprove_schedule(vakter.id, setResponse)}
                                 >
                                     {' '}
-                                    Avgodkjenn{' '}
+                                    {loading ? <Loader /> : 'Avgodkjenn'}
                                 </Button>
                             </>
                         )}
