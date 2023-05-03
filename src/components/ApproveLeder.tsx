@@ -1,4 +1,4 @@
-import { Button, Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, HelpText } from '@navikt/ds-react'
+import { Button, Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, HelpText, Modal } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -6,29 +6,9 @@ import { Schedules } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
+import ErrorModal from './utils/ErrorModal'
 
 let today = Date.now() / 1000
-
-const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>, setLoading: Dispatch<any>) => {
-    setLoading(true)
-
-    await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
-        .then((r) => r.json())
-        .then((data) => {
-            setLoading(false)
-            setResponse(data)
-        })
-}
-
-const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>, setLoading: Dispatch<any>) => {
-    setLoading(true)
-    await fetch(`/vaktor/api/disprove_schedule?schedule_id=${schedule_id}`)
-        .then((r) => r.json())
-        .then((data) => {
-            setLoading(false)
-            setResponse(data)
-        })
-}
 
 const mapApproveStatus = (status: number) => {
     let statusText = ''
@@ -75,10 +55,17 @@ const AdminLeder = ({}) => {
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
+    const [openState, setOpenState] = useState(false)
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterRole, setSearchFilterRole] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(5)
+
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+    const showErrorModal = (message: string) => {
+        setErrorMessage(message)
+    }
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -93,6 +80,49 @@ const AdminLeder = ({}) => {
                       .format('L')
         ),
     })
+
+    const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
+        try {
+            const response = await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
+            const { data } = await response.json()
+            setResponse(data)
+            setItemData((prevData) =>
+                prevData.map((vakter) => {
+                    if (vakter.id === schedule_id) {
+                        return {
+                            ...vakter,
+                            approve_level: vakter.approve_level === 0 ? 1 : 2,
+                        }
+                    }
+                    return vakter
+                })
+            )
+        } catch (error) {
+            console.error(error)
+            showErrorModal(`Feilet ved godkjenning av perioden: ${schedule_id}`)
+        }
+        setLoading(false)
+        setOpenState(false)
+    }
+
+    const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
+        try {
+            const response = await fetch(`/vaktor/api/disprove_schedule?schedule_id=${schedule_id}`)
+            const data = await response.json()
+            setResponse(data)
+            setItemData((prevData) =>
+                prevData.map((vakter) => {
+                    if (vakter.id === schedule_id) {
+                        vakter.approve_level = 0 // update the approve_level value to 0 after successful API call
+                    }
+                    return vakter
+                })
+            )
+        } catch (error) {
+            console.error(error)
+            showErrorModal(`Feilet ved avvisning av perioden: ${error}`)
+        }
+    }
 
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste.map((vakter: Schedules, i: number) => (
@@ -162,27 +192,36 @@ const AdminLeder = ({}) => {
                             <>
                                 {vakter.approve_level === 0 ? (
                                     <>
-                                        <ApproveButton vakt={vakter} setResponse={setResponse}></ApproveButton>
+                                        <ApproveButton vakt={vakter} setResponse={setResponse} confirmSchedule={confirm_schedule}></ApproveButton>
                                     </>
                                 ) : (
                                     <Button
-                                        disabled={
-                                            vakter.approve_level === 4 ||
-                                            vakter.approve_level === 3 ||
-                                            vakter.approve_level === 2 ||
-                                            vakter.end_timestamp > today
-                                        }
+                                        onClick={() => {
+                                            setLoading(true)
+                                            confirm_schedule(vakter.id, setResponse)
+                                                .then(() => {
+                                                    setLoading(false)
+                                                    setOpenState(false)
+                                                })
+                                                .catch(() => {
+                                                    setLoading(false)
+                                                })
+                                        }}
                                         style={{
                                             height: '30px',
                                             marginBottom: '5px',
                                             minWidth: '210px',
                                         }}
-                                        onClick={() => {
-                                            confirm_schedule(vakter.id, setResponse, setLoading)
-                                        }}
+                                        size="small"
+                                        disabled={
+                                            loading ||
+                                            vakter.end_timestamp > today ||
+                                            vakter.approve_level === 4 ||
+                                            vakter.approve_level === 3 ||
+                                            vakter.approve_level === 2
+                                        }
                                     >
-                                        {' '}
-                                        Godkjenn{' '}
+                                        {loading ? <Loader /> : 'Godkjenn'}
                                     </Button>
                                 )}
 
@@ -198,7 +237,7 @@ const AdminLeder = ({}) => {
                                         height: '30px',
                                         minWidth: '210px',
                                     }}
-                                    onClick={() => disprove_schedule(vakter.id, setResponse, setLoading)}
+                                    onClick={() => disprove_schedule(vakter.id, setResponse)}
                                 >
                                     {' '}
                                     Avgodkjenn{' '}
@@ -221,7 +260,8 @@ const AdminLeder = ({}) => {
         ))
 
     useEffect(() => {
-        setLoading(true)
+        //setLoading(true)
+        Modal.setAppElement('#__next')
         fetch('/vaktor/api/leader_schedules')
             .then((scheduleRes) => scheduleRes.json())
             .then((itemData) => {
@@ -230,8 +270,6 @@ const AdminLeder = ({}) => {
                 setLoading(false)
             })
     }, [response])
-
-    if (loading === true) return <Loader></Loader>
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
@@ -248,6 +286,8 @@ const AdminLeder = ({}) => {
     )
     return (
         <>
+            <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />
+
             <div className="min-h-96" style={{ display: 'flex' }}>
                 <UNSAFE_MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
@@ -275,6 +315,7 @@ const AdminLeder = ({}) => {
                     </Select>
                 </div>
             </div>
+
             <Table
                 style={{
                     minWidth: '900px',
@@ -329,3 +370,6 @@ const AdminLeder = ({}) => {
 }
 
 export default AdminLeder
+function setItemData(arg0: (prevData: { id: string; approve_level: number }[]) => { id: string; approve_level: number }[]) {
+    throw new Error('Function not implemented.')
+}
