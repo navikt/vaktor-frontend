@@ -135,6 +135,7 @@ const UpdateSchedule = () => {
                                                     setSchedule(schedule)
                                                     setIsOpen(true)
                                                 }}
+                                                disabled={schedule.approve_level > 0}
                                             >
                                                 Legg til endringer
                                             </Button>
