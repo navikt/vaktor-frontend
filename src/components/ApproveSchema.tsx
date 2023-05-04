@@ -234,7 +234,7 @@ const DineVakter = () => {
                             listeAvVakter
                         ) : (
                             <Table.Row>
-                                <Table.DataCell>Ingen vakter funnet!</Table.DataCell>
+                                <Table.DataCell>{loading ? <Loader /> : 'Ingen vakter funnet!'}</Table.DataCell>
                             </Table.Row>
                         )}
                     </Table.Body>

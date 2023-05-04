@@ -246,7 +246,7 @@ const AdminLeder = ({}) => {
         ))
 
     useEffect(() => {
-        //setLoading(true)
+        setLoading(true)
         Modal.setAppElement('#__next')
         fetch('/vaktor/api/leader_schedules')
             .then((scheduleRes) => scheduleRes.json())
@@ -349,7 +349,13 @@ const AdminLeder = ({}) => {
                         <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
-                <Table.Body>{listeAvVakter.length === 0 ? <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3> : listeAvVakter}</Table.Body>
+                <Table.Body>
+                    {listeAvVakter.length === 0 ? (
+                        <h3 style={{ margin: 'auto', color: 'red' }}>{loading ? <Loader /> : 'Ingen treff!'}</h3>
+                    ) : (
+                        listeAvVakter
+                    )}
+                </Table.Body>
             </Table>
         </>
     )
