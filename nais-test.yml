@@ -10,13 +10,19 @@ spec:
         inbound:
             rules:
                 - application: vaktor-plan
+                - application: ida # Allow IDA users to test this proxy in dev.
+                  namespace: traktor
+                  cluster: prod-fss #IDA users come from the production environment.
         outbound:
             rules:
                 - application: vaktor-plan
+                - application: fullmaktsregister-external-proxy
+                  namespace: team-nof
+                  cluster: dev-gcp
     image: {{ image }}
     port: 3000
     ingresses:
-        - https://vaktor.dev.nav.no
+        - https://vaktor.intern.dev.nav.no
     env:
         - name: NPM_CONFIG_CACHE
           value: /tmp
