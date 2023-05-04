@@ -131,7 +131,7 @@ const DineVakter = () => {
                             onClick={() => confirm_schedule(vakter.id, setResponse, setLoading)}
                         >
                             {' '}
-                            Godkjenn{' '}
+                            {loading ? <Loader /> : 'Godkjenn'}
                         </Button>
 
                         <Button
@@ -144,7 +144,7 @@ const DineVakter = () => {
                             onClick={() => disprove_schedule(vakter.id, setResponse, setLoading)}
                         >
                             {' '}
-                            Avgodkjenn{' '}
+                            {loading ? <Loader /> : 'Avgodkjenn'}
                         </Button>
                     </div>
                 </Table.DataCell>
@@ -171,7 +171,7 @@ const DineVakter = () => {
             })
     }, [response])
 
-    if (loading === true) return <Loader></Loader>
+    // if (loading === true) return <Loader></Loader>
     if (selectedMonth === undefined) setSelected(new Date())
     if (itemData === undefined) return <></>
 
