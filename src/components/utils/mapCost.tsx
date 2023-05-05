@@ -1,4 +1,4 @@
-import { Cost, Artskoder } from '../../types/types'
+import { Cost, Artskoder, Schedules } from '../../types/types'
 
 const mapCostStatus = (status: number) => {
     let statusText = ''
@@ -29,8 +29,8 @@ const mapCostStatus = (status: number) => {
     return <div>{statusText}</div>
 }
 
-const MapCost: Function = (props: { cost: Cost[]; avstemming?: boolean }) => {
-    return props.cost
+const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => {
+    return props.vakt.cost
         .sort((a: Cost, b: Cost) => Number(a.type_id) - Number(b.type_id))
         .map((cost: Cost, idx) => {
             return (
@@ -41,6 +41,7 @@ const MapCost: Function = (props: { cost: Cost[]; avstemming?: boolean }) => {
                     }}
                 >
                     {props.avstemming === true ? <b>ID: {cost.id}</b> : false}
+                    <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
                     <div
                         style={{
                             marginTop: '5px',
