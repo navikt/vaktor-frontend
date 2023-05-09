@@ -150,7 +150,7 @@ const DineVakter = () => {
                 </Table.DataCell>
                 {mapApproveStatus(vakter.approve_level)}
                 <Table.DataCell style={{ minWidth: '300px' }}>
-                    {vakter.cost.length !== 0 ? <MapCost cost={vakter.cost}></MapCost> : 'ingen beregning foreligger'}
+                    {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                 </Table.DataCell>
                 <Table.DataCell>{vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}</Table.DataCell>
             </Table.Row>

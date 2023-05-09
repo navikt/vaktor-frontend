@@ -146,7 +146,7 @@ const AvstemmingOkonomi = () => {
                     {mapApproveStatus(vakter.approve_level)}
                     {(['okonomi'].includes(user.role) || user.is_admin === true) && (
                         <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
-                            {vakter.cost.length !== 0 ? <MapCost cost={vakter.cost} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
+                            {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
                         </Table.DataCell>
                     )}
                     <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>

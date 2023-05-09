@@ -59,6 +59,7 @@ export interface Schedules {
     cost: Cost[]
     vakter: Schedules[]
     audits: Audit[]
+    is_double: boolean
 }
 
 export interface User {

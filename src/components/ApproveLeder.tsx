@@ -235,7 +235,7 @@ const AdminLeder = ({}) => {
                 {mapApproveStatus(vakter.approve_level)}
                 {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) || user.is_admin ? (
                     <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
-                        {vakter.cost.length !== 0 ? <MapCost cost={vakter.cost}></MapCost> : 'ingen beregning foreligger'}
+                        {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>
                 ) : null}
 

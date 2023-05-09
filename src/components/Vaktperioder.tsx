@@ -478,6 +478,7 @@ const Vaktperioder = () => {
                                             <Radio value="2">Onsdag</Radio>
                                         </RadioGroup>
                                         <RadioGroup legend="Angi tid for vaktbytte: " onChange={(val: any) => setRolloverTime(val)} defaultValue="12">
+                                            <Radio value="0">00:00</Radio>
                                             <Radio value="7">07:00</Radio>
                                             <Radio value="8">08:00</Radio>
                                             <Radio value="12">12:00</Radio>
@@ -518,6 +519,7 @@ const Vaktperioder = () => {
                                             <Radio value="2">Onsdag</Radio>
                                         </RadioGroup>
                                         <RadioGroup legend="Angi tid for vaktbytte: " onChange={(val: any) => setRolloverTime(val)} defaultValue="12">
+                                            <Radio value="0">00:00</Radio>
                                             <Radio value="7">07:00</Radio>
                                             <Radio value="8">08:00</Radio>
                                             <Radio value="12">12:00</Radio>
