@@ -1,8 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
+    }
+
     console.log(authorizationHeader)
     let path = `${process.env.BACKEND_URL}/api/v1/admin/test_fullmakt`
     //let path = `https://fullmaktsregister-external-proxy.intern.dev.nav.no/api/v1/fullmakter`

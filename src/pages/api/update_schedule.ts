@@ -12,8 +12,11 @@ interface RequestBody {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
-    //const authorizationHeader = process.env.FAKE_TOKEN
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
+    }
     const schedule_id = encodeURIComponent(req.query.schedule_id as string)
     const selectedVakthaver = encodeURIComponent(req.query.selectedVakthaver as string)
     const group_id = encodeURIComponent(req.query.group_id as string)

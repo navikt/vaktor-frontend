@@ -1,12 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-    // for local testing
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
 
-    let path = `${process.env.BACKEND_URL}/api/v1/leaders/users/schedules/`
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
+    }
+
+    let path = `${process.env.BACKEND_URL}/api/v1/leaders/users/schedules`
 
     const backendResponse = await fetch(path, {
         headers: { Authorization: authorizationHeader },

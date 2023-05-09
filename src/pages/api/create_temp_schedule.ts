@@ -1,26 +1,32 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
+interface ScheduleRequest {
+    start_timestamp: string
+    end_timestamp: string
+    group_id: string
+    user_id: string
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-    //let authorizationHeader = process.env.FAKE_TOKEN
-    //
-    // for local testing
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
 
-    let start_timestamp = req.query.start_timestamp
-    let end_timestamp = req.query.end_timestamp
-    let group_id = req.query.group_id
-    let user_id = req.query.user_id
-
-    let body = {
-        "user_id": user_id,
-        "group_id": group_id,
-        "start_timestamp": start_timestamp,
-        "end_timestamp": end_timestamp
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    let path = `${process.env.BACKEND_URL}/api/v1/schedules/create_temp_schedule`
-    console.log("API body: ", body)
+    const start_timestamp = encodeURIComponent(req.query.start_timestamp as string)
+    const end_timestamp = encodeURIComponent(req.query.end_timestamp as string)
+    const group_id = encodeURIComponent(req.query.group_id as string)
+    const user_id = encodeURIComponent(req.query.user_id as string)
+
+    const body: ScheduleRequest = {
+        user_id,
+        group_id,
+        start_timestamp,
+        end_timestamp,
+    }
+
+    const path = `${process.env.BACKEND_URL}/api/v1/schedules/create_temp_schedule`
 
     const backendResponse = await fetch(path, {
         headers: {
@@ -31,17 +37,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         body: JSON.stringify(body),
     })
 
-    if (backendResponse.ok) {
-        await backendResponse.json().then((body) => {
-            if (body) {
-                res.status(200).json(body)
-            } else {
-                res.send('Cant get data from backend')
-            }
-        })
-    } else {
-        const errorMessage = await backendResponse.json()
-        res.status(backendResponse.status)
-        res.json(errorMessage)
+    try {
+        if (backendResponse.ok) {
+            const data = await backendResponse.json()
+            res.status(200).json(data)
+        } else {
+            const errorMessage = await backendResponse.json()
+            res.status(backendResponse.status).json(errorMessage)
+        }
+    } catch (error) {
+        console.error('Error:', error)
+        res.status(500).send('Internal Server Error')
     }
 }

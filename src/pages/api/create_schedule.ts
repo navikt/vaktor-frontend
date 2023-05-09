@@ -1,21 +1,42 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //
-    // for local testing
+interface QueryParams {
+    group_id: string
+    start_timestamp: string
+    end_timestamp: string
+    midlertidlig_vakt: string
+    amountOfWeeks: string
+    rolloverDay: string
+    rolloverTime: string
+}
 
-    let start_timestamp = req.query.start_timestamp
-    let end_timestamp = req.query.end_timestamp
-    let group_id = req.query.group_id
-    let midlertidlig_vakt = req.query.midlertidlig_vakt
-    let amountOfWeeks = req.query.amountOfWeeks
-    let rolloverDay = req.query.rolloverDay
-    let rolloverTime = req.query.rolloverTime
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
+    }
+
+    let queryParams: QueryParams
+    try {
+        queryParams = {
+            group_id: encodeURIComponent(req.query.group_id as string),
+            start_timestamp: encodeURIComponent(req.query.start_timestamp as string),
+            end_timestamp: encodeURIComponent(req.query.end_timestamp as string),
+            midlertidlig_vakt: encodeURIComponent(req.query.midlertidlig_vakt as string),
+            amountOfWeeks: encodeURIComponent(req.query.amountOfWeeks as string),
+            rolloverDay: encodeURIComponent(req.query.rolloverDay as string),
+            rolloverTime: encodeURIComponent(req.query.rolloverTime as string),
+        }
+    } catch (error) {
+        console.error('Error encoding query parameters:', error)
+        res.status(400).send('Invalid query parameters')
+        return
+    }
+
     let user_order = JSON.parse(req.body)
 
-    let path = `${process.env.BACKEND_URL}/api/v1/schedules/?group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amount_of_weeks=${amountOfWeeks}&rollover_day=${rolloverDay}&rollover_time=${rolloverTime}`
+    let path = `${process.env.BACKEND_URL}/api/v1/schedules/?group_id=${queryParams.group_id}&start_timestamp=${queryParams.start_timestamp}&end_timestamp=${queryParams.end_timestamp}&midlertidlig_vakt=${queryParams.midlertidlig_vakt}&amount_of_weeks=${queryParams.amountOfWeeks}&rollover_day=${queryParams.rolloverDay}&rollover_time=${queryParams.rolloverTime}`
 
     const backendResponse = await fetch(path, {
         headers: {

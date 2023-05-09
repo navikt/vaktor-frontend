@@ -1,49 +1,53 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
+interface GroupRequestBody {
+    name: string
+    phone: string
+    description: string
+    type: string
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = process.env.FAKE_TOKEN
-    //
-    // for local testing
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
 
-    let groupName = req.query.name
-    let grouPhone = req.query.phone
-    let description = req.query.description
-    let groupType = req.query.type
-    let teamkatalog = req.query.teamkatalog
-
-
-    let body = {
-          name: groupName,
-          phone: grouPhone,
-          description: description,
-          type: groupType
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    let path = `${process.env.BACKEND_URL}/api/v1/groups/`
-    console.log('API body: ', body)
+    const groupName = encodeURIComponent(req.query.name as string)
+    const groupPhone = encodeURIComponent(req.query.phone as string)
+    const description = encodeURIComponent(req.query.description as string)
+    const groupType = encodeURIComponent(req.query.type as string)
+    const teamkatalog = encodeURIComponent(req.query.teamkatalog as string)
 
-    const backendResponse = await fetch(path, {
-        headers: {
-            Authorization: authorizationHeader,
-            'Content-Type': 'application/json',
-        },
-        method: 'POST',
-        body: JSON.stringify(body),
-    })
+    const requestBody: GroupRequestBody = {
+        name: groupName,
+        phone: groupPhone,
+        description: description,
+        type: groupType,
+    }
 
-    if (backendResponse.ok) {
-        await backendResponse.json().then((body) => {
-            if (body) {
-                res.status(200).json(body)
-            } else {
-                res.send('Cant get data from backend')
-            }
+    const path = `${process.env.BACKEND_URL}/api/v1/groups/`
+
+    try {
+        const backendResponse = await fetch(path, {
+            headers: {
+                Authorization: authorizationHeader,
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            body: JSON.stringify(requestBody),
         })
-    } else {
-        const errorMessage = await backendResponse.json()
-        res.status(backendResponse.status)
-        res.json(errorMessage)
+
+        if (backendResponse.ok) {
+            const responseBody = await backendResponse.json()
+            res.status(200).json(responseBody)
+        } else {
+            const errorMessage = await backendResponse.json()
+            res.status(backendResponse.status).json(errorMessage)
+        }
+    } catch (error) {
+        console.error(error)
+        res.status(500).send('Something went wrong')
     }
 }

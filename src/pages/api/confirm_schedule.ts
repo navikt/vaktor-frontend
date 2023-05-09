@@ -1,12 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = process.env.FAKE_TOKEN
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
+    }
 
     try {
-        //let schedule_id = req.query.schedule_id
-        let schedule_id: string | string[] | undefined = req.query.schedule_id
+        let schedule_id = req.query.schedule_id?.toString()
 
         if (Array.isArray(schedule_id)) {
             schedule_id = schedule_id[0]
