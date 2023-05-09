@@ -1,37 +1,40 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //
-    // for local testing
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
+    //let authorizationHeader = process.env.FAKE_TOKEN
 
-    let user = JSON.parse(req.body)
-    //console.log("user: ", user)
+    try {
+        let user = JSON.parse(req.body)
+        // validate user object
+        if (!user || !user.id) {
+            throw new Error('Invalid user object')
+        }
 
-    let path = `${process.env.BACKEND_URL}/api/v1/users/${user.id}`
+        const sanitizedValue = encodeURIComponent(user.id)
 
-    const backendResponse = await fetch(path, {
-        headers: {
-            Authorization: authorizationHeader,
-            'Content-Type': 'application/json',
-        },
-        method: 'PUT',
-        body: JSON.stringify(user),
-    })
+        let path = `${process.env.BACKEND_URL}/api/v1/users/${sanitizedValue}`
 
-    if (backendResponse.ok) {
-        await backendResponse.json().then((body) => {
-            if (body) {
-                res.status(200).json(body)
-            } else {
-                res.send('Cant get data from backend')
-            }
-        })
-    } else {
-        const errorMessage = await backendResponse.json()
-        res.status(backendResponse.status)
-        res.json(errorMessage)
+        const fetchOptions = {
+            headers: {
+                Authorization: authorizationHeader,
+                'Content-Type': 'application/json',
+            },
+            method: 'PUT',
+            body: JSON.stringify(user),
+        }
+
+        const backendResponse = await fetch(path, fetchOptions)
+
+        if (backendResponse.ok) {
+            const responseData = await backendResponse.json()
+            res.status(200).json(responseData)
+        } else {
+            const errorMessage = await backendResponse.json()
+            res.status(backendResponse.status).json({ message: errorMessage.message || 'Unable to update user data' })
+        }
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Error occurred while processing your request.' })
     }
 }

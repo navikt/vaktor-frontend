@@ -1,12 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
     let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-    // for local testing
+    //const authorizationHeader = process.env.FAKE_TOKEN
 
-    let group_id = req.query.group_id
+    const group_id = encodeURIComponent(req.query.group_id as string)
+    if (!group_id) {
+        res.status(400).send('Missing group ID')
+        return
+    }
+
     let path = `${process.env.BACKEND_URL}/api/v1/leaders/${group_id}/add`
 
     const backendResponse = await fetch(path, {

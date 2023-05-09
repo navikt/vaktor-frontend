@@ -1,25 +1,23 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-    // for local testing
+    const authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+    //const authorizationHeader = process.env.FAKE_TOKEN
 
-    let group_id = req.query.group_id
-    let user_id = req.query.user_id
-    let path = `${process.env.BACKEND_URL}/api/v1/groups/${group_id}/assign_vaktsjef?user_id=${user_id}`
+    const groupId = encodeURIComponent(req.query.group_id as string)
+    const userId = encodeURIComponent(req.query.user_id as string)
+    const path = `${process.env.BACKEND_URL}/api/v1/groups/${groupId}/assign_vaktsjef?user_id=${userId}`
 
     const backendResponse = await fetch(path, {
         headers: { Authorization: authorizationHeader },
         method: 'POST',
     })
 
-    await backendResponse.json().then((body) => {
-        if (body) {
-            res.status(200).json(body)
-        } else {
-            res.send('Cant get data from backend')
-        }
-    })
+    if (backendResponse.ok) {
+        const body = await backendResponse.json()
+        res.status(200).json(body)
+    } else {
+        const errorMessage = await backendResponse.text()
+        res.status(backendResponse.status).send(errorMessage)
+    }
 }

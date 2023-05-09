@@ -1,34 +1,45 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
+interface RequestBody {
+    schedule_id: string
+    group_id: string
+    user_id: string
+    start_timestamp: number
+    end_timestamp: number
+    approve_level: number
+    type: string
+    id?: string
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-    // for local testing
+    const authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+    //const authorizationHeader = process.env.FAKE_TOKEN
+    const schedule_id = encodeURIComponent(req.query.schedule_id as string)
+    const selectedVakthaver = encodeURIComponent(req.query.selectedVakthaver as string)
+    const group_id = encodeURIComponent(req.query.group_id as string)
+    const dateFrom = Number(req.query.dateFrom)
+    const dateTo = Number(req.query.dateTo)
+    const action = encodeURIComponent(req.query.action as string)
 
-    let schedule_id = req.query.schedule_id
-    let selectedVakthaver = req.query.selectedVakthaver
-    let group_id = req.query.group_id
-    let dateFrom = req.query.dateFrom
-    let dateTo = req.query.dateTo
-    let action = req.query.action
+    if (!schedule_id || !selectedVakthaver || !group_id || !dateFrom || !dateTo || !action) {
+        return res.status(400).json({ message: 'Missing required parameters' })
+    }
 
-    var bodycontent = {
-        schedule_id: schedule_id,
-        group_id: group_id,
-        user_id: String(selectedVakthaver).toUpperCase(),
-        start_timestamp: Number(dateFrom),
-        end_timestamp: Number(dateTo),
+    const bodycontent: RequestBody = {
+        schedule_id,
+        group_id,
+        user_id: selectedVakthaver.toUpperCase(),
+        start_timestamp: dateFrom,
+        end_timestamp: dateTo,
         approve_level: 0,
         type: action === 'replace' ? 'ordinær vakt' : action,
     }
 
-    if (action === 'replace') Object.assign(bodycontent, { id: schedule_id })
+    if (action === 'replace') {
+        bodycontent.id = schedule_id
+    }
 
-    let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}?action=${action}`
-
-    //console.log(JSON.stringify(bodycontent), path)
-
+    const path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}?action=${action}`
     const backendResponse = await fetch(path, {
         headers: {
             Authorization: authorizationHeader,
@@ -38,11 +49,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         body: JSON.stringify(bodycontent),
     })
 
-    await backendResponse.json().then((body) => {
-        if (body) {
-            res.status(200).json(body)
-        } else {
-            res.send('Cant get data from backend')
-        }
-    })
+    const responseBody = await backendResponse.json()
+
+    if (backendResponse.ok) {
+        res.status(200).json(responseBody)
+    } else {
+        res.status(500).json({ message: 'Unable to update schedule' })
+    }
 }
