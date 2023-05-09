@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         //let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}/confirm`
-        let path = `http://vaktor-plan/api/v1/schedules/${schedule_id}/confirm`
+        let path = `http://vaktor-plan-api/api/v1/schedules/${schedule_id}/confirm`
 
         const fetchOptions = {
             headers: { Authorization: authorizationHeader },
