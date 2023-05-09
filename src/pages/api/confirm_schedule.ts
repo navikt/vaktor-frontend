@@ -5,15 +5,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     //let authorizationHeader = process.env.FAKE_TOKEN
 
     try {
-        let schedule_id = req.query.schedule_id
+        //let schedule_id = req.query.schedule_id
+        let schedule_id: string | string[] | undefined = req.query.schedule_id
+
+        if (Array.isArray(schedule_id)) {
+            schedule_id = schedule_id[0]
+        }
+
         // validate schedule_id parameter
         if (!schedule_id || schedule_id === '') {
             throw new Error('Invalid schedule ID')
         }
 
-        //let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}/confirm`
-        //vaktor-plan-api.intern.dev.nav.no/
-        let path = `http://vaktor-plan/api/v1/schedules/${schedule_id}/confirm`
+        // sanitize user-provided value
+        const sanitizedValue = encodeURIComponent(schedule_id)
+        let path = `${process.env.BACKEND_URL}/api/v1/schedules/${sanitizedValue}/confirm`
 
         const fetchOptions = {
             headers: { Authorization: authorizationHeader },
