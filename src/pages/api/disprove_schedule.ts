@@ -1,24 +1,26 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-    // for local testing
+    const authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+    //const authorizationHeader = process.env.FAKE_TOKEN
+    const schedule_id = encodeURIComponent(req.query.schedule_id as string)
 
-    let schedule_id = req.query.schedule_id
-    let path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}/disprove`
+    if (!schedule_id) {
+        return res.status(400).json({ message: 'Missing required parameter schedule_id' })
+    }
+
+    const path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}/disprove`
 
     const backendResponse = await fetch(path, {
         headers: { Authorization: authorizationHeader },
         method: 'POST',
     })
 
-    await backendResponse.json().then((body) => {
-        if (body) {
-            res.status(200).json(body)
-        } else {
-            res.send('Cant get data from backend')
-        }
-    })
+    const body = await backendResponse.json()
+
+    if (backendResponse.ok && body) {
+        res.status(200).json(body)
+    } else {
+        res.status(500).json({ message: 'Unable to disprove schedule' })
+    }
 }
