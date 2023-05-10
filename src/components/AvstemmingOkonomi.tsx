@@ -1,6 +1,6 @@
-import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select } from '@navikt/ds-react'
+import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, Button } from '@navikt/ds-react'
 import moment from 'moment'
-import { useEffect, useState } from 'react'
+import { Dispatch, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
@@ -50,8 +50,14 @@ const mapApproveStatus = (status: number) => {
 const AvstemmingOkonomi = () => {
     const { user } = useAuth()
     const [itemData, setItemData] = useState<Schedules[]>([])
-    const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+
+    const [response, setResponse] = useState([])
+    const [responseError, setResponseError] = useState('')
+
+    const [actionReason, setActionReason] = useState(Number)
+    const [approveLevel, setApproveLevel] = useState(Number)
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterRole, setSearchFilterRole] = useState('')
@@ -70,6 +76,39 @@ const AvstemmingOkonomi = () => {
                       .format('L')
         ),
     })
+
+    const recalculateSchedules = async (
+        start_timestamp: number,
+        end_timestamp: number,
+        action_reason: number,
+        approve_level: number,
+        setResponse: Dispatch<any>,
+        setResponseError: Dispatch<string>
+    ) => {
+        var url = `/vaktor/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
+        console.log('Recalculating: ', start_timestamp, end_timestamp, action_reason, approve_level)
+        var fetchOptions = {
+            method: 'POST',
+        }
+
+        await fetch(url, fetchOptions)
+            .then(async (r) => {
+                if (!r.ok) {
+                    const rText = await r.json()
+                    setResponseError(rText.detail)
+                    return []
+                }
+                return r.json()
+            })
+            .then((data: Schedules) => {
+                setResponse(data)
+                setIsLoading(false)
+            })
+            .catch((error: Error) => {
+                console.error(error.name, error.message)
+                setIsLoading(false)
+            })
+    }
 
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste
@@ -167,7 +206,7 @@ const AvstemmingOkonomi = () => {
             })
     }, [response])
 
-    if (loading === true) return <Loader></Loader>
+    //if (loading === true) return <Loader></Loader>
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
@@ -213,7 +252,41 @@ const AvstemmingOkonomi = () => {
                 margin: 'auto',
             }}
         >
-            <div style={{ textAlign: 'end' }}>
+            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', gap: '10px' }}>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
+                        <option value="">gjør et valg</option>
+                        <option value={1}>Ordinær kjøring</option>
+                        <option value={2}>Lønnsendring</option>
+                        <option value={3}>Feilutregning/Feil i Vaktor</option>
+                        <option value={4}>Sekundærkjøring</option>
+                    </Select>
+                </div>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <Select label="Velg Approve Level" onChange={(e) => setApproveLevel(Number(e.target.value))}>
+                        <option value="">gjør et valg</option>
+                        <option value={1}>Godkjent av ansatt</option>
+                        <option value={3}>Godkjent av vaktsjef</option>
+                        <option value={4}>Overført til lønn</option>
+                    </Select>
+                </div>
+                <Button
+                    onClick={() => {
+                        if (selectedMonth) {
+                            const start_timestamp = Math.floor(selectedMonth.getTime() / 1000)
+                            const end_timestamp = Math.floor(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)).getTime() / 1000)
+                            recalculateSchedules(start_timestamp, end_timestamp, actionReason, approveLevel, setResponse, setResponseError)
+                            setIsLoading(true)
+                        } else {
+                            console.log('SelectedMonth not set')
+                        }
+                    }}
+                    disabled={isLoading} // disable button when loading
+                >
+                    {isLoading ? <Loader /> : 'Recalculate'}
+                </Button>
+            </div>
+            <div style={{ textAlign: 'end', display: 'flex', justifyContent: 'end' }}>
                 <h3>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</h3>
             </div>
 
@@ -276,6 +349,7 @@ const AvstemmingOkonomi = () => {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
+                        {loading ? <Loader /> : ''}
                         {listeAvVakter.length === 0 ? <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3> : listeAvVakter}
                     </Table.Body>
                 </Table>
