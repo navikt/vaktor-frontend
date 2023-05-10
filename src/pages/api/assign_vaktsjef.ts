@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
-    //const authorizationHeader = process.env.FAKE_TOKEN
+    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
+
+    if (process.env.FAKE_TOKEN) {
+        authorizationHeader = process.env.FAKE_TOKEN
+    }
 
     const groupId = encodeURIComponent(req.query.group_id as string)
     const userId = encodeURIComponent(req.query.user_id as string)

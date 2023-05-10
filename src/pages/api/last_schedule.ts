@@ -1,25 +1,34 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
-    //const authorizationHeader = process.env.FAKE_TOKEN
-    const group_id = encodeURIComponent(req.query.group_id as string)
+    try {
+        let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
 
-    if (!group_id) {
-        return res.status(400).json({ message: 'Missing required parameter group_id' })
-    }
+        if (process.env.FAKE_TOKEN) {
+            authorizationHeader = process.env.FAKE_TOKEN
+        }
 
-    const path = `${process.env.BACKEND_URL}/api/v1/schedules/${group_id}/latest`
-    const backendResponse = await fetch(path, {
-        headers: { Authorization: authorizationHeader },
-        method: 'GET',
-    })
+        const group_id = encodeURIComponent(req.query.group_id as string)
 
-    const responseBody = await backendResponse.json()
+        if (!group_id) {
+            return res.status(400).json({ message: 'Missing required parameter group_id' })
+        }
 
-    if (backendResponse.ok) {
-        res.status(200).json(responseBody)
-    } else {
-        res.status(500).json({ message: 'Unable to get latest schedule' })
+        const path = `${process.env.BACKEND_URL}/api/v1/schedules/${group_id}/latest`
+        const backendResponse = await fetch(path, {
+            headers: { Authorization: authorizationHeader },
+            method: 'GET',
+        })
+
+        const responseBody = await backendResponse.json()
+
+        if (backendResponse.ok) {
+            res.status(200).json(responseBody)
+        } else {
+            res.status(500).json({ message: 'Unable to get latest schedule' })
+        }
+    } catch (error) {
+        console.error('Error:', error)
+        res.status(500).json({ message: 'Something went wrong on the server' })
     }
 }

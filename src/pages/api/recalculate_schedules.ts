@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 interface ScheduleRequest {
-    start_timestamp: string
-    end_timestamp: string
-    group_id: string
-    user_id: string
+    start_timestamp: number
+    end_timestamp: number
+    action_reason: number
+    approve_level: number
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,19 +14,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    const start_timestamp = encodeURIComponent(req.query.start_timestamp as string)
-    const end_timestamp = encodeURIComponent(req.query.end_timestamp as string)
-    const group_id = encodeURIComponent(req.query.group_id as string)
-    const user_id = encodeURIComponent(req.query.user_id as string)
+    const start_timestamp = parseInt(encodeURIComponent(req.query.start_timestamp as string) as string)
+    const end_timestamp = parseInt(encodeURIComponent(req.query.end_timestamp as string) as string)
+    const action_reason = parseInt(encodeURIComponent(req.query.action_reason as string) as string)
+    const approve_level = parseInt(encodeURIComponent(req.query.approve_level as string) as string)
 
     const body: ScheduleRequest = {
-        user_id,
-        group_id,
         start_timestamp,
         end_timestamp,
+        action_reason,
+        approve_level,
     }
 
-    const path = `${process.env.BACKEND_URL}/api/v1/schedules/create_temp_schedule`
+    const path = `${process.env.BACKEND_URL}/api/v1/admin/rekjoring?start_timestamp=${start_timestamp}&end_timetamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
 
     const backendResponse = await fetch(path, {
         headers: {
@@ -34,8 +34,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         },
         method: 'POST',
-        body: JSON.stringify(body),
+        //        body: JSON.stringify(body),
     })
+
+    //console.log(body)
+    console.log('Path and queries used:', path)
 
     try {
         if (backendResponse.ok) {

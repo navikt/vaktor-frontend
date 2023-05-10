@@ -2,43 +2,49 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { Schedules, User, Vaktlag } from '../../types/types'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // for prod / dev
-    let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : 'No Authorization header'
-    //let authorizationHeader = req.headers && req.headers.authorization ? req.headers.authorization : "No Authorization header"
-    // for local testing
+    try {
+        let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
 
-    let path = `${process.env.BACKEND_URL}/api/v1/users/me`
+        if (process.env.FAKE_TOKEN) {
+            authorizationHeader = process.env.FAKE_TOKEN
+        }
 
-    const getCurrentUser = await fetch(path, {
-        headers: { Authorization: authorizationHeader },
-        method: 'GET',
-    }).then((res) => res.json())
+        let path = `${process.env.BACKEND_URL}/api/v1/users/me`
 
-    //let groupPath = `${process.env.BACKEND_URL}/api/v1/groups/${getCurrentUser.groups[0].id}/schedules`
-
-    const getGroupSchedule = async (groupPath: string) =>
-        await fetch(groupPath, {
+        const getCurrentUser = await fetch(path, {
             headers: { Authorization: authorizationHeader },
             method: 'GET',
-        })
+        }).then((res) => res.json())
 
-    const allGroupSchedule = async (user: User) =>
-        await Promise.all(
-            user.groups.map(async (group: Vaktlag) => {
-                let groupPath = `${process.env.BACKEND_URL}/api/v1/groups/${group.id}/schedules`
-                let schedule = await getGroupSchedule(groupPath)
-                return await schedule.json()
+        //let groupPath = `${process.env.BACKEND_URL}/api/v1/groups/${getCurrentUser.groups[0].id}/schedules`
+
+        const getGroupSchedule = async (groupPath: string) =>
+            await fetch(groupPath, {
+                headers: { Authorization: authorizationHeader },
+                method: 'GET',
             })
-        )
 
-    let schedules = await allGroupSchedule(getCurrentUser)
-    let list_of_schedules: Schedules[] = []
+        const allGroupSchedule = async (user: User) =>
+            await Promise.all(
+                user.groups.map(async (group: Vaktlag) => {
+                    let groupPath = `${process.env.BACKEND_URL}/api/v1/groups/${encodeURIComponent(group.id)}/schedules`
+                    let schedule = await getGroupSchedule(groupPath)
+                    return await schedule.json()
+                })
+            )
 
-    schedules.forEach((s) => (list_of_schedules = [...list_of_schedules, ...s]))
+        let schedules = await allGroupSchedule(getCurrentUser)
+        let list_of_schedules: Schedules[] = []
 
-    if (list_of_schedules.length != 0) {
-        res.status(200).json(list_of_schedules)
-    } else {
-        res.send('Cant get data from backend')
+        schedules.forEach((s) => (list_of_schedules = [...list_of_schedules, ...s]))
+
+        if (list_of_schedules.length != 0) {
+            res.status(200).json(list_of_schedules)
+        } else {
+            res.send('Cant get data from backend')
+        }
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Internal server error' })
     }
 }
