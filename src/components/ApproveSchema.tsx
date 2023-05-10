@@ -49,6 +49,18 @@ const mapApproveStatus = (status: number) => {
             statusText = 'Overført til lønn'
             statusColor = '#E18071'
             break
+        case 5:
+            statusText = 'Venter på utregning av diff'
+            statusColor = '#99DEAD'
+            break
+        case 6:
+            statusText = 'Utregning fullført med diff'
+            statusColor = '#99DEAD'
+            break
+        case 7:
+            statusText = 'Overført til lønn etter rekjøring'
+            statusColor = '#E18071'
+            break
         default:
             statusText = 'Trenger godkjenning'
             statusColor = '#FFFFFF'

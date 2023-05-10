@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Cost, Artskoder, Schedules } from '../../types/types'
 
 const mapCostStatus = (status: number) => {
@@ -26,65 +27,94 @@ const mapCostStatus = (status: number) => {
             break
     }
 
-    return <div>{statusText}</div>
+    return (
+        <div>
+            <b>{statusText}</b>
+        </div>
+    )
 }
 
 const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => {
-    return props.vakt.cost
-        .sort((a: Cost, b: Cost) => Number(a.type_id) - Number(b.type_id))
-        .map((cost: Cost, idx) => {
-            return (
-                <div
-                    key={cost.id}
-                    style={{
-                        marginBottom: '25px',
-                    }}
-                >
-                    {props.avstemming === true ? <b>ID: {cost.id}</b> : false}
-                    <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
-                    <div
-                        style={{
-                            marginTop: '5px',
-                            display: 'flex',
-                            gap: '20px',
-                        }}
-                    >
-                        <div>
-                            Total Sum: <b style={{ color: 'green' }}> {cost.total_cost}</b>{' '}
+    const [prevTotalCost, setPrevTotalCost] = useState<number | undefined>()
+
+    const elements = useMemo(
+        () =>
+            props.vakt.cost
+                .sort((a: Cost, b: Cost) => Number(a.type_id) - Number(b.type_id))
+                .map((cost: Cost, idx) => {
+                    const currentTotalCost = cost.total_cost
+                    const diff = prevTotalCost !== undefined ? currentTotalCost - prevTotalCost : 0
+                    const element = (
+                        <div
+                            key={cost.id}
+                            style={{
+                                marginBottom: '25px',
+                            }}
+                        >
+                            {idx > 0 ? <hr></hr> : <></>}
+                            {props.avstemming === true ? <b>ID: {cost.id}</b> : false}
+                            <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
+                            <div
+                                style={{
+                                    marginTop: '5px',
+                                    display: 'flex',
+                                    gap: '20px',
+                                }}
+                            >
+                                <div>
+                                    {mapCostStatus(Number(cost.type_id))}
+                                    Total Sum: <b style={{ color: 'green' }}> {cost.total_cost}</b>
+                                    {prevTotalCost !== undefined && cost.type_id > 1 && idx > 0 && (
+                                        <div style={{ color: diff < 0 ? 'red' : 'green' }}>
+                                            Diff: ({diff < 0 ? '-' : '+'}
+                                            {Math.abs(diff).toFixed(2)})
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: '15px',
+                                    marginTop: '15px',
+                                }}
+                            >
+                                <div>
+                                    <b>Artskoder</b>
+                                    {cost.artskoder
+                                        .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
+                                        .map((artskode, index) => (
+                                            <div key={index}>
+                                                <b> {artskode.type}:</b> {artskode.sum}
+                                            </div>
+                                        ))}
+                                </div>
+                                <div>
+                                    <b>Antall timer</b>
+                                    {cost.artskoder
+                                        .sort((a: Artskoder, b: Artskoder) => Number(a.type)! - Number(b.type)!)
+                                        .map((artskode, index) => (
+                                            <div key={index}>
+                                                <b> {artskode.type}: </b> {artskode.hours}
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
                         </div>
-                        {mapCostStatus(Number(cost.type_id))}
-                    </div>
-                    <div
-                        style={{
-                            display: 'flex',
-                            gap: '15px',
-                            marginTop: '15px',
-                        }}
-                    >
-                        <div>
-                            <b>Artskoder</b>
-                            {cost.artskoder
-                                .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
-                                .map((artskode, index) => (
-                                    <div key={index}>
-                                        <b> {artskode.type}:</b> {artskode.sum}
-                                    </div>
-                                ))}
-                        </div>
-                        <div>
-                            <b>Antall timer</b>
-                            {cost.artskoder
-                                .sort((a: Artskoder, b: Artskoder) => Number(a.type)! - Number(b.type)!)
-                                .map((artskode, index) => (
-                                    <div key={index}>
-                                        <b> {artskode.type}: </b> {artskode.hours}
-                                    </div>
-                                ))}
-                        </div>
-                    </div>
-                </div>
-            )
-        })
+                    )
+                    return element
+                }),
+        [prevTotalCost, props.vakt.cost, props.avstemming, props.vakt.is_double]
+    )
+
+    useEffect(() => {
+        if (props.vakt.cost.length > 0) {
+            const currentTotalCost = props.vakt.cost[0].total_cost
+            setPrevTotalCost(currentTotalCost)
+        }
+    }, [props.vakt.cost])
+
+    return <div>{props.vakt.cost.length !== 0 ? elements : 'ingen beregning foreligger'}</div>
 }
 
 export default MapCost

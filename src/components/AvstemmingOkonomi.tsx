@@ -1,6 +1,6 @@
-import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, Button } from '@navikt/ds-react'
+import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, Button, Popover, ReadMore } from '@navikt/ds-react'
 import moment from 'moment'
-import { Dispatch, useEffect, useState } from 'react'
+import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
@@ -26,6 +26,18 @@ const mapApproveStatus = (status: number) => {
             break
         case 4:
             statusText = 'Overført til lønn'
+            statusColor = '#E18071'
+            break
+        case 5:
+            statusText = 'Venter på utregning av diff'
+            statusColor = '#99DEAD'
+            break
+        case 6:
+            statusText = 'Utregning fullført med diff'
+            statusColor = '#99DEAD'
+            break
+        case 7:
+            statusText = 'Overført til lønn etter rekjøring'
             statusColor = '#E18071'
             break
         default:
@@ -58,6 +70,9 @@ const AvstemmingOkonomi = () => {
 
     const [actionReason, setActionReason] = useState(Number)
     const [approveLevel, setApproveLevel] = useState(Number)
+
+    const buttonRef = useRef<HTMLButtonElement>(null)
+    const [openState, setOpenState] = useState<boolean>(false)
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterRole, setSearchFilterRole] = useState('')
@@ -253,39 +268,72 @@ const AvstemmingOkonomi = () => {
             }}
         >
             <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', gap: '10px' }}>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
                     <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
-                        <option value="">gjør et valg</option>
+                        <option value="">Gjør et valg</option>
                         <option value={1}>Ordinær kjøring</option>
                         <option value={2}>Lønnsendring</option>
                         <option value={3}>Feilutregning/Feil i Vaktor</option>
                         <option value={4}>Sekundærkjøring</option>
                     </Select>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
                     <Select label="Velg Approve Level" onChange={(e) => setApproveLevel(Number(e.target.value))}>
-                        <option value="">gjør et valg</option>
+                        <option value="">Gjør et valg</option>
                         <option value={1}>Godkjent av ansatt</option>
                         <option value={3}>Godkjent av vaktsjef</option>
                         <option value={4}>Overført til lønn</option>
                     </Select>
                 </div>
+
                 <Button
                     onClick={() => {
-                        if (selectedMonth) {
-                            const start_timestamp = Math.floor(selectedMonth.getTime() / 1000)
-                            const end_timestamp = Math.floor(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)).getTime() / 1000)
-                            recalculateSchedules(start_timestamp, end_timestamp, actionReason, approveLevel, setResponse, setResponseError)
-                            setIsLoading(true)
-                        } else {
-                            console.log('SelectedMonth not set')
-                        }
+                        setOpenState(true)
                     }}
-                    disabled={isLoading} // disable button when loading
+                    style={{
+                        maxWidth: '210px',
+                        marginLeft: '30px',
+                        marginTop: '5px',
+                        marginBottom: '5px',
+                    }}
+                    disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
+                    ref={buttonRef}
                 >
-                    {isLoading ? <Loader /> : 'Recalculate'}
+                    Rekalkuler {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
                 </Button>
+                <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
+                    <Popover.Content
+                        style={{
+                            textAlign: 'center',
+                            backgroundColor: 'rgba(241, 241, 241, 1)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                            maxWidth: '250px',
+                        }}
+                    >
+                        Er du sikker på at du vil rekalkulere alle perioder for{' '}
+                        <b>{selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}?</b>
+                        <Button
+                            variant="danger"
+                            onClick={() => {
+                                if (selectedMonth) {
+                                    const start_timestamp = Math.floor(selectedMonth.getTime() / 1000)
+                                    const end_timestamp = Math.floor(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)).getTime() / 1000)
+                                    recalculateSchedules(start_timestamp, end_timestamp, actionReason, approveLevel, setResponse, setResponseError)
+                                    setIsLoading(true)
+                                } else {
+                                    console.log('SelectedMonth not set')
+                                }
+                            }}
+                            disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
+                        >
+                            {isLoading ? <Loader /> : 'Rekalkuler nå!'}
+                        </Button>
+                    </Popover.Content>
+                </Popover>
             </div>
+
             <div style={{ textAlign: 'end', display: 'flex', justifyContent: 'end' }}>
                 <h3>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</h3>
             </div>
