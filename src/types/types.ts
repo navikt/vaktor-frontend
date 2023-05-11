@@ -94,6 +94,7 @@ export interface Cost {
     approver: User
     artskoder: Artskoder[]
     type_id: number
+    order_id: number
 }
 
 export interface Artskoder {
