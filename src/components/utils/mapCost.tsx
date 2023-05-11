@@ -43,6 +43,8 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                 .sort((a: Cost, b: Cost) => Number(a.order_id) - Number(b.order_id))
                 .map((cost: Cost, idx) => {
                     const currentTotalCost = cost.total_cost
+                    const prevCost = idx > 0 ? props.vakt.cost[idx - 1] : null
+                    const prevTotalCost = prevCost ? prevCost.total_cost : undefined
                     const diff = prevTotalCost !== undefined ? currentTotalCost - prevTotalCost : 0
                     const element = (
                         <div
@@ -102,22 +104,22 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                             </div>
                         </div>
                     )
-                    if (props.vakt.cost.length > 0) {
-                        const currentTotalCost = props.vakt.cost[idx].total_cost
-                        setPrevTotalCost(currentTotalCost)
-                    }
+                    // if (props.vakt.cost.length > 0) {
+                    //     const currentTotalCost = props.vakt.cost[idx].total_cost
+                    //     setPrevTotalCost(currentTotalCost)
+                    // }
                     return element
                 }),
 
         [prevTotalCost, props.vakt.cost, props.avstemming, props.vakt.is_double]
     )
 
-    // useEffect(() => {
-    // if (props.vakt.cost.length > 0) {
-    //     const currentTotalCost = props.vakt.cost[0].total_cost
-    //     setPrevTotalCost(currentTotalCost)
-    // }
-    // }, [props.vakt.cost])
+    useEffect(() => {
+        if (props.vakt.cost.length > 0) {
+            const currentTotalCost = props.vakt.cost[0].total_cost // Use the total_cost from the first element
+            setPrevTotalCost(currentTotalCost)
+        }
+    }, [props.vakt.cost])
 
     return <div>{props.vakt.cost.length !== 0 ? elements : 'ingen beregning foreligger'}</div>
 }
