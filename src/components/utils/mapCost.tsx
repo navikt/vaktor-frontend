@@ -40,7 +40,7 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
     const elements = useMemo(
         () =>
             props.vakt.cost
-                .sort((a: Cost, b: Cost) => Number(a.type_id) - Number(b.type_id))
+                .sort((a: Cost, b: Cost) => Number(a.order_id) - Number(b.order_id))
                 .map((cost: Cost, idx) => {
                     const currentTotalCost = cost.total_cost
                     const diff = prevTotalCost !== undefined ? currentTotalCost - prevTotalCost : 0
@@ -102,17 +102,22 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                             </div>
                         </div>
                     )
+                    if (props.vakt.cost.length > 0) {
+                        const currentTotalCost = props.vakt.cost[idx].total_cost
+                        setPrevTotalCost(currentTotalCost)
+                    }
                     return element
                 }),
+
         [prevTotalCost, props.vakt.cost, props.avstemming, props.vakt.is_double]
     )
 
-    useEffect(() => {
-        if (props.vakt.cost.length > 0) {
-            const currentTotalCost = props.vakt.cost[0].total_cost
-            setPrevTotalCost(currentTotalCost)
-        }
-    }, [props.vakt.cost])
+    // useEffect(() => {
+    // if (props.vakt.cost.length > 0) {
+    //     const currentTotalCost = props.vakt.cost[0].total_cost
+    //     setPrevTotalCost(currentTotalCost)
+    // }
+    // }, [props.vakt.cost])
 
     return <div>{props.vakt.cost.length !== 0 ? elements : 'ingen beregning foreligger'}</div>
 }
