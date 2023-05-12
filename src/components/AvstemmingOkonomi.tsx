@@ -220,8 +220,8 @@ const AvstemmingOkonomi = () => {
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
                 setLoading(false)
-                const distinctGroupNames = [...new Set(itemData.map((data: { group: { name: any } }) => data.group.name))]
-                const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b)) // Sort alphabetically
+                const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
+                const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
                 setGroupNames(sortedGroupNames)
             })
     }, [response])
