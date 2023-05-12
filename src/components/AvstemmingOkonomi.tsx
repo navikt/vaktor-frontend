@@ -2,59 +2,32 @@ import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Selec
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Schedules, Vaktlag } from '../types/types'
+import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 
-let today = Date.now() / 1000
-
-const mapApproveStatus = (status: number) => {
-    let statusText = ''
-    let statusColor = ''
-    switch (status) {
-        case 1:
-            statusText = 'Godkjent av ansatt'
-            statusColor = '#66CBEC'
-            break
-        case 2:
-            statusText = 'Venter på utregning'
-            statusColor = '#99DEAD'
-            break
-        case 3:
-            statusText = 'Godkjent av vaktsjef'
-            statusColor = '#99DEAD'
-            break
-        case 4:
-            statusText = 'Overført til lønn'
-            statusColor = '#E18071'
-            break
-        case 5:
-            statusText = 'Venter på utregning av diff'
-            statusColor = '#99DEAD'
-            break
-        case 6:
-            statusText = 'Utregning fullført med diff'
-            statusColor = '#99DEAD'
-            break
-        case 7:
-            statusText = 'Overført til lønn etter rekjøring'
-            statusColor = '#E18071'
-            break
-        default:
-            statusText = 'Trenger godkjenning'
-            statusColor = '#FFFFFF'
-            break
+const mapApproveStatus = (status: number): JSX.Element => {
+    const statusMap: { [key: number]: { text: string; color: string } } = {
+        1: { text: 'Godkjent av ansatt', color: '#66CBEC' },
+        2: { text: 'Venter på utregning', color: '#99DEAD' },
+        3: { text: 'Godkjent av vaktsjef', color: '#99DEAD' },
+        4: { text: 'Overført til lønn', color: '#E18071' },
+        5: { text: 'Venter på utregning av diff', color: '#99DEAD' },
+        6: { text: 'Utregning fullført med diff', color: '#99DEAD' },
+        7: { text: 'Overført til lønn etter rekjøring', color: '#E18071' },
     }
+
+    const { text, color } = statusMap[status] || { text: 'Trenger godkjenning', color: '#FFFFFF' }
 
     return (
         <Table.DataCell
             style={{
-                backgroundColor: statusColor,
+                backgroundColor: color,
                 maxWidth: '150',
                 minWidth: '150',
             }}
         >
-            {statusText}
+            {text}
         </Table.DataCell>
     )
 }
@@ -66,6 +39,8 @@ const AvstemmingOkonomi = () => {
     const [isLoading, setIsLoading] = useState(false)
 
     const [groupNames, setGroupNames] = useState<string[]>([])
+    const [distinctFilenames, setDistinctFilenames] = useState<string[]>([])
+    const [selectedFilename, setSelectedFilename] = useState<string>('')
 
     const [response, setResponse] = useState([])
     const [responseError, setResponseError] = useState('')
@@ -219,10 +194,36 @@ const AvstemmingOkonomi = () => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
-                setLoading(false)
                 const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
                 const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
                 setGroupNames(sortedGroupNames)
+
+                const distinctFilenames: string[] = Array.from(
+                    new Set(
+                        itemData.flatMap((data: Schedules) => {
+                            return data.audits
+                                .map((audit: { action: string }) => {
+                                    const regex = /(Overført til lønn ved fil|Sendt til utbetaling ved fil): (\w{3}-\d{2}-\d{4})( - Vaktor Lonn)?/
+                                    const match = audit.action.match(regex)
+                                    if (match) {
+                                        const filename = match[2]
+                                        return filename.trim()
+                                    }
+                                    return null
+                                })
+                                .filter((filename) => filename) // Filter out null or empty filenames
+                        })
+                    )
+                )
+                // Sort the filenames by date
+                const sortedFilenames = distinctFilenames.sort((a, b) => {
+                    const dateA = new Date(a.split('-').reverse().join('-'))
+                    const dateB = new Date(b.split('-').reverse().join('-'))
+                    return dateA.getTime() - dateB.getTime()
+                })
+
+                setDistinctFilenames(sortedFilenames)
+                setLoading(false)
             })
     }, [response])
 
@@ -231,24 +232,32 @@ const AvstemmingOkonomi = () => {
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
     let listeAvVakter = mapVakter(
-        itemData.filter(
-            (value: Schedules) =>
+        itemData.filter((value: Schedules) => {
+            const isMonthMatch =
                 new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
-                value.user.name.toLowerCase().includes(searchFilter) &&
-                value.group.name.includes(searchFilterGroup) &&
-                (searchFilterAction === 8 ? true : value.approve_level === searchFilterAction)
-        )
+                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
+
+            const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
+            const isGroupMatch = value.group.name.includes(searchFilterGroup)
+            const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
+            const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
+
+            return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+        })
     )
 
-    let totalCost_filtered = itemData.filter(
-        (value: Schedules) =>
+    let totalCost_filtered = itemData.filter((value: Schedules) => {
+        const isMonthMatch =
             new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
-            value.user.name.toLowerCase().includes(searchFilter) &&
-            value.group.name.includes(searchFilterGroup) &&
-            (searchFilterAction === 8 ? true : value.approve_level === searchFilterAction)
-    )
+            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
+
+        const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
+        const isGroupMatch = value.group.name.includes(searchFilterGroup)
+        const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
+        const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
+
+        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+    })
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
         return (
@@ -365,6 +374,17 @@ const AvstemmingOkonomi = () => {
                         ))}
                     </Select>
                 </div>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <Select label="Velg Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
+                        <option value="">Alle</option>
+                        {distinctFilenames.map((filename) => (
+                            <option key={filename} value={filename}>
+                                {filename}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
+
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
                         <option value={8}>Alle</option>
