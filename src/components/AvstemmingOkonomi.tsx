@@ -2,7 +2,7 @@ import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Selec
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Schedules } from '../types/types'
+import { Schedules, Vaktlag } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 
@@ -65,6 +65,8 @@ const AvstemmingOkonomi = () => {
     const [loading, setLoading] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
+    const [groupNames, setGroupNames] = useState<string[]>([])
+
     const [response, setResponse] = useState([])
     const [responseError, setResponseError] = useState('')
 
@@ -75,8 +77,8 @@ const AvstemmingOkonomi = () => {
     const [openState, setOpenState] = useState<boolean>(false)
 
     const [searchFilter, setSearchFilter] = useState('')
-    const [searchFilterRole, setSearchFilterRole] = useState('')
-    const [searchFilterAction, setSearchFilterAction] = useState(5)
+    const [searchFilterGroup, setSearchFilterGroup] = useState('')
+    const [searchFilterAction, setSearchFilterAction] = useState(8)
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -218,6 +220,9 @@ const AvstemmingOkonomi = () => {
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
                 setLoading(false)
+                const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
+                const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
+                setGroupNames(sortedGroupNames)
             })
     }, [response])
 
@@ -231,19 +236,18 @@ const AvstemmingOkonomi = () => {
                 new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
                 new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
                 value.user.name.toLowerCase().includes(searchFilter) &&
-                value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase()) &&
-                (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
+                value.group.name.includes(searchFilterGroup) &&
+                (searchFilterAction === 8 ? true : value.approve_level === searchFilterAction)
         )
     )
 
-    // Calculate the total cost
     let totalCost_filtered = itemData.filter(
         (value: Schedules) =>
             new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
             new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
             value.user.name.toLowerCase().includes(searchFilter) &&
-            value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase()) &&
-            (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
+            value.group.name.includes(searchFilterGroup) &&
+            (searchFilterAction === 8 ? true : value.approve_level === searchFilterAction)
     )
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
@@ -352,20 +356,26 @@ const AvstemmingOkonomi = () => {
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
-                    <Select label="Velg rolle" onChange={(e) => setSearchFilterRole(e.target.value)}>
+                    <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
                         <option value="">Alle</option>
-                        <option value="vakthaver">Vakthaver</option>
-                        <option value="vaktsjef">Vaktsjef</option>
+                        {groupNames.map((groupName) => (
+                            <option key={groupName} value={groupName}>
+                                {groupName}
+                            </option>
+                        ))}
                     </Select>
                 </div>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                        <option value={5}>Alle</option>
+                        <option value={8}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
                         <option value={1}>Godkjent av ansatt</option>
                         <option value={2}>Venter på utregning</option>
                         <option value={3}>Godkjent av vaktsjef</option>
                         <option value={4}>Overført til lønn</option>
+                        <option value={5}>Venter på utregning av diff</option>
+                        <option value={6}>Utregning fullført med diff</option>
+                        <option value={7}>Overført til lønn etter rekjøring</option>
                     </Select>
                 </div>
             </div>
