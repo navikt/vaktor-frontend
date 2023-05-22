@@ -15,10 +15,15 @@ const UpdateSchedule = () => {
     const [Vakt, addVakt] = useState()
     const [searchFilter, setSearchFilter] = useState('')
     const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
+
+    const fromDate = moment('Oct 01 2022', 'MMM DD YYYY').toDate()
+    const toDate = moment('Aug 23 2025', 'MMM DD YYYY').toDate()
+    const defaultSelected = moment().locale('en-GB').startOf('month').toDate()
+
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
-        fromDate: new Date('Oct 01 2022'),
-        toDate: new Date('Aug 23 2025'),
-        defaultSelected: new Date(moment().locale('en-GB').format('MMM Y')),
+        fromDate,
+        toDate,
+        defaultSelected,
     })
 
     useEffect(() => {

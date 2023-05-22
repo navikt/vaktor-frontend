@@ -32,7 +32,7 @@ const mapApproveStatus = (status: number): JSX.Element => {
     )
 }
 
-const AvstemmingOkonomi = () => {
+const AvstemmingOkonomiAlle = () => {
     const { user } = useAuth()
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [loading, setLoading] = useState(false)
@@ -233,30 +233,32 @@ const AvstemmingOkonomi = () => {
     if (selectedMonth === undefined) setSelected(new Date())
     let listeAvVakter = mapVakter(
         itemData.filter((value: Schedules) => {
-            const isMonthMatch =
-                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
+            // const isMonthMatch =
+            //     new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+            //     new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
+            const endMonth = new Date(value.end_timestamp * 1000) < new Date('2023-05-01')
             const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
             const isGroupMatch = value.group.name.includes(searchFilterGroup)
             const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
             const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
-            return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+            return endMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
         })
     )
 
     let totalCost_filtered = itemData.filter((value: Schedules) => {
-        const isMonthMatch =
-            new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
+        // const isMonthMatch =
+        //     new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+        //     new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
+        const endMonth = new Date(value.end_timestamp * 1000) < new Date('2023-05-01')
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.includes(searchFilterGroup)
         const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
-        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+        return endMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
     })
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
@@ -272,6 +274,45 @@ const AvstemmingOkonomi = () => {
         )
     }, 0)
 
+    const totalDifference = totalCost_filtered.reduce((accumulator, currentSchedule) => {
+        const costObjectsCount = currentSchedule.cost.length
+
+        if (costObjectsCount === 1) {
+            return accumulator // If there is only 1 cost object, do nothing
+        }
+
+        if (costObjectsCount === 2) {
+            const costDifference = currentSchedule.cost.reduce((differenceAccumulator, currentCost) => {
+                if (currentCost.type_id === 3) {
+                    return differenceAccumulator + currentCost.total_cost // Add to total if type_id is 3
+                } else {
+                    return differenceAccumulator - currentCost.total_cost // Subtract from total if type_id is not 3
+                }
+            }, 0)
+
+            return accumulator + costDifference
+        }
+
+        if (costObjectsCount === 3) {
+            const costDifference = currentSchedule.cost.reduce((differenceAccumulator, currentCost) => {
+                if (currentCost.order_id === 0) {
+                    return differenceAccumulator // Do nothing if order_id is 0
+                }
+                if (currentCost.order_id === 1) {
+                    return differenceAccumulator - currentCost.total_cost // Subtract from total if order_id is 1
+                }
+                if (currentCost.order_id === 2) {
+                    return differenceAccumulator + currentCost.total_cost // Add to total if order_id is 2
+                }
+                return differenceAccumulator
+            }, 0)
+
+            return accumulator + costDifference
+        }
+
+        return accumulator
+    }, 0)
+
     return (
         <div
             style={{
@@ -284,83 +325,20 @@ const AvstemmingOkonomi = () => {
                 margin: 'auto',
             }}
         >
-            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', gap: '10px' }}>
-                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                    <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
-                        <option value="">Gjør et valg</option>
-                        <option value={1}>Ordinær kjøring</option>
-                        <option value={2}>Lønnsendring</option>
-                        <option value={3}>Feilutregning/Feil i Vaktor</option>
-                        <option value={4}>Sekundærkjøring</option>
-                    </Select>
-                </div>
-                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                    <Select label="Velg Approve Level" onChange={(e) => setApproveLevel(Number(e.target.value))}>
-                        <option value="">Gjør et valg</option>
-                        <option value={1}>Godkjent av ansatt</option>
-                        <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Overført til lønn</option>
-                    </Select>
-                </div>
-
-                <Button
-                    onClick={() => {
-                        setOpenState(true)
-                    }}
-                    style={{
-                        maxWidth: '210px',
-                        marginLeft: '30px',
-                        marginTop: '5px',
-                        marginBottom: '5px',
-                    }}
-                    disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
-                    ref={buttonRef}
-                >
-                    Rekalkuler {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
-                </Button>
-                <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
-                    <Popover.Content
-                        style={{
-                            textAlign: 'center',
-                            backgroundColor: 'rgba(241, 241, 241, 1)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '10px',
-                            maxWidth: '250px',
-                        }}
-                    >
-                        Er du sikker på at du vil rekalkulere alle perioder for{' '}
-                        <b>{selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}?</b>
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                if (selectedMonth) {
-                                    const start_timestamp = Math.floor(selectedMonth.getTime() / 1000)
-                                    const end_timestamp = Math.floor(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)).getTime() / 1000)
-                                    recalculateSchedules(start_timestamp, end_timestamp, actionReason, approveLevel, setResponse, setResponseError)
-                                    setIsLoading(true)
-                                } else {
-                                    console.log('SelectedMonth not set')
-                                }
-                            }}
-                            disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
-                        >
-                            {isLoading ? <Loader /> : 'Rekalkuler nå!'}
-                        </Button>
-                    </Popover.Content>
-                </Popover>
-            </div>
-
             <div style={{ textAlign: 'end', display: 'flex', justifyContent: 'end' }}>
                 <h3>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</h3>
             </div>
 
+            <div style={{ textAlign: 'end', display: 'flex', justifyContent: 'end' }}>
+                <h3>Total Diff: {totalDifference.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</h3>
+            </div>
+
             <div className="min-h-96" style={{ display: 'flex' }}>
-                <UNSAFE_MonthPicker {...monthpickerProps}>
+                {/* <UNSAFE_MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
                         <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
                     </div>
-                </UNSAFE_MonthPicker>
+                </UNSAFE_MonthPicker> */}
                 <form style={{ width: '300px', marginLeft: '30px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
@@ -440,4 +418,4 @@ const AvstemmingOkonomi = () => {
     )
 }
 
-export default AvstemmingOkonomi
+export default AvstemmingOkonomiAlle
