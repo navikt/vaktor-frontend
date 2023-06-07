@@ -96,25 +96,13 @@ const AdminLeder = ({}) => {
     const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
         try {
             const response = await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
-            const { data } = await response.json()
+            const data = await response.json()
             setResponse(data)
-            setItemData((prevData) =>
-                prevData.map((vakter) => {
-                    if (vakter.id === schedule_id) {
-                        return {
-                            ...vakter,
-                            approve_level: vakter.approve_level === 0 ? 1 : 2,
-                        }
-                    }
-                    return vakter
-                })
-            )
         } catch (error) {
             console.error(error)
             showErrorModal(`Feilet ved godkjenning av perioden: ${schedule_id}`)
         }
         setLoading(false)
-        setOpenState(false)
     }
 
     const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
@@ -122,18 +110,11 @@ const AdminLeder = ({}) => {
             const response = await fetch(`/vaktor/api/disprove_schedule?schedule_id=${schedule_id}`)
             const data = await response.json()
             setResponse(data)
-            setItemData((prevData) =>
-                prevData.map((vakter) => {
-                    if (vakter.id === schedule_id) {
-                        vakter.approve_level = 0 // update the approve_level value to 0 after successful API call
-                    }
-                    return vakter
-                })
-            )
         } catch (error) {
             console.error(error)
             showErrorModal(`Feilet ved avvisning av perioden: ${error}`)
         }
+        setLoading(false)
     }
 
     const mapVakter = (vaktliste: Schedules[]) =>
@@ -202,25 +183,13 @@ const AdminLeder = ({}) => {
                             <></>
                         ) : (
                             <>
-                                {vakter.approve_level === 0 ? (
-                                    <>
-                                        <ApproveButton
-                                            vakt={vakter}
-                                            setResponse={setResponse}
-                                            confirmSchedule={confirm_schedule}
-                                            setLoading={setLoading}
-                                            loading={loading}
-                                        />
-                                    </>
-                                ) : (
-                                    <ApproveButton
-                                        vakt={vakter}
-                                        setResponse={setResponse}
-                                        confirmSchedule={confirm_schedule}
-                                        setLoading={setLoading}
-                                        loading={loading}
-                                    />
-                                )}
+                                <ApproveButton
+                                    vakt={vakter}
+                                    setResponse={setResponse}
+                                    confirmSchedule={confirm_schedule}
+                                    setLoading={setLoading}
+                                    loading={loading}
+                                />
 
                                 <Button
                                     disabled={
@@ -267,7 +236,7 @@ const AdminLeder = ({}) => {
                 setItemData(itemData)
                 setLoading(false)
             })
-    }, [response])
+    }, [response, setItemData])
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
@@ -374,6 +343,3 @@ const AdminLeder = ({}) => {
 }
 
 export default AdminLeder
-function setItemData(arg0: (prevData: { id: string; approve_level: number }[]) => { id: string; approve_level: number }[]) {
-    throw new Error('Function not implemented.')
-}

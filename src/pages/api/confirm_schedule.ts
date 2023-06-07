@@ -1,44 +1,35 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
-
-    if (process.env.FAKE_TOKEN) {
-        authorizationHeader = process.env.FAKE_TOKEN
-    }
-
     try {
-        let schedule_id = req.query.schedule_id?.toString()
+        let authorizationHeader = req.headers?.authorization ?? 'No Authorization header'
 
-        if (Array.isArray(schedule_id)) {
-            schedule_id = schedule_id[0]
+        if (process.env.FAKE_TOKEN) {
+            authorizationHeader = process.env.FAKE_TOKEN
         }
 
-        // validate schedule_id parameter
-        if (!schedule_id || schedule_id === '') {
-            throw new Error('Invalid schedule ID')
+        const schedule_id = encodeURIComponent(req.query.schedule_id as string)
+
+        if (!schedule_id) {
+            return res.status(400).json({ message: 'Missing required parameter schedule_id' })
         }
 
-        // sanitize user-provided value
-        const sanitizedValue = encodeURIComponent(schedule_id)
-        let path = `${process.env.BACKEND_URL}/api/v1/schedules/${sanitizedValue}/confirm`
+        const path = `${process.env.BACKEND_URL}/api/v1/schedules/${schedule_id}/confirm`
 
-        const fetchOptions = {
+        const backendResponse = await fetch(path, {
             headers: { Authorization: authorizationHeader },
             method: 'POST',
-        }
+        })
 
-        const backendResponse = await fetch(path, fetchOptions)
+        const body = await backendResponse.json()
 
-        if (backendResponse.ok) {
-            const responseData = await backendResponse.json()
-            res.status(200).json(responseData)
+        if (backendResponse.ok && body) {
+            res.status(200).json(body)
         } else {
-            const errorMessage = await backendResponse.json()
-            res.status(backendResponse.status).json({ message: errorMessage.message || 'Unable to confirm schedule' })
+            res.status(500).json({ message: 'Unable to approve schedule' })
         }
     } catch (error) {
         console.error(error)
-        res.status(500).json({ message: 'Error occurred while processing your request.' })
+        res.status(500).json({ message: 'Internal Server Error' })
     }
 }
