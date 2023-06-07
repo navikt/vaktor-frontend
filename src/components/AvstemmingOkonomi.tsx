@@ -150,6 +150,8 @@ const AvstemmingOkonomi = () => {
                             {vakter.vakter.length !== 0 ? 'Endringer:' : ''}
                             {vakter.vakter.map((endringer, idx: number) => (
                                 <div key={idx}>
+                                    <b>ID: {endringer.id}</b>
+                                    <br />
                                     <b> {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}:</b> {endringer.user.name}
                                     <br />
                                     Start:{' '}
