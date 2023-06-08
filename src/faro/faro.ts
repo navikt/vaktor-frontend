@@ -1,5 +1,5 @@
 import { Faro, getWebInstrumentations, initializeFaro, LogLevel } from '@grafana/faro-web-sdk'
-//import { TracingInstrumentation } from '@grafana/faro-web-tracing'
+// import { TracingInstrumentation } from '@grafana/faro-web-tracing'
 
 let faro: Faro | null = null
 export function initInstrumentation(): void {
@@ -11,7 +11,7 @@ export function initInstrumentation(): void {
 export function getFaro(): Faro {
     if (faro != null) return faro
     faro = initializeFaro({
-        url: 'https://telemetry.ekstern.dev.nav.no/collect',
+        url: process.env.NEXT_PUBLIC_TELEMETRY_URL,
         app: {
             name: 'vaktor',
         },
