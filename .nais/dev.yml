@@ -1,0 +1,7 @@
+env:
+  - name: NPM_CONFIG_CACHE
+    value: /tmp
+  - name: BACKEND_URL
+    value: http://vaktor-plan
+  - name: NEXT_PUBLIC_TELEMETRY_URL
+    value: https://telemetry.dev-gcp.nav.cloud.nais.io/collect
