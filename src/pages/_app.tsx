@@ -9,13 +9,13 @@ import type { AppProps } from 'next/app'
 import Layout from '../components/Layout'
 import { AuthProvider } from '../context/AuthContext'
 
-import { initializeFaro } from '@grafana/faro-web-sdk';
-import nais from '../../nais.js';
+import { initializeFaro } from '@grafana/faro-web-sdk'
+import nais from '../../nais.js'
 
 const faro = initializeFaro({
     url: nais.telemetryCollectorURL,
-    app: nais.app
-});
+    app: nais.app,
+})
 
 function MyApp({ Component, pageProps }: AppProps) {
     return (
