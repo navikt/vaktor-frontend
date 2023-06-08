@@ -30,7 +30,7 @@ spec:
     {{/each}}
     frontend:
         generatedConfig:
-        mountPath: /usr/src/app/nais.js
+            mountPath: /usr/src/app/src/faro/nais.js
     replicas:
         min: 1
         max: 1
