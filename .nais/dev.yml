@@ -5,3 +5,5 @@ env:
     value: http://vaktor-plan
   - name: NEXT_PUBLIC_TELEMETRY_URL
     value: https://telemetry.dev-gcp.nav.cloud.nais.io/collect
+  - name: NODE_ENV 
+    value: development
