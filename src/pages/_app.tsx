@@ -9,9 +9,9 @@ import type { AppProps } from 'next/app'
 import Layout from '../components/Layout'
 import { AuthProvider } from '../context/AuthContext'
 
-import { initInstrumentation } from '../faro/faro'
+//import { initInstrumentation } from '../faro/faro'
 
-initInstrumentation()
+//initInstrumentation()
 
 function MyApp({ Component, pageProps }: AppProps) {
     return (
