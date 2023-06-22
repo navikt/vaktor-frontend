@@ -12,7 +12,7 @@ export function getFaro(): Faro {
     if (faro != null) return faro
     console.log('The faro url:', process.env.NEXT_PUBLIC_TELEMETRY_URL)
     faro = initializeFaro({
-        url: process.env.NEXT_PUBLIC_TELEMETRY_URL,
+        url: "https://telemetry.dev-gcp.nav.cloud.nais.io/collect",
         app: {
             name: 'vaktor',
         },
