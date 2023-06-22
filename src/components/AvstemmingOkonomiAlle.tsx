@@ -69,38 +69,38 @@ const AvstemmingOkonomiAlle = () => {
         ),
     })
 
-    const recalculateSchedules = async (
-        start_timestamp: number,
-        end_timestamp: number,
-        action_reason: number,
-        approve_level: number,
-        setResponse: Dispatch<any>,
-        setResponseError: Dispatch<string>
-    ) => {
-        var url = `/vaktor/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
-        console.log('Recalculating: ', start_timestamp, end_timestamp, action_reason, approve_level)
-        var fetchOptions = {
-            method: 'POST',
-        }
+    // const recalculateSchedules = async (
+    //     start_timestamp: number,
+    //     end_timestamp: number,
+    //     action_reason: number,
+    //     approve_level: number,
+    //     setResponse: Dispatch<any>,
+    //     setResponseError: Dispatch<string>
+    // ) => {
+    //     var url = `/vaktor/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
+    //     console.log('Recalculating: ', start_timestamp, end_timestamp, action_reason, approve_level)
+    //     var fetchOptions = {
+    //         method: 'POST',
+    //     }
 
-        await fetch(url, fetchOptions)
-            .then(async (r) => {
-                if (!r.ok) {
-                    const rText = await r.json()
-                    setResponseError(rText.detail)
-                    return []
-                }
-                return r.json()
-            })
-            .then((data: Schedules) => {
-                setResponse(data)
-                setIsLoading(false)
-            })
-            .catch((error: Error) => {
-                console.error(error.name, error.message)
-                setIsLoading(false)
-            })
-    }
+    //     await fetch(url, fetchOptions)
+    //         .then(async (r) => {
+    //             if (!r.ok) {
+    //                 const rText = await r.json()
+    //                 setResponseError(rText.detail)
+    //                 return []
+    //             }
+    //             return r.json()
+    //         })
+    //         .then((data: Schedules) => {
+    //             setResponse(data)
+    //             setIsLoading(false)
+    //         })
+    //         .catch((error: Error) => {
+    //             console.error(error.name, error.message)
+    //             setIsLoading(false)
+    //         })
+    // }
 
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste
