@@ -22,6 +22,8 @@ spec:
         - name: {{this.name}}
           value: "{{this.value}}"
     {{/each}}
+        - name: NEXT_TELEMETRY_DISABLED
+          value: 1 
     replicas:
         min: 2
         max: 2
