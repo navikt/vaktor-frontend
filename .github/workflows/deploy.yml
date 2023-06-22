@@ -26,7 +26,6 @@ jobs:
   deploy-test:
     name: Deploy application to test env
     needs: build-and-run-tests
-    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -37,17 +36,3 @@ jobs:
           RESOURCE: .nais/nais-test.yml
           VAR: image=${{ env.docker_image }}
           VARS: .nais/dev.yml
-  deploy-prod:
-    name: Deploy application to prod
-    needs: build-and-run-tests
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: prod-gcp
-          RESOURCE: .nais/nais.yml
-          VAR: image=${{ env.docker_image }}
-          VARS: .nais/prod.yml
