@@ -13,6 +13,7 @@ import {
     RouterAdminSchedule,
     RouterVaktperioder,
     RouterAvstemmingOkonomi,
+    RouterDineVakter,
 } from '../types/routes'
 import { useAuth } from '../context/AuthContext'
 
@@ -102,7 +103,7 @@ export default function Navbar() {
                                     height: '35px',
                                 }}
                             >
-                                <a className="link">{RouterAdmin.NAME}</a>
+                                <a className="link">{RouterDineVakter.NAME}</a>
                             </Button>
                         </Link>
                     )}
@@ -148,6 +149,21 @@ export default function Navbar() {
                                 }}
                             >
                                 <a className="link">{RouterAvstemmingOkonomi.NAME}</a>
+                            </Button>
+                        </Link>
+                    )}
+
+                    {( user.is_admin) && (
+                        <Link href="/admin">
+                            <Button
+                                variant="tertiary"
+                                style={{
+                                    marginLeft: '5px',
+                                    marginRight: '5px',
+                                    height: '35px',
+                                }}
+                            >
+                                <a className="link">{RouterAdmin.NAME}</a>
                             </Button>
                         </Link>
                     )}
