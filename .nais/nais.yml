@@ -13,8 +13,6 @@ spec:
         outbound:
             rules:
                 - application: vaktor-plan
-            external:
-                - host: graph.microsoft.com
     image: {{ image }}
     port: 3000
     ingresses:
