@@ -209,7 +209,7 @@ const VaktlagAdmin = () => {
                             justifyContent: 'center',
                         }}
                     >
-                        {user.groups.length > 1 ? (
+                        {user.groups.length > 0 ? (
                             <ToggleGroup
                                 defaultValue={user.groups[0].id}
                                 onChange={(e) => setSelctedVaktlag(user.groups.find((group) => group.id === e))}
@@ -368,7 +368,7 @@ const VaktlagAdmin = () => {
                                     </div>
                                 ))}
                             </div>
-                            {/* <Button onClick={handleSubmit}>Oppdater Medlemmer</Button> */}
+                            {<Button onClick={handleSubmit}>Oppdater Medlemmer</Button>}
                         </>
                     )}
 

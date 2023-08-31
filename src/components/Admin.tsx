@@ -1,4 +1,4 @@
-import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, Button, Popover, ReadMore } from '@navikt/ds-react'
+import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ReadMore } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -6,6 +6,7 @@ import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import DeleteVaktButton from './utils/DeleteVaktButton'
+import EndreVaktButton from './utils/AdminAdjustDate'
 
 const mapApproveStatus = (status: number): JSX.Element => {
     const statusMap: { [key: number]: { text: string; color: string } } = {
@@ -52,6 +53,11 @@ const Admin = () => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
+    const [scheduleData, setScheduleData] = useState<Schedules[]>([])
+    const [selectedSchedule, setSchedule] = useState<Schedules>()
+    const [isOpen, setIsOpen] = useState<boolean>(false)
+    const [Vakt, addVakt] = useState()
+
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(8)
@@ -62,7 +68,7 @@ const Admin = () => {
         setErrorMessage(message)
     }
 
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
+    const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
         toDate: new Date('Aug 23 2025'),
         //defaultSelected: new Date("Oct 2022")
@@ -122,6 +128,16 @@ const Admin = () => {
         setLoading(false)
     }
 
+    const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
+        await fetch(
+            `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
+        )
+            .then((r) => r.json())
+            .then((data) => {
+                addVakt(data)
+            })
+    }
+
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste
             .sort((a: Schedules, b: Schedules) =>
@@ -166,6 +182,22 @@ const Admin = () => {
                             minute: '2-digit',
                         })}
                         <br />
+                        <Button
+                            style={{
+                                height: '30px',
+                                marginTop: '10px',
+                                marginBottom: '5px',
+                                minWidth: '170px',
+                                maxWidth: '190px',
+                            }}
+                            onClick={() => {
+                                setSchedule(vakter)
+                                setIsOpen(true)
+                            }}
+                            disabled={vakter.approve_level > 0}
+                        >
+                            Gjør endringer
+                        </Button>
                         <DeleteVaktButton
                             vakt={vakter}
                             setResponse={setResponse}
@@ -313,6 +345,11 @@ const Admin = () => {
                 margin: 'auto',
             }}
         >
+            {selectedSchedule ? (
+                <EndreVaktButton schedule={selectedSchedule} isOpen={isOpen} setIsOpen={setIsOpen} setResponse={setResponse} addVakt={addVakt} />
+            ) : (
+                <></>
+            )}
             <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', gap: '10px' }}>
                 <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
                     <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
@@ -385,11 +422,11 @@ const Admin = () => {
             </div>
 
             <div className="min-h-96" style={{ display: 'flex' }}>
-                <UNSAFE_MonthPicker {...monthpickerProps}>
+                <MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
-                        <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+                        <MonthPicker.Input {...inputProps} label="Velg måned" />
                     </div>
-                </UNSAFE_MonthPicker>
+                </MonthPicker>
                 <form style={{ width: '300px', marginLeft: '30px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>

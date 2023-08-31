@@ -1,17 +1,6 @@
 import { useEffect, useState, Dispatch } from 'react'
 import React from 'react'
-import {
-    Button,
-    Select,
-    RadioGroup,
-    Radio,
-    Modal,
-    ConfirmationPanel,
-    Alert,
-    UNSAFE_DatePicker,
-    UNSAFE_useRangeDatepicker,
-    HelpText,
-} from '@navikt/ds-react'
+import { Button, Select, RadioGroup, Radio, Modal, ConfirmationPanel, Alert, DatePicker, useRangeDatepicker, HelpText } from '@navikt/ds-react'
 import { Schedules, User } from '../types/types'
 import { useAuth } from '../context/AuthContext'
 
@@ -49,7 +38,7 @@ const ScheduleModal = (props: {
     const [endTimestamp, setEndTimestamp] = useState<number>(props.schedule.end_timestamp)
     const [clock_start, setClockStart] = useState<number>(0)
     const [clock_end, setClockEnd] = useState<number>(0)
-    const { datepickerProps, toInputProps, fromInputProps, selectedRange } = UNSAFE_useRangeDatepicker({
+    const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
         fromDate: new Date(props.schedule.start_timestamp * 1000),
         toDate: new Date(props.schedule.end_timestamp * 1000),
         onRangeChange: (val) => {
@@ -61,10 +50,6 @@ const ScheduleModal = (props: {
     })
 
     useEffect(() => {
-        if (Modal && Modal.setAppElement) {
-            Modal.setAppElement('#__next')
-        }
-
         Promise.all([fetch(`/vaktor/api/get_my_groupmembers?group_id=${props.schedule.group_id}`)])
             .then(async ([membersRes]) => {
                 props.setResponse(membersRes.status)
@@ -87,7 +72,7 @@ const ScheduleModal = (props: {
                 }}
                 aria-labelledby="modal-heading"
             >
-                <Modal.Content style={{ minHeight: '100%' }}>
+                <Modal.Body style={{ minHeight: '100%' }}>
                     {' '}
                     <div className="contentEndring">
                         <Select
@@ -167,14 +152,14 @@ const ScheduleModal = (props: {
                                 }}
                             >
                                 <div style={{ margin: 'auto' }}>
-                                    <UNSAFE_DatePicker {...datepickerProps} style={{}}>
+                                    <DatePicker {...datepickerProps} style={{}}>
                                         <div
                                             style={{
                                                 display: 'flex',
                                                 gap: '15px',
                                             }}
                                         >
-                                            <UNSAFE_DatePicker.Input {...fromInputProps} label="Fra" />
+                                            <DatePicker.Input {...fromInputProps} label="Fra" />
                                             <Select
                                                 label="klokken"
                                                 defaultValue={0}
@@ -213,7 +198,7 @@ const ScheduleModal = (props: {
                                                 gap: '15px',
                                             }}
                                         >
-                                            <UNSAFE_DatePicker.Input {...toInputProps} label="Til" />
+                                            <DatePicker.Input {...toInputProps} label="Til" />
                                             <Select
                                                 label="klokken"
                                                 defaultValue={0}
@@ -246,7 +231,7 @@ const ScheduleModal = (props: {
                                                 <option value={11}>23:00</option>
                                             </Select>
                                         </div>
-                                    </UNSAFE_DatePicker>
+                                    </DatePicker>
                                 </div>
                                 {(clock_start * 3600 + startTimestamp < props.schedule.start_timestamp ||
                                     clock_end * 3600 + endTimestamp > props.schedule.end_timestamp) && (
@@ -305,7 +290,7 @@ const ScheduleModal = (props: {
                             Legg til endring
                         </Button>
                     </div>
-                </Modal.Content>
+                </Modal.Body>
             </Modal>
         </>
     )

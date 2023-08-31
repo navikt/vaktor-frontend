@@ -1,4 +1,4 @@
-import { Button, Table, UNSAFE_useMonthpicker, UNSAFE_MonthPicker, Search, Select } from '@navikt/ds-react'
+import { Button, Table, useMonthpicker, MonthPicker, Search, Select } from '@navikt/ds-react'
 import { useEffect, useState } from 'react'
 import { Schedules, User, Vaktlag } from '../types/types'
 import moment from 'moment'
@@ -20,7 +20,7 @@ const UpdateSchedule = () => {
     const toDate = moment('Aug 23 2025', 'MMM DD YYYY').toDate()
     const defaultSelected = moment().locale('en-GB').startOf('month').toDate()
 
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
+    const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate,
         toDate,
         defaultSelected,
@@ -52,11 +52,11 @@ const UpdateSchedule = () => {
                 }}
             >
                 <div className="min-h-96" style={{ display: 'flex', gap: '30px' }}>
-                    <UNSAFE_MonthPicker {...monthpickerProps}>
+                    <MonthPicker {...monthpickerProps}>
                         <div className="grid gap-4">
-                            <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+                            <MonthPicker.Input {...inputProps} label="Velg måned" />
                         </div>
-                    </UNSAFE_MonthPicker>
+                    </MonthPicker>
                     <form style={{ width: '300px' }}>
                         <Search
                             label="Søk etter person"

@@ -153,7 +153,7 @@ export default function Navbar() {
                         </Link>
                     )}
 
-                    {( user.is_admin) && (
+                    {user.is_admin && (
                         <Link href="/admin">
                             <Button
                                 variant="tertiary"

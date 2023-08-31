@@ -1,4 +1,4 @@
-import { Button, Table, Loader, Select, UNSAFE_MonthPicker, UNSAFE_useMonthpicker } from '@navikt/ds-react'
+import { Button, Table, Loader, Select, MonthPicker, useMonthpicker } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { Schedules } from '../types/types'
@@ -87,7 +87,7 @@ const DineVakter = () => {
 
     const [searchFilterAction, setSearchFilterAction] = useState(5)
 
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
+    const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
         toDate: new Date('Aug 23 2025'),
         defaultSelected: new Date(
@@ -212,11 +212,11 @@ const DineVakter = () => {
             >
                 {' '}
                 <div style={{ display: 'flex' }}>
-                    <UNSAFE_MonthPicker {...monthpickerProps}>
+                    <MonthPicker {...monthpickerProps}>
                         <div className="grid gap-4">
-                            <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+                            <MonthPicker.Input {...inputProps} label="Velg måned" />
                         </div>
-                    </UNSAFE_MonthPicker>
+                    </MonthPicker>
                     <div></div>
 
                     <div style={{ width: '200px', marginLeft: '30px' }}>

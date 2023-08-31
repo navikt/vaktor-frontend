@@ -52,7 +52,9 @@ const LoadingWrapper = styled.div`
 function VaktorTimeline() {
     const { user } = useAuth()
     const [groupData, setGroupData] = useState(null)
-    const [itemData, setItemData] = useState(null)
+    //const [itemData, setItemData] = useState(null)
+    const [itemData, setItemData] = useState<Array<any> | null>(null)
+
     const [isLoading, setLoading] = useState(false)
 
     const [grpModalOpen, setGrpModalOpen] = useState(false)
@@ -363,7 +365,7 @@ function VaktorTimeline() {
 
     return (
         <div>
-            {itemData[0].user_id === 'A123456' ? (
+            {itemData && itemData[0] && itemData[0].user_id === 'A123456' ? (
                 <Overview groups={groupsSorted} />
             ) : (
                 <>
