@@ -39,32 +39,14 @@ export const Spacer = styled.div.attrs((props: { height: number }) => props)`
 `
 
 const GroupDetailsModal = (props: { handleClose: Function; groupName: string; groupType?: string; groupTelephone?: string }) => {
-    useEffect(() => {
-        if (Modal && Modal.setAppElement) {
-            Modal.setAppElement('#__next')
-        }
-    }, [])
+    useEffect(() => {}, [])
 
     const phonetext = props.groupTelephone == '??' ? 'n/a' : '(+47) ' + props.groupTelephone
 
     return (
         <>
-            <Modal
-                open={true}
-                aria-label="Informasjons-modal for vaktlag"
-                onClose={() => props.handleClose()}
-                style={{
-                    overlay: {},
-                    content: {
-                        width: '20%',
-                        minWidth: '470px',
-                        padding: '5px',
-                        paddingTop: '20px',
-                        position: 'sticky',
-                    },
-                }}
-            >
-                <Modal.Content>
+            <Modal open={true} aria-label="Informasjons-modal for vaktlag" onClose={() => props.handleClose()}>
+                <Modal.Body>
                     {/*Vaktlag Heading*/}
                     <InformationLine>
                         <Heading spacing level="1" size="medium">
@@ -100,7 +82,7 @@ const GroupDetailsModal = (props: { handleClose: Function; groupName: string; gr
                             </InfoTextWrapper>
                         </InformationLine>
                     </BodyLong>
-                </Modal.Content>
+                </Modal.Body>
             </Modal>
         </>
     )
