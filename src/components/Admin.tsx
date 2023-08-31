@@ -182,29 +182,30 @@ const Admin = () => {
                             minute: '2-digit',
                         })}
                         <br />
-                        <Button
-                            style={{
-                                height: '30px',
-                                marginTop: '10px',
-                                marginBottom: '5px',
-                                minWidth: '170px',
-                                maxWidth: '190px',
-                            }}
-                            onClick={() => {
-                                setSchedule(vakter)
-                                setIsOpen(true)
-                            }}
-                            disabled={vakter.approve_level > 0}
-                        >
-                            Gjør endringer
-                        </Button>
-                        <DeleteVaktButton
-                            vakt={vakter}
-                            setResponse={setResponse}
-                            deleteSchedule={delete_schedule}
-                            setLoading={setLoading}
-                            loading={loading}
-                        ></DeleteVaktButton>
+                        <div style={{ textAlign: 'center', display: 'grid', justifyContent: 'left', gap: '5px' }}>
+                            <Button
+                                size="small"
+                                style={{
+                                    height: '25px',
+                                    minWidth: '170px',
+                                    maxWidth: '2000px',
+                                }}
+                                onClick={() => {
+                                    setSchedule(vakter)
+                                    setIsOpen(true)
+                                }}
+                                disabled={vakter.approve_level > 0}
+                            >
+                                Gjør endringer
+                            </Button>
+                            <DeleteVaktButton
+                                vakt={vakter}
+                                setResponse={setResponse}
+                                deleteSchedule={delete_schedule}
+                                setLoading={setLoading}
+                                loading={loading}
+                            ></DeleteVaktButton>
+                        </div>
                         <div style={{ marginTop: '15px', marginBottom: '15px' }}>
                             {vakter.vakter.length !== 0 ? 'Endringer:' : ''}
                             {vakter.vakter.map((endringer, idx: number) => (

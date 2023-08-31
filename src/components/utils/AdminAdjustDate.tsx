@@ -163,7 +163,7 @@ const EndreVaktButton = (props: {
                                 height: '50px',
                                 marginTop: '25px',
                                 marginBottom: '25px',
-                                minWidth: '300px',
+                                minWidth: '200px',
                             }}
                             onClick={() => {
                                 let period = {

@@ -239,8 +239,6 @@ const Vaktperioder = () => {
     //// #####
 
     useEffect(() => {
-        Modal.setAppElement('#__next')
-
         Promise.all([
             fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`),
             fetch(`/vaktor/api/last_schedule?group_id=${selectedVaktlag}`),
@@ -296,12 +294,12 @@ const Vaktperioder = () => {
                                 window.location.reload()
                             }}
                         >
-                            <Modal.Content>
+                            <Modal.Body>
                                 <Heading spacing level="2" size="medium">
                                     Disse vaktene ble opprettet:
                                 </Heading>
                                 <BodyLong spacing>{mapForms(forms)}</BodyLong>
-                            </Modal.Content>
+                            </Modal.Body>
                         </Modal>
                     </>
                 ) : (
