@@ -1,4 +1,4 @@
-import { Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, Button, Popover, ReadMore } from '@navikt/ds-react'
+import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ReadMore } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -55,7 +55,7 @@ const AvstemmingOkonomiAlle = () => {
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(8)
 
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
+    const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
         toDate: new Date('Aug 23 2025'),
         //defaultSelected: new Date("Oct 2022")
@@ -334,11 +334,11 @@ const AvstemmingOkonomiAlle = () => {
             </div>
 
             <div className="min-h-96" style={{ display: 'flex' }}>
-                {/* <UNSAFE_MonthPicker {...monthpickerProps}>
+                {/* <MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
-                        <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+                        <MonthPicker.Input {...inputProps} label="Velg måned" />
                     </div>
-                </UNSAFE_MonthPicker> */}
+                </MonthPicker> */}
                 <form style={{ width: '300px', marginLeft: '30px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
