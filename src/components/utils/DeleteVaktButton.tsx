@@ -17,7 +17,7 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, deleteSchedule, 
     const handleApproveClick = async () => {
         setLoading(true)
         setOpenState(false)
-        //await deleteSchedule(vakt.id, setResponse)
+        await deleteSchedule(vakt.id, setResponse)
         console.log('Sletter vakt med id: ', vakt.id)
         setLoading(false)
     }

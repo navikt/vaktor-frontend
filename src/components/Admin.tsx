@@ -56,7 +56,6 @@ const Admin = () => {
     const [scheduleData, setScheduleData] = useState<Schedules[]>([])
     const [selectedSchedule, setSchedule] = useState<Schedules>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    const [Vakt, addVakt] = useState()
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
@@ -81,6 +80,49 @@ const Admin = () => {
                       .format('L')
         ),
     })
+
+    const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
+        try {
+            const response = await fetch(`/vaktor/api/delete_schedule?schedule_id=${schedule_id}`)
+            const data = await response.json()
+            setResponse(data)
+            console.log(`Sletter periode med id: ${schedule_id}`)
+        } catch (error) {
+            console.error(error)
+            showErrorModal(`Feilet ved sletting perioden: ${schedule_id}`)
+        }
+        setLoading(false)
+    }
+
+    const update_schedule = async (schedulelulu: Schedules, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
+        var url = `/vaktor/api/admin_update_schedule`
+        console.log('Updating period with id: ', schedulelulu.id)
+        var fetchOptions = {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(schedulelulu),
+        }
+
+        await fetch(url, fetchOptions)
+            .then(async (r) => {
+                if (!r.ok) {
+                    const rText = await r.json()
+                    setResponseError(rText.detail)
+                    return []
+                }
+                return r.json()
+            })
+            .then((data: Schedules) => {
+                setResponse(data)
+                setIsLoading(false)
+            })
+            .catch((error: Error) => {
+                console.error(error.name, error.message)
+                setIsLoading(false)
+            })
+    }
 
     const recalculateSchedules = async (
         start_timestamp: number,
@@ -112,29 +154,6 @@ const Admin = () => {
             .catch((error: Error) => {
                 console.error(error.name, error.message)
                 setIsLoading(false)
-            })
-    }
-
-    const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
-        try {
-            // const response = await fetch(`/vaktor/api/delete_schedule?schedule_id=${schedule_id}`)
-            // const data = await response.json()
-            // setResponse(data)
-            console.log(`Sletter periode med id: ${schedule_id}`)
-        } catch (error) {
-            // console.error(error)
-            showErrorModal(`Feilet ved sletting perioden: ${schedule_id}`)
-        }
-        setLoading(false)
-    }
-
-    const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
-        await fetch(
-            `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
-        )
-            .then((r) => r.json())
-            .then((data) => {
-                addVakt(data)
             })
     }
 
@@ -198,6 +217,7 @@ const Admin = () => {
                             >
                                 Gjør endringer
                             </Button>
+
                             <DeleteVaktButton
                                 vakt={vakter}
                                 setResponse={setResponse}
@@ -347,7 +367,18 @@ const Admin = () => {
             }}
         >
             {selectedSchedule ? (
-                <EndreVaktButton schedule={selectedSchedule} isOpen={isOpen} setIsOpen={setIsOpen} setResponse={setResponse} addVakt={addVakt} />
+                <>
+                    <EndreVaktButton
+                        vakt={selectedSchedule}
+                        isOpen={isOpen}
+                        setResponse={setResponse}
+                        setResponseError={setResponseError}
+                        setIsOpen={setIsOpen}
+                        update_schedule={update_schedule}
+                        setLoading={setLoading}
+                        loading={loading}
+                    />
+                </>
             ) : (
                 <></>
             )}

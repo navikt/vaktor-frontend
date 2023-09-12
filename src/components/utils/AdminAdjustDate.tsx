@@ -1,32 +1,28 @@
-import { useEffect, useState, Dispatch, useRef } from 'react'
-import React from 'react'
-import { Button, Select, Modal, Alert, DatePicker, useRangeDatepicker, Heading } from '@navikt/ds-react'
-import { Schedules, User } from '../../types/types'
+import { Alert, Button, DatePicker, Heading, Loader, Modal, Popover, Select, useRangeDatepicker } from '@navikt/ds-react'
+import { Dispatch, useRef, useState } from 'react'
+import { Schedules } from '../../types/types'
 
-const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
-    await fetch(
-        `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
-    )
-        .then((r) => r.json())
-        .then((data) => {
-            addVakt(data)
-        })
+interface Props {
+    vakt: Schedules
+    isOpen: boolean
+    setResponse: Dispatch<any>
+    setResponseError: Dispatch<any>
+    setIsOpen: Dispatch<any>
+    update_schedule: (schedule: Schedules, setResponse: Dispatch<any>, setResponseError: Dispatch<any>) => Promise<void>
+    loading: boolean
+    setLoading: Dispatch<boolean>
 }
 
-const EndreVaktButton = (props: {
-    schedule: Schedules
-    isOpen: boolean
-    setIsOpen: Dispatch<boolean>
-    setResponse: Dispatch<any>
-    addVakt: Dispatch<any>
-}) => {
+const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setResponseError, update_schedule, setIsOpen, loading, setLoading }) => {
     const ref = useRef<HTMLDialogElement>(null)
-    const [action, setAction] = useState('')
-    const [startTimestamp, setStartTimestamp] = useState<number>(props.schedule.start_timestamp)
-    const [endTimestamp, setEndTimestamp] = useState<number>(props.schedule.end_timestamp)
+    const [startTimestamp, setStartTimestamp] = useState<number>(vakt.start_timestamp)
+    const [endTimestamp, setEndTimestamp] = useState<number>(vakt.end_timestamp)
     const [clock_start, setClockStart] = useState<number>(0)
     const [clock_end, setClockEnd] = useState<number>(0)
+
     const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
+        // fromDate: new Date(vakt.start_timestamp * 1000),
+        // toDate: new Date(vakt.end_timestamp * 1000),
         onRangeChange: (val) => {
             if (val && val.from && val.to) {
                 setStartTimestamp(val.from.setHours(12) / 1000)
@@ -35,15 +31,37 @@ const EndreVaktButton = (props: {
         },
     })
 
-    useEffect(() => {}, [props])
+    const handleApproveClick = async () => {
+        setLoading(true)
+        setIsOpen(false)
+        const period = {
+            ...vakt,
+            start_timestamp: clock_start * 3600 + startTimestamp,
+            end_timestamp: clock_end * 3600 + endTimestamp,
+        }
+        try {
+            console.log('Attempting to update period: ', vakt.id)
+            console.log('Tider: ', startTimestamp, 'and: ', endTimestamp)
+            await update_schedule(period, setResponse, setResponseError)
+            setLoading(false)
+            setIsOpen(false)
+            ref.current?.close()
+        } catch (error) {
+            // Handle any error here
+            console.error(error)
+        }
+    }
+
+    const isDisabled = vakt.approve_level > 0
 
     return (
         <>
             <Modal
-                open={props.isOpen}
+                ref={ref}
+                open={isOpen}
                 aria-label="Modal for vaktperioder"
                 onClose={() => {
-                    props.setIsOpen(!props.isOpen)
+                    setIsOpen(false)
                 }}
                 aria-labelledby="modal-heading"
             >
@@ -53,7 +71,7 @@ const EndreVaktButton = (props: {
                     </Heading>
                 </Modal.Header>
                 <Modal.Body style={{ minHeight: '100%' }}>
-                    {props.schedule.id}
+                    {vakt.id}
 
                     <div className="min-h-96 min-w-96 max-w-full">
                         <div
@@ -165,22 +183,8 @@ const EndreVaktButton = (props: {
                                 marginBottom: '25px',
                                 minWidth: '200px',
                             }}
-                            onClick={() => {
-                                let period = {
-                                    ...props.schedule,
-                                    start_timestamp: startTimestamp + clock_start * 3600,
-                                    end_timestamp: endTimestamp + clock_end * 3600,
-                                    schedule_id: props.schedule.id,
-                                }
-                                ref.current?.close()
-                                //(update_schedule(period, action, selectedVakthaver, props.addVakt)
-                                console.log('This is a button', period)
-                                props.setIsOpen(false)
-                                setStartTimestamp(0)
-                                setEndTimestamp(0)
-                                setClockEnd(0)
-                                setClockStart(0)
-                            }}
+                            onClick={handleApproveClick}
+                            disabled={isDisabled}
                         >
                             Endre vakt
                         </Button>
