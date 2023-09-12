@@ -25,11 +25,7 @@ const ItemDetailsModal = (props: {
     canEdit: boolean
     user: User
 }) => {
-    useEffect(() => {
-        if (Modal && Modal.setAppElement) {
-            Modal.setAppElement('#__next')
-        }
-    }, [])
+    useEffect(() => {}, [])
 
     const phonetext = props.telephone == '??' ? 'n/a' : '(+47) ' + props.telephone
 
@@ -39,27 +35,14 @@ const ItemDetailsModal = (props: {
                 open={true}
                 aria-label="Informasjonsmodal for vaktperiode"
                 onClose={() => props.handleClose()}
-                style={{
-                    overlay: {},
-                    content: {
-                        width: '20%',
-                        minWidth: '500px',
-                        padding: '5px',
-                        paddingTop: '20px',
-                        position: 'sticky',
-                    },
+                header={{
+                    label: 'Informasjon om valgt periode',
+                    icon: <InformationColored />,
+                    heading: 'Vaktperiode',
                 }}
             >
-                <Modal.Content>
+                <Modal.Body>
                     {/*Vaktperiode Heading*/}
-                    <InformationLine>
-                        <Heading spacing level="1" size="medium">
-                            <HeadingIcon>
-                                <InformationColored />
-                            </HeadingIcon>
-                            <InfoHeadWrapper>Vaktperiode</InfoHeadWrapper>
-                        </Heading>
-                    </InformationLine>
 
                     <UserInfoDetails infoName="Vaktlag: " infoText={props.groupName!} icon={<CoApplicant style={iconStyle} />} />
 
@@ -88,7 +71,7 @@ const ItemDetailsModal = (props: {
                         infoText={`${props.startTime} - ${props.endTime}`}
                         icon={<Calender style={iconStyle} />}
                     />
-                </Modal.Content>
+                </Modal.Body>
             </Modal>
         </>
     )

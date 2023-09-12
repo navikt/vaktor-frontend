@@ -2,12 +2,12 @@ import {
     Button,
     Table,
     Loader,
-    UNSAFE_MonthPicker,
-    UNSAFE_useMonthpicker,
+    MonthPicker,
+    useMonthpicker,
     HelpText,
     Radio,
     RadioGroup,
-    UNSAFE_useRangeDatepicker,
+    useRangeDatepicker,
     Pagination,
     Alert,
     Select,
@@ -115,7 +115,7 @@ const Vaktperioder = () => {
     const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
     const [lastVakt, setLastVakt] = useState<Schedules | undefined>()
 
-    const { monthpickerProps, inputProps, selectedMonth } = UNSAFE_useMonthpicker({
+    const { monthpickerProps, inputProps, selectedMonth } = useMonthpicker({
         required: true,
         fromDate: new Date('Jan 01 2023'),
         toDate: new Date('Feb 01 2025'),
@@ -239,8 +239,6 @@ const Vaktperioder = () => {
     //// #####
 
     useEffect(() => {
-        Modal.setAppElement('#__next')
-
         Promise.all([
             fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`),
             fetch(`/vaktor/api/last_schedule?group_id=${selectedVaktlag}`),
@@ -296,12 +294,12 @@ const Vaktperioder = () => {
                                 window.location.reload()
                             }}
                         >
-                            <Modal.Content>
+                            <Modal.Body>
                                 <Heading spacing level="2" size="medium">
                                     Disse vaktene ble opprettet:
                                 </Heading>
                                 <BodyLong spacing>{mapForms(forms)}</BodyLong>
-                            </Modal.Content>
+                            </Modal.Body>
                         </Modal>
                     </>
                 ) : (
@@ -502,7 +500,7 @@ const Vaktperioder = () => {
                                         }}
                                     >
                                         {' '}
-                                        <UNSAFE_MonthPicker {...monthpickerProps} style={{}}>
+                                        <MonthPicker {...monthpickerProps} style={{}}>
                                             <div
                                                 style={{
                                                     display: 'flex',
@@ -511,9 +509,9 @@ const Vaktperioder = () => {
                                                     justifyContent: 'center',
                                                 }}
                                             >
-                                                <UNSAFE_MonthPicker.Input {...inputProps} label="Fra" />
+                                                <MonthPicker.Input {...inputProps} label="Fra" />
                                             </div>
-                                        </UNSAFE_MonthPicker>
+                                        </MonthPicker>
                                         <RadioGroup legend="Angi dag for vaktbytte: " onChange={(val: any) => setRolloverDay(val)} defaultValue="2">
                                             <Radio value="0">Mandag</Radio>
                                             <Radio value="2">Onsdag</Radio>

@@ -1,4 +1,4 @@
-import { Select, UNSAFE_DatePicker, UNSAFE_useRangeDatepicker } from '@navikt/ds-react'
+import { Select, DatePicker, useRangeDatepicker } from '@navikt/ds-react'
 import { useState } from 'react'
 
 type props = {
@@ -17,7 +17,7 @@ function DatePickeroo({ index, handleChildProps }: props) {
         handleChildProps(index, { from: from, to: to })
     }
 
-    const { datepickerProps, toInputProps, fromInputProps, selectedRange } = UNSAFE_useRangeDatepicker({
+    const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
         fromDate: new Date(Date.now()), //+ numWeeksInMs),
         toDate: new Date('Feb 01 2024'),
         defaultMonth: new Date(Date.now() + numWeeksInMs),
@@ -33,11 +33,11 @@ function DatePickeroo({ index, handleChildProps }: props) {
     return (
         <>
             <div style={{ margin: 'auto' }}>
-                <UNSAFE_DatePicker {...datepickerProps}>
-                    <UNSAFE_DatePicker.Input {...fromInputProps} label="Fra Dato" />
+                <DatePicker {...datepickerProps}>
+                    <DatePicker.Input {...fromInputProps} label="Fra Dato" />
 
-                    <UNSAFE_DatePicker.Input {...toInputProps} label="Til Dato" />
-                </UNSAFE_DatePicker>
+                    <DatePicker.Input {...toInputProps} label="Til Dato" />
+                </DatePicker>
             </div>
         </>
     )

@@ -6,7 +6,7 @@ export enum RouterVaktor {
 // ---
 
 // Admin
-export enum RouterAdmin {
+export enum RouterDineVakter {
     NAME = 'Dine Vakter',
     PATH = '/dine_vakter',
 }
@@ -34,6 +34,11 @@ export enum RouterLeveranseleder {
 export enum RouterAvstemmingOkonomi {
     NAME = 'Avstemming',
     PATH = '/avstemming',
+}
+
+export enum RouterAdmin {
+    NAME = 'Admin',
+    PATH = '/admin',
 }
 
 // ---

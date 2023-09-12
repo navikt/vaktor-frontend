@@ -1,4 +1,4 @@
-import { Button, Table, Loader, UNSAFE_MonthPicker, UNSAFE_useMonthpicker, Search, Select, HelpText, Modal } from '@navikt/ds-react'
+import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, HelpText, Modal } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -79,7 +79,7 @@ const AdminLeder = ({}) => {
         setErrorMessage(message)
     }
 
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } = UNSAFE_useMonthpicker({
+    const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
         toDate: new Date('Aug 23 2025'),
         //defaultSelected: new Date("Oct 2022")
@@ -228,7 +228,6 @@ const AdminLeder = ({}) => {
 
     useEffect(() => {
         setLoading(true)
-        Modal.setAppElement('#__next')
         fetch('/vaktor/api/leader_schedules')
             .then((scheduleRes) => scheduleRes.json())
             .then((itemData) => {
@@ -256,11 +255,11 @@ const AdminLeder = ({}) => {
             <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />
 
             <div className="min-h-96" style={{ display: 'flex' }}>
-                <UNSAFE_MonthPicker {...monthpickerProps}>
+                <MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
-                        <UNSAFE_MonthPicker.Input {...inputProps} label="Velg måned" />
+                        <MonthPicker.Input {...inputProps} label="Velg måned" />
                     </div>
-                </UNSAFE_MonthPicker>
+                </MonthPicker>
                 <form style={{ width: '300px', marginLeft: '30px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
