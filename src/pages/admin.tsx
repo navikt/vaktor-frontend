@@ -12,7 +12,7 @@ const Home: NextPage = () => {
     const { user } = useAuth()
     moment.locale('nb')
 
-    if (['okonomi'].includes(user.role) || user.is_admin === true)
+    if (user.is_admin === true)
         return (
             <>
                 <div className="Container">

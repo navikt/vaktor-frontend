@@ -5,6 +5,13 @@ on: [push]
 env:
   docker_image: ghcr.io/navikt/${{ github.repository }}:${{ github.sha }}
 
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+  packages: write
+  security-events: write
+
 jobs:
   build-and-run-tests:
     name: Build and push Docker container
