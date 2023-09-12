@@ -49,10 +49,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'Missing required parameters' })
     }
 
-    const path = `${process.env.BACKEND_URL}/api/v1/admin/update_schedule/${bodycontent.id}`
-    const encodedPath = encodeURIComponent(path)
+    const encodedPath = encodeURIComponent(bodycontent.id) as string
+    const path = `${process.env.BACKEND_URL}/api/v1/admin/update_schedule/${encodedPath}`
 
-    const backendResponse = await fetch(encodedPath, {
+    const backendResponse = await fetch(path, {
         headers: {
             Authorization: authorizationHeader,
             'Content-Type': 'application/json',
