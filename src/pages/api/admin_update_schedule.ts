@@ -22,7 +22,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    const codeQLfix = encodeURIComponent(authorizationHeader)
     const incomingData: RequestBody = req.body
 
     // Extract only the required fields from the incoming JSON object
@@ -51,10 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const path = `${process.env.BACKEND_URL}/api/v1/admin/update_schedule/${bodycontent.id}`
+    const encodedPath = encodeURIComponent(path)
 
-    const backendResponse = await fetch(path, {
+    const backendResponse = await fetch(encodedPath, {
         headers: {
-            Authorization: codeQLfix,
+            Authorization: authorizationHeader,
             'Content-Type': 'application/json',
         },
         method: 'PUT',
