@@ -4,8 +4,9 @@ on: [push]
 
 env:
   docker_image: ghcr.io/navikt/${{ github.repository }}:${{ github.sha }}
+  SENTRY_CLI_VERSION: 2.2.0
   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-  SENTRY_ORG: 'nav'
+  SENTRY_ORG: 'nav'  
   SENTRY_PROJECT: 'vaktor'
 
 permissions:
@@ -34,23 +35,19 @@ jobs:
           docker push ${docker_image}
   
   sentry-bump-version-release:
-    name: Build and push Docker container
+    name: Sentry Create and Finalize Release
     runs-on: ubuntu-latest
     steps:
       - name: Install Sentry CLI
         run: |
-          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
-        env:
-          SENTRY_CLI_VERSION: 2.2.0
+          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="${SENTRY_CLI_VERSION}" bash
 
       - name: Create and Finalize Release
         run: |
-          VERSION=$(sentry-cli releases propose-version)
+          VERSION="${GITHUB_SHA}"  # Use the commit hash as the release name
           sentry-cli releases new "$VERSION"
           sentry-cli releases set-commits "$VERSION" --auto
           sentry-cli releases finalize "$VERSION"
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
   deploy-test:
     name: Deploy application to test env
