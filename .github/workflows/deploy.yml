@@ -5,7 +5,7 @@ on: [push]
 env:
   docker_image: ghcr.io/navikt/${{ github.repository }}:${{ github.sha }}
   SENTRY_CLI_VERSION: 2.2.0
-  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_TOKEN }}
   SENTRY_ORG: 'nav'  
   SENTRY_PROJECT: 'vaktor'
 
