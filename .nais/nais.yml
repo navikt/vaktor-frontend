@@ -13,6 +13,9 @@ spec:
         outbound:
             rules:
                 - application: vaktor-plan
+
+            external:
+                  - host: sentry.gc.nav.no
     image: {{ image }}
     port: 3000
     ingresses:
