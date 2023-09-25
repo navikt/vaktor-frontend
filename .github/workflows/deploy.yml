@@ -22,7 +22,7 @@ jobs:
     name: Build and push Docker container
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       
       - name: Authenticate with private NPM package
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
@@ -39,6 +39,9 @@ jobs:
     name: Sentry Create and Finalize Release
     runs-on: ubuntu-latest
     steps:
+
+      - uses: actions/checkout@v2
+    
       - name: Install Sentry CLI
         run: |
           curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="${SENTRY_CLI_VERSION}" bash
