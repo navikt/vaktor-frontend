@@ -8,6 +8,7 @@ env:
   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_TOKEN }}
   SENTRY_ORG: 'nav'  
   SENTRY_PROJECT: 'vaktor'
+  SENTRY_URL : 'https://sentry.gc.nav.no'
 
 permissions:
   actions: read
