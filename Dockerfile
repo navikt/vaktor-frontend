@@ -21,6 +21,9 @@ RUN npm install
 COPY src/ src/
 COPY public/ public/
 COPY next.config.js next.config.js
+COPY sentry.client.config.ts sentry.client.config.ts
+COPY sentry.server.config.ts sentry.server.config.ts
+COPY sentry.edge.config.ts sentry.edge.config.ts
 #COPY .babelrc .babelrc
 #COPY babel.config.js babel.config.js
 

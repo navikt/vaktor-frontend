@@ -262,16 +262,7 @@ const AvstemmingOkonomi = () => {
     })
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
-        return (
-            accumulator +
-            currentSchedule.cost.reduce((costAccumulator, currentCost, index) => {
-                if (currentSchedule.cost.length === 1 || currentCost.type_id > 1) {
-                    return costAccumulator + currentCost.total_cost
-                } else {
-                    return costAccumulator
-                }
-            }, 0)
-        )
+        return accumulator + (currentSchedule.cost.length > 0 ? currentSchedule.cost[currentSchedule.cost.length - 1].total_cost : 0)
     }, 0)
 
     return (
