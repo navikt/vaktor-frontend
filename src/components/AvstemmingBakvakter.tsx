@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Audit, Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
+import MapApproveStatus from './utils/MapApproveStatus'
 
 const mapAudit = (audit: Audit[]) => {
     return audit
@@ -23,45 +24,6 @@ const mapAudit = (audit: Audit[]) => {
                 </div>
             )
         })
-}
-
-const mapApproveStatus = (status: number) => {
-    let statusText = ''
-    let statusColor = ''
-    switch (status) {
-        case 1:
-            statusText = 'Godkjent av ansatt'
-            statusColor = '#66CBEC'
-            break
-        case 2:
-            statusText = 'Venter på utregning'
-            statusColor = '#99DEAD'
-            break
-        case 3:
-            statusText = 'Godkjent av vaktsjef'
-            statusColor = '#99DEAD'
-            break
-        case 4:
-            statusText = 'Overført til lønn'
-            statusColor = '#E18071'
-            break
-        default:
-            statusText = 'Trenger godkjenning'
-            statusColor = '#FFFFFF'
-            break
-    }
-
-    return (
-        <Table.DataCell
-            style={{
-                backgroundColor: statusColor,
-                maxWidth: '150',
-                minWidth: '150',
-            }}
-        >
-            {statusText}
-        </Table.DataCell>
-    )
 }
 
 const AvstemmingBakvakter = () => {
@@ -133,7 +95,7 @@ const AvstemmingBakvakter = () => {
                         })}
                         <br />
                     </Table.DataCell>
-                    {mapApproveStatus(vakter.approve_level)}
+                    <MapApproveStatus status={vakter.approve_level} />
                     {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) && (
                         <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
                             {vakter.cost ? <MapCost cost={vakter.cost} avstemming={true}></MapCost> : 'ingen beregning foreligger'}

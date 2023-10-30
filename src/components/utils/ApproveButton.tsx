@@ -1,16 +1,17 @@
 import { Button, Loader, Popover } from '@navikt/ds-react'
 import { Dispatch, useRef, useState } from 'react'
-import { Schedules } from '../../types/types'
+import { Schedules, User, Roles } from '../../types/types'
 
 interface Props {
     vakt: Schedules
+    user: User
     setResponse: Dispatch<any>
     confirmSchedule: (scheduleId: string, setResponse: Dispatch<any>) => Promise<void>
     loading: boolean
     setLoading: Dispatch<boolean>
 }
 
-const ApproveButton: React.FC<Props> = ({ vakt, setResponse, confirmSchedule, loading, setLoading }) => {
+const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedule, loading, setLoading }) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
@@ -21,7 +22,13 @@ const ApproveButton: React.FC<Props> = ({ vakt, setResponse, confirmSchedule, lo
         setLoading(false)
     }
 
-    const isDisabled = vakt.end_timestamp > Date.now() / 1000 || vakt.approve_level === 4 || vakt.approve_level === 3 || vakt.approve_level === 2
+    const isDisabled =
+        vakt.end_timestamp > Date.now() / 1000 ||
+        (vakt.approve_level === 4 && user.roles.some((role) => role.title.toLowerCase() === 'bdm')) ||
+        vakt.approve_level === 3 ||
+        vakt.approve_level === 2
+
+    const message = vakt.approve_level !== 4 ? 'Godkjenn' : 'Godkjenn for utbetaling'
 
     if (vakt.approve_level === 0) {
         return (
@@ -82,7 +89,7 @@ const ApproveButton: React.FC<Props> = ({ vakt, setResponse, confirmSchedule, lo
             size="small"
             disabled={isDisabled || loading}
         >
-            {loading ? <Loader /> : 'Godkjenn'}
+            {loading ? <Loader /> : message}
         </Button>
     )
 }

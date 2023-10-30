@@ -7,59 +7,7 @@ import ApproveButton from './utils/ApproveButton'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
-
-let today = Date.now() / 1000
-
-const mapApproveStatus = (status: number) => {
-    let statusText = ''
-    let statusColor = ''
-    switch (status) {
-        case 1:
-            statusText = 'Godkjent av ansatt'
-            statusColor = '#66CBEC'
-            break
-        case 2:
-            statusText = 'Venter på utregning'
-            statusColor = '#99DEAD'
-            break
-        case 3:
-            statusText = 'Godkjent av vaktsjef'
-            statusColor = '#99DEAD'
-            break
-        case 4:
-            statusText = 'Overført til lønn'
-            statusColor = '#E18071'
-            break
-        case 5:
-            statusText = 'Venter på utregning av diff'
-            statusColor = '#99DEAD'
-            break
-        case 6:
-            statusText = 'Utregning fullført med diff'
-            statusColor = '#99DEAD'
-            break
-        case 7:
-            statusText = 'Overført til lønn etter rekjøring'
-            statusColor = '#E18071'
-            break
-        default:
-            statusText = 'Trenger godkjenning'
-            statusColor = '#FFFFFF'
-            break
-    }
-
-    return (
-        <Table.DataCell
-            style={{
-                backgroundColor: statusColor,
-                maxWidth: '150',
-                minWidth: '150',
-            }}
-        >
-            {statusText}
-        </Table.DataCell>
-    )
-}
+import MapApproveStatus from './utils/MapApproveStatus'
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
@@ -185,6 +133,7 @@ const AdminLeder = ({}) => {
                             <>
                                 <ApproveButton
                                     vakt={vakter}
+                                    user={user}
                                     setResponse={setResponse}
                                     confirmSchedule={confirm_schedule}
                                     setLoading={setLoading}
@@ -197,7 +146,7 @@ const AdminLeder = ({}) => {
                                         vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
                                         vakter.approve_level === 0 ||
                                         vakter.approve_level === 2 ||
-                                        vakter.approve_level === 4
+                                        vakter.approve_level >= 4
                                     }
                                     style={{
                                         backgroundColor: '#f96c6c',
@@ -213,8 +162,8 @@ const AdminLeder = ({}) => {
                         )}
                     </div>
                 </Table.DataCell>
-                {mapApproveStatus(vakter.approve_level)}
-                {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) || user.is_admin ? (
+                <MapApproveStatus status={vakter.approve_level} />
+                {['personalleder', 'leveranseleder', 'okonomi', 'bdm'].includes(user.role) || user.is_admin ? (
                     <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
                         {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>

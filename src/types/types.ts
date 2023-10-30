@@ -75,6 +75,13 @@ export interface User {
     ekstern: boolean
     contact_info: string
     is_admin: boolean
+    roles: Roles[]
+}
+
+export interface Roles {
+    id: string
+    title: string
+    description: string
 }
 
 export interface Audit {
