@@ -208,33 +208,22 @@ const AvstemmingOkonomi = () => {
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
-    let listeAvVakter = mapVakter(
-        itemData.filter((value: Schedules) => {
-            const isMonthMatch =
-                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
-            const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
-            const isGroupMatch = value.group.name.includes(searchFilterGroup)
-            const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
-            const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
-
-            return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
-        })
-    )
-
-    let totalCost_filtered = itemData.filter((value: Schedules) => {
+    function matchesFilterCriteria(value: Schedules): boolean {
         const isMonthMatch =
             new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
             new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
-        const isGroupMatch = value.group.name.includes(searchFilterGroup)
+        const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
-    })
+    }
+
+    let listeAvVakter = mapVakter(itemData.filter(matchesFilterCriteria))
+    let totalCost_filtered = itemData.filter(matchesFilterCriteria)
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
         return accumulator + (currentSchedule.cost.length > 0 ? currentSchedule.cost[currentSchedule.cost.length - 1].total_cost : 0)
@@ -383,10 +372,11 @@ const AvstemmingOkonomi = () => {
                         <option value={1}>Godkjent av ansatt</option>
                         <option value={2}>Venter på utregning</option>
                         <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Overført til lønn</option>
-                        <option value={5}>Venter på utregning av diff</option>
-                        <option value={6}>Utregning fullført med diff</option>
-                        <option value={7}>Overført til lønn etter rekjøring</option>
+                        <option value={4}>Godkjent av BDM</option>
+                        <option value={5}>Overført til lønn</option>
+                        <option value={6}>Venter på utregning av diff</option>
+                        <option value={7}>Utregning fullført med diff</option>
+                        <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
                 </div>
             </div>
