@@ -9,19 +9,21 @@ const Home: NextPage = () => {
     const { user } = useAuth()
     moment.locale('nb')
 
-    if (['okonomi'].includes(user.role) || user.is_admin === true)
+    const hasAccess = user?.roles?.some((role) => ['okonomi', 'admin'].includes(role.title.toLowerCase()))
+
+    if (hasAccess) {
         return (
-            <>
-                <div className="Container">
-                    <div className="AdminGuideContainer">
-                        <GuidePanel className="AdminGuidePanel">
-                            <p>Avstemming for ØT </p>
-                        </GuidePanel>
-                    </div>
-                    <AvstemmingOkonomiAlle></AvstemmingOkonomiAlle>
+            <div className="Container">
+                <div className="AdminGuideContainer">
+                    <GuidePanel className="AdminGuidePanel">
+                        <p>Avstemming for ØT</p>
+                    </GuidePanel>
                 </div>
-            </>
+                <AvstemmingOkonomiAlle />
+            </div>
         )
+    }
+
     return <div>Du har ikke tilgang hit!</div>
 }
 
