@@ -35,11 +35,12 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
 
     const isDisabled =
         vakt.end_timestamp > Date.now() / 1000 ||
-        (vakt.approve_level === 4 && user.roles.some((role) => role.title.toLowerCase() === 'bdm')) ||
+        (vakt.approve_level === 3 && user.roles.some((role) => role.title.toLowerCase() === 'bdm')) ||
+        vakt.approve_level === 4 ||
         vakt.approve_level === 3 ||
         vakt.approve_level === 2
 
-    const message = vakt.approve_level !== 4 ? 'Godkjenn' : 'Godkjenn for utbetaling'
+    const message = vakt.approve_level !== 3 ? 'Godkjenn' : 'Godkjenn for utbetaling'
 
     if (vakt.approve_level === 0) {
         return (
