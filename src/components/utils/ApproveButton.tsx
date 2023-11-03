@@ -1,25 +1,36 @@
 import { Button, Loader, Popover } from '@navikt/ds-react'
 import { Dispatch, useRef, useState } from 'react'
-import { Schedules, User, Roles } from '../../types/types'
+import { Schedules, User } from '../../types/types'
 
 interface Props {
     vakt: Schedules
     user: User
-    setResponse: Dispatch<any>
-    confirmSchedule: (scheduleId: string, setResponse: Dispatch<any>) => Promise<void>
+    setResponse: Dispatch<ResponseType>
+    confirmSchedule: (scheduleId: string, setResponse: Dispatch<ResponseType>) => Promise<void>
     loading: boolean
-    setLoading: Dispatch<boolean>
+    setLoading: Dispatch<React.SetStateAction<boolean>>
+    onError: (errorMessage: string) => void
 }
 
-const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedule, loading, setLoading }) => {
+const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedule, loading, setLoading, onError }) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
     const handleApproveClick = async () => {
         setLoading(true)
         setOpenState(false)
-        await confirmSchedule(vakt.id, setResponse)
-        setLoading(false)
+        try {
+            await confirmSchedule(vakt.id, setResponse)
+        } catch (error) {
+            console.error('There was an error approving the schedule:', error)
+            if (error instanceof Error) {
+                onError(`Feilet ved godkjenning av vakt: ${error.message}`) // Using onError callback
+            } else {
+                onError('Feilet ved godkjenning av vakt: En ukjent feil oppstod.') // For unexpected errors
+            }
+        } finally {
+            setLoading(false)
+        }
     }
 
     const isDisabled =
