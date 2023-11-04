@@ -41,7 +41,7 @@ const Navbar: React.FC = () => {
                     />
                 </div>
                 <div className="logo">
-                    {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin']) && (
+                    {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
                         <h3>
                             {getGreeting()} {user.name}
                         </h3>
@@ -49,7 +49,7 @@ const Navbar: React.FC = () => {
                 </div>
 
                 {/* Buttons for various roles */}
-                {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin']) && (
+                {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
                     <LinkButton route={Routes.RouterVaktor} />
                 )}
                 {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'admin']) && (
@@ -57,13 +57,13 @@ const Navbar: React.FC = () => {
                 )}
                 {hasAnyRole(user, ['vaktsjef', 'admin']) && <LinkButton route={Routes.RouterVaktperioder} />}
                 {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'admin']) && <LinkButton route={Routes.RouterDineVakter} />}
-                {hasAnyRole(user, ['vaktsjef', 'leveranseleder', 'personalleder', 'admin']) && <LinkButton route={Routes.RouterLedergodkjenning} />}
+                {hasAnyRole(user, ['vaktsjef', 'leveranseleder', 'personalleder', 'admin', 'bdm']) && <LinkButton route={Routes.RouterLedergodkjenning} />}
                 {hasAnyRole(user, ['leveranseleder', 'admin']) && <LinkButton route={Routes.RouterLeveranseleder} />}
                 {hasAnyRole(user, ['okonomi', 'admin']) && <LinkButton route={Routes.RouterAvstemmingOkonomi} />}
                 {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterAdmin} />}
 
                 {/* Alert if no roles */}
-                {!hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin']) && (
+                {!hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
                     <Alert variant="info" size="small" style={{ maxWidth: '250px', minWidth: '250px', marginBottom: '20px', marginTop: '-20px' }}>
                         Du har ingen rolle i vaktor
                     </Alert>
