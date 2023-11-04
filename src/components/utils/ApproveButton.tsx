@@ -1,27 +1,45 @@
 import { Button, Loader, Popover } from '@navikt/ds-react'
 import { Dispatch, useRef, useState } from 'react'
-import { Schedules } from '../../types/types'
+import { Schedules, User } from '../../types/types'
 
 interface Props {
     vakt: Schedules
-    setResponse: Dispatch<any>
-    confirmSchedule: (scheduleId: string, setResponse: Dispatch<any>) => Promise<void>
+    user: User
+    setResponse: Dispatch<ResponseType>
+    confirmSchedule: (scheduleId: string, setResponse: Dispatch<ResponseType>) => Promise<void>
     loading: boolean
-    setLoading: Dispatch<boolean>
+    setLoading: Dispatch<React.SetStateAction<boolean>>
+    onError: (errorMessage: string) => void
 }
 
-const ApproveButton: React.FC<Props> = ({ vakt, setResponse, confirmSchedule, loading, setLoading }) => {
+const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedule, loading, setLoading, onError }) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
     const handleApproveClick = async () => {
         setLoading(true)
         setOpenState(false)
-        await confirmSchedule(vakt.id, setResponse)
-        setLoading(false)
+        try {
+            await confirmSchedule(vakt.id, setResponse)
+        } catch (error) {
+            console.error('There was an error approving the schedule:', error)
+            if (error instanceof Error) {
+                onError(`Feilet ved godkjenning av vakt: ${error.message}`) // Using onError callback
+            } else {
+                onError('Feilet ved godkjenning av vakt: En ukjent feil oppstod.') // For unexpected errors
+            }
+        } finally {
+            setLoading(false)
+        }
     }
 
-    const isDisabled = vakt.end_timestamp > Date.now() / 1000 || vakt.approve_level === 4 || vakt.approve_level === 3 || vakt.approve_level === 2
+    const isDisabled =
+        vakt.end_timestamp > Date.now() / 1000 ||
+        vakt.approve_level === 2 ||
+        (vakt.approve_level === 3 && !user.roles.some((role) => role.title.toLowerCase() === 'bdm')) ||
+        vakt.approve_level >= 4
+
+    const message = vakt.approve_level !== 3 ? 'Godkjenn' : 'Godkjenn for utbetaling'
 
     if (vakt.approve_level === 0) {
         return (
@@ -82,7 +100,7 @@ const ApproveButton: React.FC<Props> = ({ vakt, setResponse, confirmSchedule, lo
             size="small"
             disabled={isDisabled || loading}
         >
-            {loading ? <Loader /> : 'Godkjenn'}
+            {loading ? <Loader /> : message}
         </Button>
     )
 }

@@ -38,7 +38,7 @@ const ScheduleModal = (props: {
     const [endTimestamp, setEndTimestamp] = useState<number>(props.schedule.end_timestamp)
     const [clock_start, setClockStart] = useState<number>(0)
     const [clock_end, setClockEnd] = useState<number>(0)
-    const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
+    const { datepickerProps, toInputProps, fromInputProps, reset } = useRangeDatepicker({
         fromDate: new Date(props.schedule.start_timestamp * 1000),
         toDate: new Date(props.schedule.end_timestamp * 1000),
         onRangeChange: (val) => {
@@ -59,19 +59,23 @@ const ScheduleModal = (props: {
             .then(([groupData]) => {
                 setgroupData(groupData.filter((user: User) => user.role !== 'leveranseleder'))
             })
+        reset()
+        setStartTimestamp(props.schedule.start_timestamp)
+        setEndTimestamp(props.schedule.end_timestamp)
     }, [props])
 
     return (
         <>
             <Modal
                 open={props.isOpen}
-                aria-label="Modal for vaktperioder"
                 onClose={() => {
                     setConfirmState(false)
                     props.setIsOpen(!props.isOpen)
                 }}
-                aria-labelledby="modal-heading"
             >
+                <Modal.Header closeButton>
+                    <b>Gjør endringer på Vaktperiode</b>
+                </Modal.Header>
                 <Modal.Body style={{ minHeight: '100%' }}>
                     {' '}
                     <div className="contentEndring">
@@ -152,7 +156,7 @@ const ScheduleModal = (props: {
                                 }}
                             >
                                 <div style={{ margin: 'auto' }}>
-                                    <DatePicker {...datepickerProps} style={{}}>
+                                    <DatePicker {...datepickerProps} showWeekNumber>
                                         <div
                                             style={{
                                                 display: 'flex',

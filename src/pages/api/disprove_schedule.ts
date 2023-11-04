@@ -21,12 +21,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             method: 'POST',
         })
 
-        const body = await backendResponse.json()
-
-        if (backendResponse.ok && body) {
+        if (backendResponse.ok) {
+            const body = await backendResponse.json()
             res.status(200).json(body)
         } else {
-            res.status(500).json({ message: 'Unable to disprove schedule' })
+            const errorText = await backendResponse.text()
+            res.status(backendResponse.status).json({ message: errorText })
         }
     } catch (error) {
         console.error(error)

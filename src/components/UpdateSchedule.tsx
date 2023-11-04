@@ -20,7 +20,7 @@ const UpdateSchedule = () => {
     const toDate = moment('Aug 23 2025', 'MMM DD YYYY').toDate()
     const defaultSelected = moment().locale('en-GB').startOf('month').toDate()
 
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
+    const { monthpickerProps, inputProps, selectedMonth } = useMonthpicker({
         fromDate,
         toDate,
         defaultSelected,

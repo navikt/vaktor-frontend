@@ -1,71 +1,19 @@
 import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, HelpText, Modal } from '@navikt/ds-react'
 import moment from 'moment'
-import { useEffect, useState, Dispatch } from 'react'
+import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
-
-let today = Date.now() / 1000
-
-const mapApproveStatus = (status: number) => {
-    let statusText = ''
-    let statusColor = ''
-    switch (status) {
-        case 1:
-            statusText = 'Godkjent av ansatt'
-            statusColor = '#66CBEC'
-            break
-        case 2:
-            statusText = 'Venter på utregning'
-            statusColor = '#99DEAD'
-            break
-        case 3:
-            statusText = 'Godkjent av vaktsjef'
-            statusColor = '#99DEAD'
-            break
-        case 4:
-            statusText = 'Overført til lønn'
-            statusColor = '#E18071'
-            break
-        case 5:
-            statusText = 'Venter på utregning av diff'
-            statusColor = '#99DEAD'
-            break
-        case 6:
-            statusText = 'Utregning fullført med diff'
-            statusColor = '#99DEAD'
-            break
-        case 7:
-            statusText = 'Overført til lønn etter rekjøring'
-            statusColor = '#E18071'
-            break
-        default:
-            statusText = 'Trenger godkjenning'
-            statusColor = '#FFFFFF'
-            break
-    }
-
-    return (
-        <Table.DataCell
-            style={{
-                backgroundColor: statusColor,
-                maxWidth: '150',
-                minWidth: '150',
-            }}
-        >
-            {statusText}
-        </Table.DataCell>
-    )
-}
+import MapApproveStatus from './utils/MapApproveStatus'
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
 
     const [itemData, setItemData] = useState<Schedules[]>([])
-    const [response, setResponse] = useState()
+    const [response, setResponse] = useState<ResponseType | undefined>()
     const [loading, setLoading] = useState(false)
     const [openState, setOpenState] = useState(false)
 
@@ -74,10 +22,6 @@ const AdminLeder = ({}) => {
     const [searchFilterAction, setSearchFilterAction] = useState(5)
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-    const showErrorModal = (message: string) => {
-        setErrorMessage(message)
-    }
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -94,27 +38,52 @@ const AdminLeder = ({}) => {
     })
 
     const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
+        setLoading(true)
         try {
             const response = await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
-            const data = await response.json()
-            setResponse(data)
-        } catch (error) {
+            if (!response.ok) {
+                // Check if the response was not ok (status code in the range 200-299)
+                const errorData = await response.json() // Assuming the server sends JSON with error details
+                let message = `Server error ${response.status}: ${errorData.message || 'No additional error information'}`
+                setErrorMessage(message)
+            } else {
+                const data = await response.json()
+                setResponse(data)
+            }
+        } catch (error: unknown) {
             console.error(error)
-            showErrorModal(`Feilet ved godkjenning av perioden: ${schedule_id}`)
+            let message = 'An unexpected error occurred approving schedule'
+            if (error instanceof Error) {
+                message = `Noe feiled ved godkjenning av perioden: ${error.message}`
+            }
+            setErrorMessage(message)
         }
         setLoading(false)
     }
 
     const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
+        setLoading(true)
         try {
             const response = await fetch(`/vaktor/api/disprove_schedule?schedule_id=${schedule_id}`)
-            const data = await response.json()
-            setResponse(data)
-        } catch (error) {
+            if (!response.ok) {
+                // Check if the response was not ok (status code not in the range 200-299)
+                const errorData = await response.json() // Assuming the server sends JSON with error details
+                let message = `Server error ${response.status}: ${errorData.message || 'No additional error information'}`
+                setErrorMessage(message)
+            } else {
+                const data = await response.json()
+                setResponse(data)
+            }
+        } catch (error: unknown) {
             console.error(error)
-            showErrorModal(`Feilet ved avvisning av perioden: ${error}`)
+            let message = 'An unexpected error occurred'
+            if (error instanceof Error) {
+                message = `Feilet ved avvisning av perioden: ${error.message}`
+            }
+            setErrorMessage(message)
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const mapVakter = (vaktliste: Schedules[]) =>
@@ -185,10 +154,12 @@ const AdminLeder = ({}) => {
                             <>
                                 <ApproveButton
                                     vakt={vakter}
-                                    setResponse={setResponse}
+                                    user={user}
+                                    setResponse={setResponse as Dispatch<SetStateAction<ResponseType>>}
                                     confirmSchedule={confirm_schedule}
                                     setLoading={setLoading}
                                     loading={loading}
+                                    onError={setErrorMessage}
                                 />
 
                                 <Button
@@ -197,7 +168,7 @@ const AdminLeder = ({}) => {
                                         vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
                                         vakter.approve_level === 0 ||
                                         vakter.approve_level === 2 ||
-                                        vakter.approve_level === 4
+                                        vakter.approve_level >= 4
                                     }
                                     style={{
                                         backgroundColor: '#f96c6c',
@@ -213,8 +184,8 @@ const AdminLeder = ({}) => {
                         )}
                     </div>
                 </Table.DataCell>
-                {mapApproveStatus(vakter.approve_level)}
-                {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) || user.is_admin ? (
+                <MapApproveStatus status={vakter.approve_level} />
+                {['personalleder', 'leveranseleder', 'okonomi', 'bdm'].includes(user.role) || user.is_admin ? (
                     <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
                         {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>

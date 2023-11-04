@@ -1,5 +1,5 @@
-import { Alert, Button, DatePicker, Heading, Loader, Modal, Popover, Select, useRangeDatepicker } from '@navikt/ds-react'
-import { Dispatch, useRef, useState } from 'react'
+import { Alert, Button, DatePicker, Heading, Modal, Select, useRangeDatepicker } from '@navikt/ds-react'
+import { Dispatch, useEffect, useRef, useState } from 'react'
 import { Schedules } from '../../types/types'
 
 interface Props {
@@ -9,20 +9,20 @@ interface Props {
     setResponseError: Dispatch<any>
     setIsOpen: Dispatch<any>
     update_schedule: (schedule: Schedules, setResponse: Dispatch<any>, setResponseError: Dispatch<any>) => Promise<void>
-    loading: boolean
     setLoading: Dispatch<boolean>
 }
 
-const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setResponseError, update_schedule, setIsOpen, loading, setLoading }) => {
+const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setResponseError, update_schedule, setIsOpen, setLoading }) => {
     const ref = useRef<HTMLDialogElement>(null)
     const [startTimestamp, setStartTimestamp] = useState<number>(vakt.start_timestamp)
     const [endTimestamp, setEndTimestamp] = useState<number>(vakt.end_timestamp)
     const [clock_start, setClockStart] = useState<number>(0)
     const [clock_end, setClockEnd] = useState<number>(0)
+    const defaultSelected = { from: new Date(startTimestamp * 1000), to: new Date(endTimestamp * 1000) }
 
-    const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
-        // fromDate: new Date(vakt.start_timestamp * 1000),
-        // toDate: new Date(vakt.end_timestamp * 1000),
+    const { datepickerProps, toInputProps, fromInputProps, reset, setSelected } = useRangeDatepicker({
+        defaultSelected: defaultSelected,
+        fromDate: new Date('Aug 30 2022'),
         onRangeChange: (val) => {
             if (val && val.from && val.to) {
                 setStartTimestamp(val.from.setHours(12) / 1000)
@@ -51,6 +51,13 @@ const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setRespon
             console.error(error)
         }
     }
+    useEffect(() => {
+        reset()
+        setSelected({
+            from: new Date(vakt.start_timestamp * 1000),
+            to: new Date(vakt.end_timestamp * 1000),
+        })
+    }, [vakt])
 
     const isDisabled = vakt.approve_level > 0
 
@@ -62,17 +69,21 @@ const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setRespon
                 aria-label="Modal for vaktperioder"
                 onClose={() => {
                     setIsOpen(false)
+                    setStartTimestamp(0)
+                    setEndTimestamp(0)
                 }}
                 aria-labelledby="modal-heading"
             >
                 <Modal.Header>
                     <Heading level="1" size="small" id="modal-heading">
                         Endre start/slutt på periode
+                        <br />
+                        {vakt.user.name}
                     </Heading>
                 </Modal.Header>
                 <Modal.Body style={{ minHeight: '100%' }}>
                     {vakt.id}
-
+                    <br />
                     <div className="min-h-96 min-w-96 max-w-full">
                         <div
                             style={{
@@ -85,7 +96,7 @@ const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setRespon
                             }}
                         >
                             <div style={{ margin: 'auto' }}>
-                                <DatePicker {...datepickerProps}>
+                                <DatePicker {...datepickerProps} showWeekNumber>
                                     <div
                                         style={{
                                             display: 'flex',

@@ -4,6 +4,7 @@ import { useEffect, useState, Dispatch } from 'react'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
+import MapApproveStatus from './utils/MapApproveStatus'
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -27,57 +28,6 @@ const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>
             setLoading(false)
             setResponse(data)
         })
-}
-
-const mapApproveStatus = (status: number) => {
-    let statusText = ''
-    let statusColor = ''
-    switch (status) {
-        case 1:
-            statusText = 'Godkjent av ansatt'
-            statusColor = '#66CBEC'
-            break
-        case 2:
-            statusText = 'Venter på utregning'
-            statusColor = '#99DEAD'
-            break
-        case 3:
-            statusText = 'Godkjent av vaktsjef'
-            statusColor = '#99DEAD'
-            break
-        case 4:
-            statusText = 'Overført til lønn'
-            statusColor = '#E18071'
-            break
-        case 5:
-            statusText = 'Venter på utregning av diff'
-            statusColor = '#99DEAD'
-            break
-        case 6:
-            statusText = 'Utregning fullført med diff'
-            statusColor = '#99DEAD'
-            break
-        case 7:
-            statusText = 'Overført til lønn etter rekjøring'
-            statusColor = '#E18071'
-            break
-        default:
-            statusText = 'Trenger godkjenning'
-            statusColor = '#FFFFFF'
-            break
-    }
-
-    return (
-        <Table.DataCell
-            style={{
-                backgroundColor: statusColor,
-                maxWidth: '210px',
-                minWidth: '200px',
-            }}
-        >
-            {statusText}
-        </Table.DataCell>
-    )
 }
 
 const DineVakter = () => {
@@ -160,7 +110,7 @@ const DineVakter = () => {
                         </Button>
                     </div>
                 </Table.DataCell>
-                {mapApproveStatus(vakter.approve_level)}
+                <MapApproveStatus status={vakter.approve_level} />
                 <Table.DataCell style={{ minWidth: '300px' }}>
                     {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                 </Table.DataCell>

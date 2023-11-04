@@ -10,19 +10,22 @@ const Home: NextPage = () => {
 
     moment.locale('nb')
 
-    if (['vaktsjef', 'leveranseleder', 'personalleder'].includes(user.role))
+    // Check if the roles array exists and includes any of the specified roles
+    const hasAccess = user?.roles?.some((role) => ['vaktsjef', 'leveranseleder', 'personalleder', 'admin', 'bdm'].includes(role.title.toLowerCase()))
+
+    if (hasAccess) {
         return (
-            <>
-                <div className="Container">
-                    <div className="AdminGuideContainer">
-                        <GuidePanel className="AdminGuidePanel">
-                            <p>Under er listen over personer som har vaktperioder du må ta stilling til. </p>
-                        </GuidePanel>
-                    </div>
-                    <AdminLeder></AdminLeder>
+            <div className="Container">
+                <div className="AdminGuideContainer">
+                    <GuidePanel className="AdminGuidePanel">
+                        <p>Under er listen over personer som har vaktperioder du må ta stilling til.</p>
+                    </GuidePanel>
                 </div>
-            </>
+                <AdminLeder />
+            </div>
         )
+    }
+
     return <div>Du har ikke tilgang hit!</div>
 }
 

@@ -11,19 +11,23 @@ const Home: NextPage = () => {
     const { user } = useAuth()
     moment.locale('nb')
 
-    if (['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder'].includes(user.role))
+    const hasAccess = user?.roles?.some((role) =>
+        ['vakthaver', 'vaktsjef', 'personalleder', 'leveranseleder', 'admin'].includes(role.title.toLowerCase())
+    )
+
+    if (hasAccess) {
         return (
-            <>
-                <div className="Container">
-                    <div className="AdminGuideContainer">
-                        <GuidePanel className="AdminGuidePanel">
-                            <p>Her kan du endre vaktperioder i vaktlag du er medlem av </p>
-                        </GuidePanel>
-                    </div>
-                    <UpdateSchedule></UpdateSchedule>
+            <div className="Container">
+                <div className="AdminGuideContainer">
+                    <GuidePanel className="AdminGuidePanel">
+                        <p>Her kan du endre vaktperioder i vaktlag du er medlem av </p>
+                    </GuidePanel>
                 </div>
-            </>
+                <UpdateSchedule />
+            </div>
         )
+    }
+
     return <div>Du har ikke tilgang hit!</div>
 }
 

@@ -1,38 +1,13 @@
-import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ReadMore } from '@navikt/ds-react'
+import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button } from '@navikt/ds-react'
 import moment from 'moment'
-import { Dispatch, useEffect, useRef, useState } from 'react'
+import { Dispatch, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import DeleteVaktButton from './utils/DeleteVaktButton'
 import EndreVaktButton from './utils/AdminAdjustDate'
-
-const mapApproveStatus = (status: number): JSX.Element => {
-    const statusMap: { [key: number]: { text: string; color: string } } = {
-        1: { text: 'Godkjent av ansatt', color: '#66CBEC' },
-        2: { text: 'Venter på utregning', color: '#99DEAD' },
-        3: { text: 'Godkjent av vaktsjef', color: '#99DEAD' },
-        4: { text: 'Overført til lønn', color: '#E18071' },
-        5: { text: 'Venter på utregning av diff', color: '#99DEAD' },
-        6: { text: 'Utregning fullført med diff', color: '#99DEAD' },
-        7: { text: 'Overført til lønn etter rekjøring', color: '#E18071' },
-    }
-
-    const { text, color } = statusMap[status] || { text: 'Trenger godkjenning', color: '#FFFFFF' }
-
-    return (
-        <Table.DataCell
-            style={{
-                backgroundColor: color,
-                maxWidth: '150',
-                minWidth: '150',
-            }}
-        >
-            {text}
-        </Table.DataCell>
-    )
-}
+import MapApproveStatus from './utils/MapApproveStatus'
 
 const Admin = () => {
     const { user } = useAuth()
@@ -47,13 +22,6 @@ const Admin = () => {
     const [response, setResponse] = useState([])
     const [responseError, setResponseError] = useState('')
 
-    const [actionReason, setActionReason] = useState(Number)
-    const [approveLevel, setApproveLevel] = useState(Number)
-
-    const buttonRef = useRef<HTMLButtonElement>(null)
-    const [openState, setOpenState] = useState<boolean>(false)
-
-    const [scheduleData, setScheduleData] = useState<Schedules[]>([])
     const [selectedSchedule, setSchedule] = useState<Schedules>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
 
@@ -124,39 +92,6 @@ const Admin = () => {
             })
     }
 
-    const recalculateSchedules = async (
-        start_timestamp: number,
-        end_timestamp: number,
-        action_reason: number,
-        approve_level: number,
-        setResponse: Dispatch<any>,
-        setResponseError: Dispatch<string>
-    ) => {
-        var url = `/vaktor/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
-        console.log('Recalculating: ', start_timestamp, end_timestamp, action_reason, approve_level)
-        var fetchOptions = {
-            method: 'POST',
-        }
-
-        await fetch(url, fetchOptions)
-            .then(async (r) => {
-                if (!r.ok) {
-                    const rText = await r.json()
-                    setResponseError(rText.detail)
-                    return []
-                }
-                return r.json()
-            })
-            .then((data: Schedules) => {
-                setResponse(data)
-                setIsLoading(false)
-            })
-            .catch((error: Error) => {
-                console.error(error.name, error.message)
-                setIsLoading(false)
-            })
-    }
-
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste
             .sort((a: Schedules, b: Schedules) =>
@@ -168,7 +103,16 @@ const Admin = () => {
                 <Table.Row key={i}>
                     <Table.DataCell>{i + 1}</Table.DataCell>
                     <Table.DataCell scope="row">
+                        {vakter.user.ekstern === true ? (
+                            <>
+                                <b style={{ color: 'red' }}>EKSTERN</b>
+                                <br />
+                            </>
+                        ) : (
+                            <></>
+                        )}
                         <b> {vakter.user.name}</b>
+
                         <br />
                         {vakter.user.id.toUpperCase()}
                         <br />
@@ -256,7 +200,7 @@ const Admin = () => {
                             <br />
                         </div>
                     </Table.DataCell>
-                    {mapApproveStatus(vakter.approve_level)}
+                    <MapApproveStatus status={vakter.approve_level} />
                     {(['okonomi'].includes(user.role) || user.is_admin === true) && (
                         <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
                             {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
@@ -275,7 +219,8 @@ const Admin = () => {
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
-                setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
+                // setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
+                setItemData(itemData)
                 const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
                 const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
                 setGroupNames(sortedGroupNames)
@@ -320,39 +265,13 @@ const Admin = () => {
                 new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
             const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
-            const isGroupMatch = value.group.name.includes(searchFilterGroup)
+            const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
             const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
             const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
             return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
         })
     )
-
-    let totalCost_filtered = itemData.filter((value: Schedules) => {
-        const isMonthMatch =
-            new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
-
-        const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
-        const isGroupMatch = value.group.name.includes(searchFilterGroup)
-        const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
-        const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
-
-        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
-    })
-
-    const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
-        return (
-            accumulator +
-            currentSchedule.cost.reduce((costAccumulator, currentCost, index) => {
-                if (currentSchedule.cost.length === 1 || currentCost.type_id > 1) {
-                    return costAccumulator + currentCost.total_cost
-                } else {
-                    return costAccumulator
-                }
-            }, 0)
-        )
-    }, 0)
 
     return (
         <div
@@ -376,82 +295,11 @@ const Admin = () => {
                         setIsOpen={setIsOpen}
                         update_schedule={update_schedule}
                         setLoading={setLoading}
-                        loading={loading}
                     />
                 </>
             ) : (
                 <></>
             )}
-            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', gap: '10px' }}>
-                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                    <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
-                        <option value="">Gjør et valg</option>
-                        <option value={1}>Ordinær kjøring</option>
-                        <option value={2}>Lønnsendring</option>
-                        <option value={3}>Feilutregning/Feil i Vaktor</option>
-                        <option value={4}>Sekundærkjøring</option>
-                    </Select>
-                </div>
-                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                    <Select label="Velg Approve Level" onChange={(e) => setApproveLevel(Number(e.target.value))}>
-                        <option value="">Gjør et valg</option>
-                        <option value={1}>Godkjent av ansatt</option>
-                        <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Overført til lønn</option>
-                    </Select>
-                </div>
-
-                <Button
-                    onClick={() => {
-                        setOpenState(true)
-                    }}
-                    style={{
-                        maxWidth: '210px',
-                        marginLeft: '30px',
-                        marginTop: '5px',
-                        marginBottom: '5px',
-                    }}
-                    disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
-                    ref={buttonRef}
-                >
-                    Rekalkuler {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
-                </Button>
-                <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
-                    <Popover.Content
-                        style={{
-                            textAlign: 'center',
-                            backgroundColor: 'rgba(241, 241, 241, 1)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '10px',
-                            maxWidth: '250px',
-                        }}
-                    >
-                        Er du sikker på at du vil rekalkulere alle perioder for{' '}
-                        <b>{selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}?</b>
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                if (selectedMonth) {
-                                    const start_timestamp = Math.floor(selectedMonth.getTime() / 1000)
-                                    const end_timestamp = Math.floor(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)).getTime() / 1000)
-                                    recalculateSchedules(start_timestamp, end_timestamp, actionReason, approveLevel, setResponse, setResponseError)
-                                    setIsLoading(true)
-                                } else {
-                                    console.log('SelectedMonth not set')
-                                }
-                            }}
-                            disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
-                        >
-                            {isLoading ? <Loader /> : 'Rekalkuler nå!'}
-                        </Button>
-                    </Popover.Content>
-                </Popover>
-            </div>
-
-            <div style={{ textAlign: 'end', display: 'flex', justifyContent: 'end' }}>
-                <h3>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</h3>
-            </div>
 
             <div className="min-h-96" style={{ display: 'flex' }}>
                 <MonthPicker {...monthpickerProps}>
@@ -490,7 +338,8 @@ const Admin = () => {
                         <option value={1}>Godkjent av ansatt</option>
                         <option value={2}>Venter på utregning</option>
                         <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Overført til lønn</option>
+                        <option value={4}>Godkjent av BDM</option>
+                        <option value={5}>Overført til lønn</option>
                         <option value={5}>Venter på utregning av diff</option>
                         <option value={6}>Utregning fullført med diff</option>
                         <option value={7}>Overført til lønn etter rekjøring</option>

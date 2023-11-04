@@ -10,19 +10,21 @@ const Home: NextPage = () => {
 
     moment.locale('nb')
 
-    if (['leveranseleder'].includes(user.role) || user.is_admin)
+    const hasAccess = user?.roles?.some((role) => ['admin'].includes(role.title.toLowerCase()))
+
+    if (hasAccess) {
         return (
-            <>
-                <div className="Container">
-                    <div className="AdminGuideContainer">
-                        <GuidePanel className="AdminGuidePanel">
-                            <p>Her kan du opprette nye vaktlag</p>
-                        </GuidePanel>
-                    </div>
-                    <VaktlagAdmin />
+            <div className="Container">
+                <div className="AdminGuideContainer">
+                    <GuidePanel className="AdminGuidePanel">
+                        <p>Her kan du opprette nye vaktlag</p>
+                    </GuidePanel>
                 </div>
-            </>
+                <VaktlagAdmin />
+            </div>
         )
+    }
+
     return <div>Du har ikke tilgang hit!</div>
 }
 

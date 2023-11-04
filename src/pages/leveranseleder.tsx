@@ -10,21 +10,22 @@ const Home: NextPage = () => {
 
     moment.locale('nb')
 
-    if (user.role !== 'leveranseleder' && user.is_admin === false) {
-        return <div>Du har ikke tilgang hit!</div>
-    }
-    return (
-        <>
+    const hasAccess = user?.roles?.some((role) => ['leveranseleder', 'admin'].includes(role.title.toLowerCase()))
+
+    if (hasAccess) {
+        return (
             <div className="Container">
                 <div className="AdminGuideContainer">
                     <GuidePanel className="AdminGuidePanel">
                         <p>Her kan leveranseleder påta seg ansvaret som leder for et vaktlag og tildele vaktsjef </p>
                     </GuidePanel>
                 </div>
-                <AdminLeder></AdminLeder>
+                <AdminLeder />
             </div>
-        </>
-    )
+        )
+    }
+
+    return <div>Du har ikke tilgang hit!</div>
 }
 
 export default Home
