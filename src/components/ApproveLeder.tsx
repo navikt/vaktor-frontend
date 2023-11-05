@@ -2,12 +2,13 @@ import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, Hel
 import moment from 'moment'
 import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Schedules } from '../types/types'
+import { Schedules, Roles } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
+import { title } from 'process'
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
@@ -99,6 +100,8 @@ const AdminLeder = ({}) => {
                 <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
                 <Table.DataCell>
                     <div>
+                        <b>ID: {vakter.id} </b>
+                        <br />
                         Uke {moment(vakter.start_timestamp * 1000).week()}{' '}
                         {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
                             ? ' - ' + moment(vakter.end_timestamp * 1000).week()
@@ -168,7 +171,7 @@ const AdminLeder = ({}) => {
                                         vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
                                         vakter.approve_level === 0 ||
                                         vakter.approve_level === 2 ||
-                                        vakter.approve_level >= 4
+                                        vakter.approve_level >= 3
                                     }
                                     style={{
                                         backgroundColor: '#f96c6c',
@@ -185,7 +188,7 @@ const AdminLeder = ({}) => {
                     </div>
                 </Table.DataCell>
                 <MapApproveStatus status={vakter.approve_level} />
-                {['personalleder', 'leveranseleder', 'okonomi', 'bdm'].includes(user.role) || user.is_admin ? (
+                {['personalleder', 'leveranseleder', 'okonomi', 'bdm', 'admin'].includes(user.role) ? (
                     <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
                         {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>
