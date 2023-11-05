@@ -152,11 +152,10 @@ const AvstemmingOkonomi = () => {
                         </div>
                     </Table.DataCell>
                     <MapApproveStatus status={vakter.approve_level} />
-                    {(['okonomi'].includes(user.role) || user.is_admin === true) && (
-                        <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
-                            {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
-                        </Table.DataCell>
-                    )}
+                    <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
+                        {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
+                    </Table.DataCell>
+
                     <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
                         {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
                     </Table.DataCell>
@@ -397,17 +396,15 @@ const AvstemmingOkonomi = () => {
                                 Periode
                             </Table.HeaderCell>
                             <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                            {(['okonomi'].includes(user.role) || user.is_admin === true) && (
-                                <Table.HeaderCell
-                                    scope="col"
-                                    style={{
-                                        minWidth: '400px',
-                                        maxWidth: '400px',
-                                    }}
-                                >
-                                    Kost
-                                </Table.HeaderCell>
-                            )}
+                            <Table.HeaderCell
+                                scope="col"
+                                style={{
+                                    minWidth: '400px',
+                                    maxWidth: '400px',
+                                }}
+                            >
+                                Kost
+                            </Table.HeaderCell>
                             <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
