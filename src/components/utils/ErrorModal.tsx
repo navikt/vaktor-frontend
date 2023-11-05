@@ -1,7 +1,6 @@
 import React from 'react'
 import { Modal } from '@navikt/ds-react'
-import { Alert, Heading } from '@navikt/ds-react'
-import { XMarkOctagonIcon } from '@navikt/aksel-icons'
+import { Alert } from '@navikt/ds-react'
 
 type Props = {
     errorMessage: string | null

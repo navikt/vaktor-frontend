@@ -29,7 +29,6 @@ const ScheduleModal = (props: {
     setResponse: Dispatch<any>
     addVakt: Dispatch<any>
 }) => {
-    const { user } = useAuth()
     const [groupData, setgroupData] = useState<User[]>([])
     const [selectedVakthaver, setVakthaver] = useState('')
     const [action, setAction] = useState('')
@@ -70,7 +69,7 @@ const ScheduleModal = (props: {
                 open={props.isOpen}
                 onClose={() => {
                     setConfirmState(false)
-                    props.setIsOpen(!props.isOpen)
+                    props.setIsOpen(false)
                 }}
             >
                 <Modal.Header closeButton>
