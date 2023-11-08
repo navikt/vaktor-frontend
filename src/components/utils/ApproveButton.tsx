@@ -1,6 +1,6 @@
 import { Button, Loader, Popover } from '@navikt/ds-react'
 import { Dispatch, useRef, useState } from 'react'
-import { Schedules, User } from '../../types/types'
+import { Schedules, User, Cost } from '../../types/types'
 
 interface Props {
     vakt: Schedules
@@ -33,11 +33,11 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
         }
     }
 
+    const num_cost = vakt.cost.length - 1
+    const haskoststed = user.bdm_koststeder.includes(vakt.cost[num_cost].koststed)
+
     const isDisabled =
-        vakt.end_timestamp > Date.now() / 1000 ||
-        vakt.approve_level === 2 ||
-        (vakt.approve_level === 3 && !user.roles.some((role) => role.title.toLowerCase() === 'bdm')) ||
-        vakt.approve_level >= 4
+        vakt.end_timestamp > Date.now() / 1000 || vakt.approve_level === 2 || (vakt.approve_level === 3 && !haskoststed) || vakt.approve_level >= 4
 
     const message = vakt.approve_level !== 3 ? 'Godkjenn' : 'Godkjenn for utbetaling'
 
