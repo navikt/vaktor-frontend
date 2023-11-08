@@ -1,4 +1,4 @@
-import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, HelpText, Modal } from '@navikt/ds-react'
+import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, HelpText } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -8,7 +8,6 @@ import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
-import { title } from 'process'
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
@@ -92,6 +91,7 @@ const AdminLeder = ({}) => {
             //approve_level = 2;
 
             <Table.Row key={i}>
+                <Table.DataCell>{i + 1}</Table.DataCell>
                 <Table.HeaderCell scope="row">
                     {vakter.user.name}
                     <br />
@@ -266,6 +266,7 @@ const AdminLeder = ({}) => {
             >
                 <Table.Header>
                     <Table.Row>
+                        <Table.HeaderCell>#</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
@@ -296,7 +297,7 @@ const AdminLeder = ({}) => {
                         </Table.HeaderCell>
                         <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                        {['personalleder', 'leveranseleder'].includes(user!.role) || user.is_admin ? (
+                        {['personalleder', 'leveranseleder', 'okonomi', 'bdm', 'admin'].includes(user.role) ? (
                             <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>
                         ) : null}
 

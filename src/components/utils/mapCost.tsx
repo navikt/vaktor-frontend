@@ -66,6 +66,8 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                                 <div>
                                     {mapCostStatus(Number(cost.type_id))}
                                     Total Sum: <b style={{ color: 'green' }}> {cost.total_cost}</b>
+                                    <br />
+                                    Koststed: <b>{cost.koststed}</b>
                                     {prevTotalCost !== undefined && cost.type_id > 1 && idx > 0 && (
                                         <div style={{ color: diff < 0 ? 'red' : 'green' }}>
                                             Diff: ({diff < 0 ? '-' : '+'}

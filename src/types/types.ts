@@ -102,6 +102,7 @@ export interface Cost {
     artskoder: Artskoder[]
     type_id: number
     order_id: number
+    koststed: string
 }
 
 export interface Artskoder {
