@@ -76,6 +76,7 @@ export interface User {
     contact_info: string
     is_admin: boolean
     roles: Roles[]
+    bdm_koststeder: string
 }
 
 export interface Roles {
@@ -102,6 +103,7 @@ export interface Cost {
     artskoder: Artskoder[]
     type_id: number
     order_id: number
+    koststed: string
 }
 
 export interface Artskoder {
