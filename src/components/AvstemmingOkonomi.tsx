@@ -220,7 +220,6 @@ const AvstemmingOkonomi = () => {
     useEffect(() => {
         setLoading(true)
         const path = `/vaktor/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
-        console.log(path)
         fetch(path)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {
