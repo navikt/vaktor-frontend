@@ -44,6 +44,33 @@ const AvstemmingOkonomi = () => {
         ),
     })
 
+    function getMonthTimestamps(currentMonth: Date) {
+        const year = currentMonth.getFullYear()
+        const month = currentMonth.getMonth()
+
+        // Start of the month
+        const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0)
+        const startTimestamp = Math.floor(startOfMonth.getTime() / 1000)
+
+        // End of the month (start of the next month)
+        const startOfNextMonth = new Date(year, month + 1, 1, 0, 0, 0, 0)
+        const endTimestamp = Math.floor(startOfNextMonth.getTime() / 1000)
+
+        return { startTimestamp, endTimestamp }
+    }
+
+    let startTimestamp: number, endTimestamp: number
+
+    if (selectedMonth !== undefined) {
+        const timestamps = getMonthTimestamps(selectedMonth)
+        startTimestamp = timestamps.startTimestamp
+        endTimestamp = timestamps.endTimestamp
+    } else {
+        const now = new Date()
+        startTimestamp = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime() / 1000
+        endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
+    }
+
     const recalculateSchedules = async (
         start_timestamp: number,
         end_timestamp: number,
@@ -192,7 +219,9 @@ const AvstemmingOkonomi = () => {
 
     useEffect(() => {
         setLoading(true)
-        fetch('/vaktor/api/all_schedules')
+        const path = `/vaktor/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
+        console.log(path)
+        fetch(path)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
@@ -229,7 +258,7 @@ const AvstemmingOkonomi = () => {
                 setDistinctFilenames(sortedFilenames)
                 setLoading(false)
             })
-    }, [response])
+    }, [response, selectedMonth])
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
