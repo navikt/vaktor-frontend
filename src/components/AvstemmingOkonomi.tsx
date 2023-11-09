@@ -1,4 +1,4 @@
-import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ReadMore, ExpansionCard } from '@navikt/ds-react'
+import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ExpansionCard } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -77,16 +77,41 @@ const AvstemmingOkonomi = () => {
             })
     }
 
-    const mapVakter = (vaktliste: Schedules[]) =>
-        vaktliste
-            .sort((a: Schedules, b: Schedules) =>
-                a.start_timestamp !== b.start_timestamp ? a.start_timestamp - b.start_timestamp : a.user.name.localeCompare(b.user.name)
-            )
-            .map((vakter: Schedules, i: number) => (
-                //approve_level = 2;
+    let rowCount = 0
 
-                <Table.Row key={i}>
-                    <Table.DataCell>{i + 1}</Table.DataCell>
+    const mapVakter = (vaktliste: Schedules[]) => {
+        // Use a record type to map the koststed to the corresponding array of Schedules
+        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
+            const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
+            if (!acc[koststed]) {
+                acc[koststed] = []
+            }
+            acc[koststed].push(current)
+            return acc
+        }, {} as Record<string, Schedules[]>)
+
+        // Sort each group by start_timestamp
+        Object.keys(groupedByKoststed).forEach((koststedKey) => {
+            groupedByKoststed[koststedKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
+        })
+
+        // Sort each group by start_timestamp
+        Object.keys(groupedByKoststed).forEach((koststedKey) => {
+            groupedByKoststed[koststedKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
+        })
+
+        // Convert the grouped and sorted schedules into an array of JSX elements
+        const groupedRows = Object.entries(groupedByKoststed).flatMap(([koststed, schedules], index) => [
+            // This is the row for the group header
+            <Table.Row key={`header-${koststed}`}>
+                <Table.DataCell colSpan={8}>
+                    <b>Koststed: {koststed}</b>
+                </Table.DataCell>
+            </Table.Row>,
+            // These are the individual rows for the schedules
+            ...schedules.map((vakter, i) => (
+                <Table.Row key={`row-${vakter.id}-${i}`}>
+                    <Table.DataCell>{++rowCount}</Table.DataCell>
                     <Table.DataCell scope="row">
                         <b> {vakter.user.name}</b>
                         <br />
@@ -160,7 +185,10 @@ const AvstemmingOkonomi = () => {
                         {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
                     </Table.DataCell>
                 </Table.Row>
-            ))
+            )),
+        ])
+        return groupedRows
+    }
 
     useEffect(() => {
         setLoading(true)
@@ -202,8 +230,6 @@ const AvstemmingOkonomi = () => {
                 setLoading(false)
             })
     }, [response])
-
-    //if (loading === true) return <Loader></Loader>
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
@@ -330,7 +356,7 @@ const AvstemmingOkonomi = () => {
                     <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                 </div>
                 <div>
-                    <b>Antall vakter: {listeAvVakter.length}</b>
+                    <b>Antall vakter: {rowCount}</b>
                 </div>
             </div>
 
@@ -409,8 +435,16 @@ const AvstemmingOkonomi = () => {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {loading ? <Loader /> : ''}
-                        {listeAvVakter.length === 0 ? <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3> : listeAvVakter}
+                        {loading ? <Loader /> : null}
+                        {listeAvVakter.length === 0 && !loading ? (
+                            <Table.Row>
+                                <Table.DataCell colSpan={7}>
+                                    <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3>
+                                </Table.DataCell>
+                            </Table.Row>
+                        ) : (
+                            listeAvVakter
+                        )}
                     </Table.Body>
                 </Table>
             </div>
