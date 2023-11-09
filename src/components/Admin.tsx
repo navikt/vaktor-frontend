@@ -49,6 +49,33 @@ const Admin = () => {
         ),
     })
 
+    function getMonthTimestamps(currentMonth: Date) {
+        const year = currentMonth.getFullYear()
+        const month = currentMonth.getMonth()
+
+        // Start of the month
+        const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0)
+        const startTimestamp = Math.floor(startOfMonth.getTime() / 1000)
+
+        // End of the month (start of the next month)
+        const startOfNextMonth = new Date(year, month + 1, 1, 0, 0, 0, 0)
+        const endTimestamp = Math.floor(startOfNextMonth.getTime() / 1000)
+
+        return { startTimestamp, endTimestamp }
+    }
+
+    let startTimestamp: number, endTimestamp: number
+
+    if (selectedMonth !== undefined) {
+        const timestamps = getMonthTimestamps(selectedMonth)
+        startTimestamp = timestamps.startTimestamp
+        endTimestamp = timestamps.endTimestamp
+    } else {
+        const now = new Date()
+        startTimestamp = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime() / 1000
+        endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
+    }
+
     const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
         try {
             const response = await fetch(`/vaktor/api/delete_schedule?schedule_id=${schedule_id}`)
@@ -212,7 +239,8 @@ const Admin = () => {
 
     useEffect(() => {
         setLoading(true)
-        fetch('/vaktor/api/all_schedules')
+        const path = `/vaktor/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
+        fetch(path)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
@@ -250,7 +278,7 @@ const Admin = () => {
                 setDistinctFilenames(sortedFilenames)
                 setLoading(false)
             })
-    }, [response])
+    }, [response, selectedMonth])
 
     //if (loading === true) return <Loader></Loader>
 
