@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'Missing required parameter start and/or end timestamps' })
     }
 
-    const path = `${process.env.BACKEND_URL}/api/v1/admin/all_schedules_with_limit?start=${start_timestamp}&end=${end_timestamp}`
+    const path = `${process.env.BACKEND_URL}/api/v1/okonomi/all_schedules_with_limit?start=${start_timestamp}&end=${end_timestamp}`
 
     try {
         console.log('Path: ', path)
