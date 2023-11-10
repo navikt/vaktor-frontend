@@ -235,10 +235,13 @@ const AvstemmingOkonomi = () => {
                         itemData.flatMap((data: Schedules) => {
                             return data.audits
                                 .map((audit: { action: string }) => {
-                                    const regex = /(Overført til lønn ved fil|Sendt til utbetaling ved fil): (\w{3}-\d{2}-\d{4})( - Vaktor Lonn)?/
+                                    const regex =
+                                        /(Overført til lønn ved fil|Sendt til utbetaling ved fil): (\w{3}-\d{2}-\d{4})(-?\w*)\.txt( - Vaktor Lonn)?/
                                     const match = audit.action.match(regex)
                                     if (match) {
-                                        const filename = match[2]
+                                        const datePart = match[2]
+                                        const optionalSuffix = match[3] || '' // Will be empty string if not present
+                                        const filename = `${datePart}${optionalSuffix}.txt`
                                         return filename.trim()
                                     }
                                     return null
@@ -247,6 +250,7 @@ const AvstemmingOkonomi = () => {
                         })
                     )
                 )
+
                 // Sort the filenames by date
                 const sortedFilenames = distinctFilenames.sort((a, b) => {
                     const dateA = new Date(a.split('-').reverse().join('-'))
