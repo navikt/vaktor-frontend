@@ -16,8 +16,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
 
         if (backendResponse.ok) {
-            const body = await backendResponse.json()
-            res.status(200).json(body)
+            // Assuming the response is an iCalendar file, read it as text
+            const icalData = await backendResponse.text()
+
+            res.setHeader('Content-Type', 'text/calendar')
+            res.setHeader('Content-Disposition', 'attachment; filename="calendar.ics"')
+            res.status(200).send(icalData)
         } else {
             const errorText = await backendResponse.text()
             res.status(backendResponse.status).json({ message: errorText })

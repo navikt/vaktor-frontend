@@ -31,9 +31,27 @@ const UpdateSchedule = () => {
     const group_calendar = async (group_id: string) => {
         try {
             const response = await fetch(`/vaktor/api/group_calendar?group_id=${group_id}`)
-            const data = await response.json()
-            setResponse(data)
-            console.log(`Laster ned kalender for: ${group_id}`)
+            if (response.ok) {
+                const icalData = await response.text()
+                const blob = new Blob([icalData], { type: 'text/calendar' })
+
+                // Create a link element to download the file
+                const link = document.createElement('a')
+                link.href = window.URL.createObjectURL(blob)
+                link.download = 'group_calendar.ics'
+                document.body.appendChild(link)
+                link.click()
+
+                // Clean up the link element
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(link.href)
+
+                console.log(`Laster ned kalender for: ${user.name}`)
+            } else {
+                console.error('Failed to download calendar')
+                const errorText = await response.text()
+                console.error(errorText)
+            }
         } catch (error) {
             console.error(error)
         }
@@ -42,9 +60,28 @@ const UpdateSchedule = () => {
     const my_calendar = async () => {
         try {
             const response = await fetch(`/vaktor/api/my_calendar`)
-            const data = await response.json()
-            setResponse(data)
-            console.log(`Laster ned kalender for: ${user.name}`)
+
+            if (response.ok) {
+                const icalData = await response.text()
+                const blob = new Blob([icalData], { type: 'text/calendar' })
+
+                // Create a link element to download the file
+                const link = document.createElement('a')
+                link.href = window.URL.createObjectURL(blob)
+                link.download = 'my_calendar.ics'
+                document.body.appendChild(link)
+                link.click()
+
+                // Clean up the link element
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(link.href)
+
+                console.log(`Laster ned kalender for: ${user.name}`)
+            } else {
+                console.error('Failed to download calendar')
+                const errorText = await response.text()
+                console.error(errorText)
+            }
         } catch (error) {
             console.error(error)
         }
