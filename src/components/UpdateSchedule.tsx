@@ -1,10 +1,12 @@
-import { Button, Table, useMonthpicker, MonthPicker, Search, Select } from '@navikt/ds-react'
-import { useEffect, useState } from 'react'
+import { Button, Table, useMonthpicker, MonthPicker, Search, Select, ReadMore } from '@navikt/ds-react'
+import { Dispatch, useEffect, useState } from 'react'
 import { Schedules, User, Vaktlag } from '../types/types'
 import moment from 'moment'
 import ScheduleModal from './ScheduleModal'
 import ScheduleChanges from './ScheduleChanges'
 import { useAuth } from '../context/AuthContext'
+import { CalendarIcon } from '@navikt/aksel-icons'
+import styled from 'styled-components'
 
 const UpdateSchedule = () => {
     const { user } = useAuth()
@@ -25,6 +27,65 @@ const UpdateSchedule = () => {
         toDate,
         defaultSelected,
     })
+
+    const group_calendar = async (group_id: string) => {
+        try {
+            const response = await fetch(`/vaktor/api/group_calendar?group_id=${group_id}`)
+            if (response.ok) {
+                const icalData = await response.text()
+                const blob = new Blob([icalData], { type: 'text/calendar' })
+
+                // Create a link element to download the file
+                const link = document.createElement('a')
+                link.href = window.URL.createObjectURL(blob)
+                link.download = 'group_calendar.ics'
+                document.body.appendChild(link)
+                link.click()
+
+                // Clean up the link element
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(link.href)
+
+                console.log(`Laster ned kalender for: ${user.name}`)
+            } else {
+                console.error('Failed to download calendar')
+                const errorText = await response.text()
+                console.error(errorText)
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const my_calendar = async () => {
+        try {
+            const response = await fetch(`/vaktor/api/my_calendar`)
+
+            if (response.ok) {
+                const icalData = await response.text()
+                const blob = new Blob([icalData], { type: 'text/calendar' })
+
+                // Create a link element to download the file
+                const link = document.createElement('a')
+                link.href = window.URL.createObjectURL(blob)
+                link.download = 'my_calendar.ics'
+                document.body.appendChild(link)
+                link.click()
+
+                // Clean up the link element
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(link.href)
+
+                console.log(`Laster ned kalender for: ${user.name}`)
+            } else {
+                console.error('Failed to download calendar')
+                const errorText = await response.text()
+                console.error(errorText)
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
     useEffect(() => {
         fetch('/vaktor/api/group_schedules')
@@ -51,6 +112,30 @@ const UpdateSchedule = () => {
                     justifyContent: 'space-around',
                 }}
             >
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <ReadMore header="Last ned vakter til kalender">
+                        <div style={{ display: 'grid', gap: '10px', justifyContent: 'flex-end' }}>
+                            <Button
+                                size="small"
+                                icon={<CalendarIcon title="a11y-title" fontSize="1.5rem" />}
+                                onClick={() => {
+                                    group_calendar(selectedVaktlag)
+                                }}
+                            >
+                                .iCal for Vaktlaget
+                            </Button>
+                            <Button
+                                size="small"
+                                icon={<CalendarIcon title="a11y-title" fontSize="1.5rem" />}
+                                onClick={() => {
+                                    my_calendar()
+                                }}
+                            >
+                                .iCal for mine vakter
+                            </Button>
+                        </div>
+                    </ReadMore>
+                </div>
                 <div className="min-h-96" style={{ display: 'flex', gap: '30px' }}>
                     <MonthPicker {...monthpickerProps}>
                         <div className="grid gap-4">
