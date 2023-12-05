@@ -273,7 +273,7 @@ const AvstemmingOkonomi = () => {
 
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-        const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
+        const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
