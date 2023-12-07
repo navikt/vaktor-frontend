@@ -320,6 +320,8 @@ const AvstemmingOkonomi = () => {
                                     <option value={1}>Godkjent av ansatt</option>
                                     <option value={3}>Godkjent av vaktsjef</option>
                                     <option value={4}>Overført til lønn</option>
+                                    <option value={5}>Godkjent av BDM</option>
+                                    <option value={7}>Utregning fullført med diff</option>
                                 </Select>
                             </div>
 
