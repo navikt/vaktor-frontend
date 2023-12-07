@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         approve_level,
     }
 
-    const path = `${process.env.BACKEND_URL}/api/v1/admin/rekjoring?start_timestamp=${start_timestamp}&end_timetamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
+    const path = `${process.env.BACKEND_URL}/api/v1/okonomi/rekjoring?start_timestamp=${start_timestamp}&end_timetamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
 
     const backendResponse = await fetch(path, {
         headers: {
