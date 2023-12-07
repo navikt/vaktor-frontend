@@ -28,7 +28,7 @@ const AvstemmingOkonomi = () => {
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
-    const [searchFilterAction, setSearchFilterAction] = useState(8)
+    const [searchFilterAction, setSearchFilterAction] = useState(9)
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -273,7 +273,7 @@ const AvstemmingOkonomi = () => {
 
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-        const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
+        const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
@@ -424,7 +424,7 @@ const AvstemmingOkonomi = () => {
 
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                        <option value={8}>Alle</option>
+                        <option value={9}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
                         <option value={1}>Godkjent av ansatt</option>
                         <option value={2}>Venter på utregning</option>

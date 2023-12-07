@@ -27,7 +27,7 @@ const Admin = () => {
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
-    const [searchFilterAction, setSearchFilterAction] = useState(8)
+    const [searchFilterAction, setSearchFilterAction] = useState(9)
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -292,7 +292,7 @@ const Admin = () => {
 
             const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
             const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-            const isApproveLevelMatch = searchFilterAction === 8 ? true : value.approve_level === searchFilterAction
+            const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
             const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
             return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
@@ -359,16 +359,16 @@ const Admin = () => {
 
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                        <option value={8}>Alle</option>
+                        <option value={9}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
                         <option value={1}>Godkjent av ansatt</option>
                         <option value={2}>Venter på utregning</option>
                         <option value={3}>Godkjent av vaktsjef</option>
                         <option value={4}>Godkjent av BDM</option>
                         <option value={5}>Overført til lønn</option>
-                        <option value={5}>Venter på utregning av diff</option>
-                        <option value={6}>Utregning fullført med diff</option>
-                        <option value={7}>Overført til lønn etter rekjøring</option>
+                        <option value={6}>Venter på utregning av diff</option>
+                        <option value={7}>Utregning fullført med diff</option>
+                        <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
                 </div>
             </div>
