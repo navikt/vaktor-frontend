@@ -1,4 +1,4 @@
-import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ExpansionCard } from '@navikt/ds-react'
+import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ExpansionCard, CheckboxGroup, Checkbox } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -29,6 +29,8 @@ const AvstemmingOkonomi = () => {
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(9)
+
+     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -226,6 +228,11 @@ const AvstemmingOkonomi = () => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
+                
+                if(FilterOnDoubleSchedules === true){
+                    setItemData(itemData.filter((data: Schedules) => data.is_double === true))
+                }
+                
                 const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
                 const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
                 setGroupNames(sortedGroupNames)
@@ -261,7 +268,7 @@ const AvstemmingOkonomi = () => {
                 setDistinctFilenames(sortedFilenames)
                 setLoading(false)
             })
-    }, [response, selectedMonth])
+    }, [response, selectedMonth, FilterOnDoubleSchedules])
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
@@ -437,6 +444,11 @@ const AvstemmingOkonomi = () => {
                         <option value={7}>Utregning fullført med diff</option>
                         <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
+                </div>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <CheckboxGroup legend="Dobbel vakt" onChange={(val: string[]) => setFilterOnDoubleSchedules(val.includes('true'))}>
+                        <Checkbox value="true">Er dobbeltvakt</Checkbox>
+                    </CheckboxGroup>
                 </div>
             </div>
             <div>
