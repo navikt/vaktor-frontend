@@ -35,6 +35,10 @@ export enum RouterAvstemmingOkonomi {
     NAME = 'Avstemming',
     PATH = '/avstemming',
 }
+export enum RouterUnfinished {
+    NAME = 'Unfnished',
+    PATH = '/avstemmingMangler',
+}
 
 export enum RouterAdmin {
     NAME = 'Admin',

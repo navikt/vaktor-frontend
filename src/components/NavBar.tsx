@@ -57,9 +57,12 @@ const Navbar: React.FC = () => {
                 )}
                 {hasAnyRole(user, ['vaktsjef', 'admin']) && <LinkButton route={Routes.RouterVaktperioder} />}
                 {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'admin']) && <LinkButton route={Routes.RouterDineVakter} />}
-                {hasAnyRole(user, ['vaktsjef', 'leveranseleder', 'personalleder', 'admin', 'bdm']) && <LinkButton route={Routes.RouterLedergodkjenning} />}
+                {hasAnyRole(user, ['vaktsjef', 'leveranseleder', 'personalleder', 'admin', 'bdm']) && (
+                    <LinkButton route={Routes.RouterLedergodkjenning} />
+                )}
                 {hasAnyRole(user, ['leveranseleder', 'admin']) && <LinkButton route={Routes.RouterLeveranseleder} />}
                 {hasAnyRole(user, ['okonomi', 'admin']) && <LinkButton route={Routes.RouterAvstemmingOkonomi} />}
+                {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterUnfinished} />}
                 {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterAdmin} />}
 
                 {/* Alert if no roles */}
