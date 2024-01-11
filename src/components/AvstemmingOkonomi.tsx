@@ -30,7 +30,7 @@ const AvstemmingOkonomi = () => {
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(9)
 
-     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
+    const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -228,11 +228,11 @@ const AvstemmingOkonomi = () => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
-                
-                if(FilterOnDoubleSchedules === true){
+
+                if (FilterOnDoubleSchedules === true) {
                     setItemData(itemData.filter((data: Schedules) => data.is_double === true))
                 }
-                
+
                 const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
                 const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
                 setGroupNames(sortedGroupNames)
@@ -280,7 +280,12 @@ const AvstemmingOkonomi = () => {
 
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-        const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
+        const isApproveLevelMatch =
+            searchFilterAction === 9
+                ? true
+                : searchFilterAction === -1
+                ? value.approve_level !== 5 && value.approve_level !== 8
+                : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
@@ -443,6 +448,7 @@ const AvstemmingOkonomi = () => {
                         <option value={6}>Venter på utregning av diff</option>
                         <option value={7}>Utregning fullført med diff</option>
                         <option value={8}>Overført til lønn etter rekjøring</option>
+                        <option value={-1}>Ikke overført lønn</option>
                     </Select>
                 </div>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
