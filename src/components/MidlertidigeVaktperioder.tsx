@@ -19,7 +19,7 @@ function DatePickeroo({ index, handleChildProps }: props) {
 
     const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
         fromDate: new Date(Date.now()), //+ numWeeksInMs),
-        toDate: new Date('Feb 01 2024'),
+        toDate: new Date('Feb 01 2027'),
         defaultMonth: new Date(Date.now() + numWeeksInMs),
         onRangeChange: (val) => {
             if (val && val.from && val.to) {
