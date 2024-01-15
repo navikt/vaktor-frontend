@@ -40,6 +40,8 @@ const ItemDetailsModal = (props: {
                     icon: <InformationColored />,
                     heading: 'Vaktperiode',
                 }}
+                width="small"
+                closeOnBackdropClick
             >
                 <Modal.Body>
                     {/*Vaktperiode Heading*/}

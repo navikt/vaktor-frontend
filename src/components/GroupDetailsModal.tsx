@@ -1,8 +1,9 @@
 import { Modal, Button, Alert, Heading, BodyLong } from '@navikt/ds-react'
-import { Telephone, Dialog, InformationColored, Clock } from '@navikt/ds-icons'
+import { Telephone, Dialog, InformationColored, Clock, CoApplicant } from '@navikt/ds-icons'
 import '@navikt/ds-css'
 import styled from 'styled-components'
 import { useEffect, useState } from 'react'
+import UserInfoDetails from './userInfoDetails'
 
 export const InformationLine = styled.div.attrs((props: { leftPosition?: number }) => props)`
     display: block;
@@ -37,6 +38,13 @@ export const InfoTextWrapper = styled.div`
 export const Spacer = styled.div.attrs((props: { height: number }) => props)`
     height: ${(props) => props.height}px;
 `
+const iconStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '53px',
+    marginRight: '10px',
+}
 
 const GroupDetailsModal = (props: { handleClose: Function; groupName: string; groupType?: string; groupTelephone?: string }) => {
     useEffect(() => {}, [])
@@ -45,43 +53,22 @@ const GroupDetailsModal = (props: { handleClose: Function; groupName: string; gr
 
     return (
         <>
-            <Modal open={true} aria-label="Informasjons-modal for vaktlag" onClose={() => props.handleClose()}>
+            <Modal
+                open={true}
+                aria-label="Informasjons-modal for vaktlag"
+                onClose={() => props.handleClose()}
+                header={{
+                    label: 'Informasjon om vaktlag',
+                    icon: <InformationColored />,
+                    heading: props.groupName,
+                }}
+                width="medium"
+                closeOnBackdropClick
+            >
                 <Modal.Body>
-                    {/*Vaktlag Heading*/}
-                    <InformationLine>
-                        <Heading spacing level="1" size="medium">
-                            <HeadingIcon>
-                                <InformationColored />
-                            </HeadingIcon>
-                            <InfoHeadWrapper>{props.groupName}</InfoHeadWrapper>
-                        </Heading>
-                    </InformationLine>
+                    <UserInfoDetails infoName="Vakttype: " infoText={props.groupType!} icon={<CoApplicant style={iconStyle} />} />
 
-                    {/*Slack*/}
-                    <Spacer height={8} />
-                    <InformationLine>
-                        <IconWrapper topPosition={92}>
-                            <Clock />
-                        </IconWrapper>
-                        <InfoTextWrapper>
-                            <b>{props.groupType}</b>
-                        </InfoTextWrapper>
-                    </InformationLine>
-
-                    <BodyLong spacing>
-                        {/*Vakttelefon*/}
-                        <Spacer height={12} />
-                        <InformationLine>
-                            <IconWrapper topPosition={130}>
-                                <Telephone />
-                            </IconWrapper>
-                            <InfoTextWrapper>
-                                <b>Vakttelefon:&nbsp; </b>
-
-                                {phonetext}
-                            </InfoTextWrapper>
-                        </InformationLine>
-                    </BodyLong>
+                    <UserInfoDetails infoName="Vaktnummer: " infoText={phonetext} icon={<Telephone style={iconStyle} />} />
                 </Modal.Body>
             </Modal>
         </>
