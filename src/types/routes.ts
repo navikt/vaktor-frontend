@@ -36,7 +36,7 @@ export enum RouterAvstemmingOkonomi {
     PATH = '/avstemming',
 }
 export enum RouterUnfinished {
-    NAME = 'Unfnished',
+    NAME = 'Mangler Utbetaling',
     PATH = '/avstemmingMangler',
 }
 
