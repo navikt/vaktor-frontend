@@ -1,8 +1,7 @@
-import { Modal, Heading, BodyLong, Textarea } from '@navikt/ds-react'
-import { InformationColored, People, CoApplicant, Calender, Telephone, Notes, Dialog, Edit, SuccessStroke, SuccessColored } from '@navikt/ds-icons'
+import { Modal } from '@navikt/ds-react'
+import { InformationColored, People, CoApplicant, Calender, Telephone, Notes, Dialog } from '@navikt/ds-icons'
 import '@navikt/ds-css'
 import { useEffect } from 'react'
-import { InformationLine, HeadingIcon, InfoHeadWrapper } from './GroupDetailsModal'
 import { User } from '../types/types'
 import UserInfoDetails from './userInfoDetails'
 
