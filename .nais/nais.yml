@@ -49,4 +49,3 @@ spec:
             enabled: true
             # everything below is optional, defaults shown
             autoLogin: true
-            errorPath: ""

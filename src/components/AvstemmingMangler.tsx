@@ -1,110 +1,29 @@
-import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ExpansionCard, CheckboxGroup, Checkbox } from '@navikt/ds-react'
+import { Table, Loader, Search, Select, CheckboxGroup, Checkbox } from '@navikt/ds-react'
 import moment from 'moment'
-import { Dispatch, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import MapApproveStatus from './utils/MapApproveStatus'
 
-const AvstemmingOkonomi = () => {
+const AvstemmingMangler = () => {
     const { user } = useAuth()
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [loading, setLoading] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
 
     const [groupNames, setGroupNames] = useState<string[]>([])
     const [distinctFilenames, setDistinctFilenames] = useState<string[]>([])
     const [selectedFilename, setSelectedFilename] = useState<string>('')
 
     const [response, setResponse] = useState([])
-    const [responseError, setResponseError] = useState('')
-
-    const [actionReason, setActionReason] = useState(Number)
-    const [approveLevel, setApproveLevel] = useState(Number)
-
-    const buttonRef = useRef<HTMLButtonElement>(null)
-    const [openState, setOpenState] = useState<boolean>(false)
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(9)
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
-
-    const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
-        fromDate: new Date('Oct 01 2022'),
-        toDate: new Date('Aug 23 2025'),
-        //defaultSelected: new Date("Oct 2022")
-        defaultSelected: new Date(
-            new Date().getDate() - 10 > 0
-                ? moment().locale('en-GB').format('L')
-                : moment()
-                      .locale('en-GB')
-                      .month(moment().month() - 1)
-                      .format('L')
-        ),
-    })
-
-    function getMonthTimestamps(currentMonth: Date) {
-        const year = currentMonth.getFullYear()
-        const month = currentMonth.getMonth()
-
-        // Start of the month
-        const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0)
-        const startTimestamp = Math.floor(startOfMonth.getTime() / 1000)
-
-        // End of the month (start of the next month)
-        const startOfNextMonth = new Date(year, month + 1, 1, 0, 0, 0, 0)
-        const endTimestamp = Math.floor(startOfNextMonth.getTime() / 1000)
-
-        return { startTimestamp, endTimestamp }
-    }
-
-    let startTimestamp: number, endTimestamp: number
-
-    if (selectedMonth !== undefined) {
-        const timestamps = getMonthTimestamps(selectedMonth)
-        startTimestamp = timestamps.startTimestamp
-        endTimestamp = timestamps.endTimestamp
-    } else {
-        const now = new Date()
-        startTimestamp = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime() / 1000
-        endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
-    }
-
-    const recalculateSchedules = async (
-        start_timestamp: number,
-        end_timestamp: number,
-        action_reason: number,
-        approve_level: number,
-        setResponse: Dispatch<any>,
-        setResponseError: Dispatch<string>
-    ) => {
-        var url = `/vaktor/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
-        console.log('Recalculating: ', start_timestamp, end_timestamp, action_reason, approve_level)
-        var fetchOptions = {
-            method: 'POST',
-        }
-
-        await fetch(url, fetchOptions)
-            .then(async (r) => {
-                if (!r.ok) {
-                    const rText = await r.json()
-                    setResponseError(rText.detail)
-                    return []
-                }
-                return r.json()
-            })
-            .then((data: Schedules) => {
-                setResponse(data)
-                setIsLoading(false)
-            })
-            .catch((error: Error) => {
-                console.error(error.name, error.message)
-                setIsLoading(false)
-            })
-    }
+    const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
 
     let rowCount = 0
 
@@ -221,7 +140,7 @@ const AvstemmingOkonomi = () => {
 
     useEffect(() => {
         setLoading(true)
-        const path = `/vaktor/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
+        const path = `/vaktor/api/unfinished_schedules`
         fetch(path)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {
@@ -268,15 +187,24 @@ const AvstemmingOkonomi = () => {
                 setDistinctFilenames(sortedFilenames)
                 setLoading(false)
             })
-    }, [response, selectedMonth, FilterOnDoubleSchedules])
+    }, [response, FilterOnDoubleSchedules])
 
     if (itemData === undefined) return <></>
-    if (selectedMonth === undefined) setSelected(new Date())
 
     function matchesFilterCriteria(value: Schedules): boolean {
-        const isMonthMatch =
-            new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
+        let isNotCurrentMonth = true
+
+        if (FilterExcludeCurrentMonth) {
+            const currentDate = new Date()
+            const currentMonth = currentDate.getMonth()
+            const currentYear = currentDate.getFullYear()
+
+            const valueDate = new Date(value.start_timestamp * 1000)
+            const valueMonth = valueDate.getMonth()
+            const valueYear = valueDate.getFullYear()
+
+            isNotCurrentMonth = valueMonth !== currentMonth || valueYear !== currentYear
+        }
 
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
@@ -288,7 +216,7 @@ const AvstemmingOkonomi = () => {
                 : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
-        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+        return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
     }
 
     let listeAvVakter = mapVakter(itemData.filter(matchesFilterCriteria))
@@ -310,93 +238,6 @@ const AvstemmingOkonomi = () => {
                 margin: 'auto',
             }}
         >
-            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end' }}>
-                <ExpansionCard aria-label="reberegning-av-vakter" size="small" style={{ justifyContent: 'center', width: '280px' }}>
-                    <ExpansionCard.Header>
-                        <ExpansionCard.Title>Reberegning</ExpansionCard.Title>
-                    </ExpansionCard.Header>
-                    <ExpansionCard.Content>
-                        <div style={{ display: 'grid', justifyContent: 'center', gap: '10px' }}>
-                            <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                                <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
-                                    <option value="">Gjør et valg</option>
-                                    <option value={1}>Ordinær kjøring</option>
-                                    <option value={2}>Lønnsendring</option>
-                                    <option value={3}>Feilutregning/Feil i Vaktor</option>
-                                    <option value={4}>Sekundærkjøring</option>
-                                </Select>
-                            </div>
-                            <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                                <Select label="Velg Approve Level" onChange={(e) => setApproveLevel(Number(e.target.value))}>
-                                    <option value="">Gjør et valg</option>
-                                    <option value={1}>Godkjent av ansatt</option>
-                                    <option value={3}>Godkjent av vaktsjef</option>
-                                    <option value={4}>Godkjent av BDM</option>
-                                    <option value={5}>Overført til lønn</option>
-                                    <option value={7}>Utregning fullført med diff</option>
-                                </Select>
-                            </div>
-
-                            <Button
-                                onClick={() => {
-                                    setOpenState(true)
-                                }}
-                                style={{
-                                    maxWidth: '210px',
-                                    marginLeft: '30px',
-                                    marginTop: '5px',
-                                    marginBottom: '5px',
-                                }}
-                                disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
-                                ref={buttonRef}
-                            >
-                                Rekalkuler {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
-                            </Button>
-                            <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
-                                <Popover.Content
-                                    style={{
-                                        textAlign: 'center',
-                                        backgroundColor: 'rgba(241, 241, 241, 1)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '10px',
-                                        maxWidth: '250px',
-                                    }}
-                                >
-                                    Er du sikker på at du vil rekalkulere alle perioder for{' '}
-                                    <b>{selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}?</b>
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => {
-                                            if (selectedMonth) {
-                                                const start_timestamp = Math.floor(selectedMonth.getTime() / 1000)
-                                                const end_timestamp = Math.floor(
-                                                    new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)).getTime() / 1000
-                                                )
-                                                recalculateSchedules(
-                                                    start_timestamp,
-                                                    end_timestamp,
-                                                    actionReason,
-                                                    approveLevel,
-                                                    setResponse,
-                                                    setResponseError
-                                                )
-                                                setIsLoading(true)
-                                            } else {
-                                                console.log('SelectedMonth not set')
-                                            }
-                                        }}
-                                        disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
-                                    >
-                                        {isLoading ? <Loader /> : 'Rekalkuler nå!'}
-                                    </Button>
-                                </Popover.Content>
-                            </Popover>
-                        </div>
-                    </ExpansionCard.Content>
-                </ExpansionCard>
-            </div>
-
             <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', columnGap: '15px', marginTop: '15px' }}>
                 <div>
                     <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
@@ -407,11 +248,6 @@ const AvstemmingOkonomi = () => {
             </div>
 
             <div className="min-h-96" style={{ display: 'flex' }}>
-                <MonthPicker {...monthpickerProps}>
-                    <div className="grid gap-4">
-                        <MonthPicker.Input {...inputProps} label="Velg måned" />
-                    </div>
-                </MonthPicker>
                 <form style={{ width: '300px', marginLeft: '30px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
@@ -454,6 +290,11 @@ const AvstemmingOkonomi = () => {
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <CheckboxGroup legend="Dobbel vakt" onChange={(val: string[]) => setFilterOnDoubleSchedules(val.includes('true'))}>
                         <Checkbox value="true">Er dobbeltvakt</Checkbox>
+                    </CheckboxGroup>
+                </div>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <CheckboxGroup legend="!= denne måned" onChange={(val: string[]) => setFilterExcludeCurrentMonth(val.includes('true'))}>
+                        <Checkbox value="true">!= denne måned</Checkbox>
                     </CheckboxGroup>
                 </div>
             </div>
@@ -504,4 +345,4 @@ const AvstemmingOkonomi = () => {
     )
 }
 
-export default AvstemmingOkonomi
+export default AvstemmingMangler
