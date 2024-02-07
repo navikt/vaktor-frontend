@@ -2,12 +2,16 @@ import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, Hel
 import moment from 'moment'
 import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Schedules, Roles } from '../types/types'
+import { Schedules, Roles, User } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
+
+const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
+    return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
+}
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
@@ -188,7 +192,7 @@ const AdminLeder = ({}) => {
                     </div>
                 </Table.DataCell>
                 <MapApproveStatus status={vakter.approve_level} />
-                {['personalleder', 'leveranseleder', 'okonomi', 'bdm', 'admin'].includes(user.role) ? (
+                {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? (
                     <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
                         {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>
@@ -297,7 +301,7 @@ const AdminLeder = ({}) => {
                         </Table.HeaderCell>
                         <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                        {['personalleder', 'leveranseleder', 'okonomi', 'bdm', 'admin'].includes(user.role) ? (
+                        {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? (
                             <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>
                         ) : null}
 
