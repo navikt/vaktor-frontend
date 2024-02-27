@@ -1,6 +1,6 @@
 import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button } from '@navikt/ds-react'
 import moment from 'moment'
-import { Dispatch, useEffect, useState } from 'react'
+import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
@@ -8,6 +8,7 @@ import MapAudit from './utils/mapAudit'
 import DeleteVaktButton from './utils/DeleteVaktButton'
 import EndreVaktButton from './utils/AdminAdjustDate'
 import MapApproveStatus from './utils/MapApproveStatus'
+import VarsleModal from './VarsleModal'
 
 const Admin = () => {
     const { user } = useAuth()
@@ -30,6 +31,7 @@ const Admin = () => {
     const [searchFilterAction, setSearchFilterAction] = useState(9)
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [varsleModalOpen, setVarsleModalOpen] = useState(false)
 
     const showErrorModal = (message: string) => {
         setErrorMessage(message)
@@ -284,20 +286,20 @@ const Admin = () => {
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
-    let listeAvVakter = mapVakter(
-        itemData.filter((value: Schedules) => {
-            const isMonthMatch =
-                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
+    const filteredVakter = itemData.filter((value: Schedules) => {
+        const isMonthMatch =
+            new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
-            const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
-            const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-            const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
-            const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
+        const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
+        const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
+        const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
+        const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
-            return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
-        })
-    )
+        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+    })
+
+    let listeAvVakter = mapVakter(filteredVakter)
 
     return (
         <div
@@ -311,6 +313,9 @@ const Admin = () => {
                 margin: 'auto',
             }}
         >
+            {varsleModalOpen && (
+                <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={selectedMonth || new Date()} />
+            )}
             {selectedSchedule ? (
                 <>
                     <EndreVaktButton
@@ -370,6 +375,11 @@ const Admin = () => {
                         <option value={7}>Utregning fullført med diff</option>
                         <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
+                </div>
+                <div style={{ width: '200px', marginLeft: '30px', marginTop: '30px' }}>
+                    <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
+                        Send påminnelse
+                    </Button>
                 </div>
             </div>
             <div>

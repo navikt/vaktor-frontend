@@ -110,14 +110,17 @@ const AvstemmingOkonomi = () => {
 
     const mapVakter = (vaktliste: Schedules[]) => {
         // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
-            const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
-            if (!acc[koststed]) {
-                acc[koststed] = []
-            }
-            acc[koststed].push(current)
-            return acc
-        }, {} as Record<string, Schedules[]>)
+        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce(
+            (acc: Record<string, Schedules[]>, current) => {
+                const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
+                if (!acc[koststed]) {
+                    acc[koststed] = []
+                }
+                acc[koststed].push(current)
+                return acc
+            },
+            {} as Record<string, Schedules[]>
+        )
 
         // Sort each group by start_timestamp
         Object.keys(groupedByKoststed).forEach((koststedKey) => {
@@ -284,8 +287,8 @@ const AvstemmingOkonomi = () => {
             searchFilterAction === 9
                 ? true
                 : searchFilterAction === -1
-                ? value.approve_level !== 5 && value.approve_level !== 8
-                : value.approve_level === searchFilterAction
+                  ? value.approve_level !== 5 && value.approve_level !== 8
+                  : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
