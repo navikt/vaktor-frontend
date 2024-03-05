@@ -6,31 +6,18 @@ import GroupOptions from './GroupOptions'
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
 
-const assign_leader = async (
-    group_id: string,
-    setResponse: Dispatch<any>
-    //setLoading: Dispatch<any>
-) => {
-    //setLoading(true);
-
+const assign_leader = async (group_id: string, setResponse: Dispatch<any>) => {
     await fetch(`/vaktor/api/assign_leader/?group_id=${group_id}`)
         .then((r) => r.json())
         .then((data) => {
-            //setLoading(false);
             setResponse(data)
         })
 }
 
-const remove_leader = async (
-    group_id: string,
-    setResponse: Dispatch<any>
-    //setLoading: Dispatch<any>
-) => {
-    //setLoading(true);
+const remove_leader = async (group_id: string, setResponse: Dispatch<any>) => {
     await fetch(`/vaktor/api/remove_leader/?group_id=${group_id}`)
         .then((r) => r.json())
         .then((data) => {
-            //setLoading(false);
             setResponse(data)
         })
 }
@@ -90,14 +77,8 @@ const Leveranseleder = () => {
                             </Table.HeaderCell>
 
                             <Table.DataCell>
-                                {
-                                    // Map out innterruptions (vaktbytter)
-                                    mapLeaders(vaktlag.vaktsjef)
-                                }
-                                {
-                                    // Map out innterruptions (vaktbytter)
-                                    mapLeaders(vaktlag.leveranseleder)
-                                }
+                                {mapLeaders(vaktlag.vaktsjef)}
+                                {mapLeaders(vaktlag.leveranseleder)}
                             </Table.DataCell>
 
                             <Table.DataCell style={{ maxWidth: '150px' }}>
@@ -108,6 +89,7 @@ const Leveranseleder = () => {
                                             marginBottom: '10px',
                                             minWidth: '210px',
                                         }}
+                                        disabled
                                         onClick={() => {
                                             assign_leader(
                                                 vaktlag.id,
@@ -125,6 +107,7 @@ const Leveranseleder = () => {
                                             height: '30px',
                                             minWidth: '210px',
                                         }}
+                                        disabled
                                         onClick={() =>
                                             remove_leader(
                                                 vaktlag.id,

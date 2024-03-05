@@ -40,6 +40,11 @@ export enum RouterUnfinished {
     PATH = '/avstemmingMangler',
 }
 
+export enum RouterVaktlagAdmin {
+    NAME = 'Vaktlag Admin',
+    PATH = '/vaktlag_admin',
+}
+
 export enum RouterAdmin {
     NAME = 'Admin',
     PATH = '/admin',

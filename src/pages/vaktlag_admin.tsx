@@ -18,6 +18,9 @@ const Home: NextPage = () => {
                 <div className="AdminGuideContainer">
                     <GuidePanel className="AdminGuidePanel">
                         <p>Her kan du opprette nye vaktlag</p>
+                        <p>
+                            <b>OBS! funker ikke enda</b>
+                        </p>
                     </GuidePanel>
                 </div>
                 <VaktlagAdmin />
