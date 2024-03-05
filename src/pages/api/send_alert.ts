@@ -9,8 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const month: string = req.body.month
     const type: string = req.body.type
+    const role: string = req.body.role
 
-    const path = `${process.env.BACKEND_URL}/api/v1/admin/alert_leaders?month=${month}&type=${type}`
+    const path = `${process.env.BACKEND_URL}/api/v1/admin/alert_leaders?month=${month}&type=${type}&role=${role}`
+    console.log('Path: ', path)
+    console.log('body: ', JSON.stringify(req.body.schedule_ids))
     try {
         const backendResponse = await fetch(path, {
             headers: {

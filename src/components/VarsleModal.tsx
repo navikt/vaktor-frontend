@@ -22,21 +22,23 @@ const VarsleModal = (props: { listeAvVakter: Schedules[]; handleClose: Function;
     useEffect(() => {}, [])
 
     const [selectedHowRadio, setSelectedHowRadio] = useState('slack')
-    const [selectedWhoRadio, setSelectedWhoRadio] = useState('vakthaver')
+    const [selectedRoleRadio, setSelectedRoleRadio] = useState('vakthaver')
 
     const selectedMonth = props.month.toLocaleString('nb-NO', { month: 'long' })
+
     const handleHowRadioChange = (val: string) => {
         setSelectedHowRadio(val)
     }
 
     const handleWhoRadioChange = (val: string) => {
-        setSelectedHowRadio(val)
+        setSelectedRoleRadio(val)
     }
 
     const handleSendAlert = () => {
         const data = {
             type: selectedHowRadio,
             month: selectedMonth,
+            role: selectedRoleRadio,
             schedule_ids: props.listeAvVakter.map((schedule) => schedule.id),
         }
         send_alert(data)
