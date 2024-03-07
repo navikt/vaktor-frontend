@@ -35,23 +35,23 @@ jobs:
           docker build --tag ${docker_image} --build-arg NPM_TOKEN=${{ secrets.NPM_TOKEN }} .
           docker push ${docker_image}
   
-  sentry-bump-version-release:
-    name: Sentry Create and Finalize Release
-    runs-on: ubuntu-latest
-    steps:
+  # sentry-bump-version-release:
+  #   name: Sentry Create and Finalize Release
+  #   runs-on: ubuntu-latest
+  #   steps:
 
-      - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v2
     
-      - name: Install Sentry CLI
-        run: |
-          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="${SENTRY_CLI_VERSION}" bash
+  #     - name: Install Sentry CLI
+  #       run: |
+  #         curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="${SENTRY_CLI_VERSION}" bash
 
-      - name: Create and Finalize Release
-        run: |
-          VERSION="${GITHUB_SHA}"  # Use the commit hash as the release name
-          sentry-cli releases new "$VERSION"
-          sentry-cli releases set-commits "$VERSION" --auto
-          sentry-cli releases finalize "$VERSION"
+  #     - name: Create and Finalize Release
+  #       run: |
+  #         VERSION="${GITHUB_SHA}"  # Use the commit hash as the release name
+  #         sentry-cli releases new "$VERSION"
+  #         sentry-cli releases set-commits "$VERSION" --auto
+  #         sentry-cli releases finalize "$VERSION"
 
   deploy-test:
     name: Deploy application to test env
