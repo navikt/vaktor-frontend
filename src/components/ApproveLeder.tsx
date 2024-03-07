@@ -220,39 +220,30 @@ const AdminLeder = ({}) => {
 
     let listeAvVakter = mapVakter(
         itemData.filter((value: Schedules) => {
-            const currentDate = new Date()
-            const currentMonth = currentDate.getMonth()
-            const currentYear = currentDate.getFullYear()
+            const month = new Date(value.start_timestamp * 1000).getMonth()
+            const year = new Date(value.start_timestamp * 1000).getFullYear()
+            // Check for role and approvelevel
+            const checkRole =
+                (hasAnyRole(user, ['bdm']) && value.approve_level == 3) ||
+                (hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1) ||
+                (hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1)
+            const isExternal = value.user.ekstern == false
+            // Ignore approved periods in the future
+            const futurePeriodsMonth = month <= selectedMonth!.getMonth()
+            const futurePeriodsYear = year == selectedMonth!.getFullYear()
 
-            // Normalize selectedMonth to the first day of the month for accurate comparison
-            const normalizedSelectedMonth = new Date(selectedMonth!.getFullYear(), selectedMonth!.getMonth(), 1)
+            // Determine if the date filtering should be applied.
+            const isDateMatching = checkRole || (month === selectedMonth!.getMonth() && year === selectedMonth!.getFullYear())
 
-            // Determine if selectedMonth is in the past
-            const isSelectedMonthPast = normalizedSelectedMonth < new Date(currentYear, currentMonth, 1)
-
-            // Conditions to ignore date based on roles and approve_level, but only for past selectedMonth
-            const ignoreDateIfPastForSpecificRoles =
-                isSelectedMonthPast &&
-                ((hasAnyRole(user, ['bdm']) && value.approve_level == 3) ||
-                    (hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1) ||
-                    (hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1))
-
-            const valueDate = new Date(value.start_timestamp * 1000)
-
-            // Condition for matching date, considering selectedMonth
-            const isDateMatching =
-                ignoreDateIfPastForSpecificRoles ||
-                (!isSelectedMonthPast && // Apply the month and year filter if selectedMonth is not in the past
-                    valueDate.getMonth() === selectedMonth!.getMonth() &&
-                    valueDate.getFullYear() === selectedMonth!.getFullYear())
-
-            // Apply other filtering conditions
+            // Apply other filtering conditions.
             const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
             const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
             const isApproveLevelMatching = searchFilterAction === 5 ? true : value.approve_level === searchFilterAction
 
-            // Combine all conditions for filtering
-            return isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching
+            // Combine all conditions for filtering.
+            return (
+                isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching && isExternal && futurePeriodsMonth && futurePeriodsYear
+            )
         })
     )
 
