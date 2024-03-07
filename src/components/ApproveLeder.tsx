@@ -217,41 +217,42 @@ const AdminLeder = ({}) => {
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
-    // let listeAvVakter = mapVakter(
-    //     itemData.filter(
-    //         (value: Schedules) =>
-    //             // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
-    //             // if hasAnyRole(user, ['bdm']) ignore date if value.approve_level == 3 &&
-    //             new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-    //             new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
-    //             value.user.name.toLowerCase().includes(searchFilter) &&
-    //             value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase()) &&
-    //             (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
-    //     )
-    // )
+
     let listeAvVakter = mapVakter(
         itemData.filter((value: Schedules) => {
-            // Check if the user has the 'bdm' role and approve_level is 3.
-            const ignoreDateForBdmAndApproveLevel3 = hasAnyRole(user, ['bdm']) && value.approve_level == 3
-            const ignoreDateForVaktsjefAndApproveLevel1 = hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1
-            const ignoreDateForLeveranselederAndApproveLevel1 = hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1
-            const isExternal = value.user.ekstern == false
+            const currentDate = new Date()
+            const currentMonth = currentDate.getMonth()
+            const currentYear = currentDate.getFullYear()
 
-            // Determine if the date filtering should be applied.
+            // Normalize selectedMonth to the first day of the month for accurate comparison
+            const normalizedSelectedMonth = new Date(selectedMonth!.getFullYear(), selectedMonth!.getMonth(), 1)
+
+            // Determine if selectedMonth is in the past
+            const isSelectedMonthPast = normalizedSelectedMonth < new Date(currentYear, currentMonth, 1)
+
+            // Conditions to ignore date based on roles and approve_level, but only for past selectedMonth
+            const ignoreDateIfPastForSpecificRoles =
+                isSelectedMonthPast &&
+                ((hasAnyRole(user, ['bdm']) && value.approve_level == 3) ||
+                    (hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1) ||
+                    (hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1))
+
+            const valueDate = new Date(value.start_timestamp * 1000)
+
+            // Condition for matching date, considering selectedMonth
             const isDateMatching =
-                ignoreDateForBdmAndApproveLevel3 ||
-                ignoreDateForVaktsjefAndApproveLevel1 ||
-                ignoreDateForLeveranselederAndApproveLevel1 ||
-                (new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                    new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear())
+                ignoreDateIfPastForSpecificRoles ||
+                (!isSelectedMonthPast && // Apply the month and year filter if selectedMonth is not in the past
+                    valueDate.getMonth() === selectedMonth!.getMonth() &&
+                    valueDate.getFullYear() === selectedMonth!.getFullYear())
 
-            // Apply other filtering conditions.
+            // Apply other filtering conditions
             const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
             const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
             const isApproveLevelMatching = searchFilterAction === 5 ? true : value.approve_level === searchFilterAction
 
-            // Combine all conditions for filtering.
-            return isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching && isExternal
+            // Combine all conditions for filtering
+            return isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching
         })
     )
 
