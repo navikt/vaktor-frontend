@@ -324,7 +324,8 @@ const AdminLeder = ({}) => {
                             Denne knappen vil godkjenne samtlige vakter i lista under. Du kan bruke filterfunksjonaliteten (til venstre) for å
                             redusere antall vakter du godkjenner i bulk. <br />
                             <br />
-                            Vakter i forskjellig status kan ikke godkjennes samtidig, derfor <b>må</b> "status" velges i nedtrekksmenyen til venstre
+                            Vakter i forskjellig status kan ikke godkjennes samtidig, derfor <b>må</b> <i>status</i> velges i nedtrekksmenyen til
+                            venstre
                         </div>
                     </HelpText>
                 </div>
