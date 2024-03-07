@@ -217,17 +217,44 @@ const AdminLeder = ({}) => {
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
+    // let listeAvVakter = mapVakter(
+    //     itemData.filter(
+    //         (value: Schedules) =>
+    //             // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
+    //             // if hasAnyRole(user, ['bdm']) ignore date if value.approve_level == 3 &&
+    //             new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+    //             new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
+    //             value.user.name.toLowerCase().includes(searchFilter) &&
+    //             value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase()) &&
+    //             (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
+    //     )
+    // )
     let listeAvVakter = mapVakter(
-        itemData.filter(
-            (value: Schedules) =>
-                // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
-                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
-                value.user.name.toLowerCase().includes(searchFilter) &&
-                value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase()) &&
-                (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
-        )
+        itemData.filter((value: Schedules) => {
+            // Check if the user has the 'bdm' role and approve_level is 3.
+            const ignoreDateForBdmAndApproveLevel3 = hasAnyRole(user, ['bdm']) && value.approve_level == 3
+            const ignoreDateForVaktsjefAndApproveLevel1 = hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1
+            const ignoreDateForLeveranselederAndApproveLevel1 = hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1
+            const isExternal = value.user.ekstern == false
+
+            // Determine if the date filtering should be applied.
+            const isDateMatching =
+                ignoreDateForBdmAndApproveLevel3 ||
+                ignoreDateForVaktsjefAndApproveLevel1 ||
+                ignoreDateForLeveranselederAndApproveLevel1 ||
+                (new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+                    new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear())
+
+            // Apply other filtering conditions.
+            const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
+            const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
+            const isApproveLevelMatching = searchFilterAction === 5 ? true : value.approve_level === searchFilterAction
+
+            // Combine all conditions for filtering.
+            return isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching && isExternal
+        })
     )
+
     return (
         <>
             <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />
