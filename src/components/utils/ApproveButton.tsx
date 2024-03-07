@@ -39,7 +39,6 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
         user.bdm_koststeder != null && Array.isArray(vakt.cost) && num_cost >= 0 && num_cost < vakt.cost.length && vakt.cost[num_cost] != null
             ? user.bdm_koststeder.includes(vakt.cost[num_cost].koststed)
             : false
-    console.log('koststed: ', vakt.cost)
 
     const isDisabled =
         vakt.end_timestamp > Date.now() / 1000 || vakt.approve_level === 2 || (vakt.approve_level === 3 && !haskoststed) || vakt.approve_level >= 4
