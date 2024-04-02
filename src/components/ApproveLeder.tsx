@@ -2,7 +2,7 @@ import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, Hel
 import moment from 'moment'
 import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Schedules, Roles, User } from '../types/types'
+import { Schedules, User } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
@@ -19,7 +19,7 @@ const AdminLeder = ({}) => {
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [response, setResponse] = useState<ResponseType | undefined>()
     const [loading, setLoading] = useState(false)
-    const [openState, setOpenState] = useState(false)
+    //const [openState, setOpenState] = useState(false)
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterRole, setSearchFilterRole] = useState('')
@@ -40,6 +40,34 @@ const AdminLeder = ({}) => {
                       .format('L')
         ),
     })
+
+    const confirm_schedules_bulk = async (scheduleIds: string[], setResponse: Dispatch<any>) => {
+        setLoading(true)
+        const promises = scheduleIds.map((schedule_id) =>
+            fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`).then((response) => {
+                if (!response.ok) {
+                    // Assuming the server sends JSON with error details
+                    return response.json().then((errorData) => {
+                        throw new Error(`Server error ${response.status}: ${errorData.message || 'No additional error information'}`)
+                    })
+                }
+                return response.json()
+            })
+        )
+
+        try {
+            const results = await Promise.all(promises)
+            setResponse(results)
+        } catch (error) {
+            console.error(error)
+            let message = 'An unexpected error occurred approving schedules'
+            if (error instanceof Error) {
+                message = `Error in bulk schedule approval: ${error.message}`
+            }
+            setErrorMessage(message)
+        }
+        setLoading(false)
+    }
 
     const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
         setLoading(true)
@@ -92,8 +120,6 @@ const AdminLeder = ({}) => {
 
     const mapVakter = (vaktliste: Schedules[]) =>
         vaktliste.map((vakter: Schedules, i: number) => (
-            //approve_level = 2;
-
             <Table.Row key={i}>
                 <Table.DataCell>{i + 1}</Table.DataCell>
                 <Table.HeaderCell scope="row">
@@ -218,34 +244,32 @@ const AdminLeder = ({}) => {
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
 
-    let listeAvVakter = mapVakter(
-        itemData.filter((value: Schedules) => {
-            const month = new Date(value.start_timestamp * 1000).getMonth()
-            const year = new Date(value.start_timestamp * 1000).getFullYear()
-            // Check for role and approvelevel
-            const checkRole =
-                (hasAnyRole(user, ['bdm']) && value.approve_level == 3) ||
-                (hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1) ||
-                (hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1)
-            const isExternal = value.user.ekstern == false
-            // Ignore approved periods in the future
-            const futurePeriodsMonth = month <= selectedMonth!.getMonth()
-            const futurePeriodsYear = year == selectedMonth!.getFullYear()
+    let listeAvVakter = itemData.filter((value: Schedules) => {
+        const month = new Date(value.start_timestamp * 1000).getMonth()
+        const year = new Date(value.start_timestamp * 1000).getFullYear()
+        // Check for role and approvelevel
+        const checkRole =
+            (hasAnyRole(user, ['bdm']) && value.approve_level == 3) ||
+            (hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1) ||
+            (hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1)
+        const isExternal = value.user.ekstern == false
+        // Ignore approved periods in the future
+        const futurePeriodsMonth = month <= selectedMonth!.getMonth()
+        const futurePeriodsYear = year == selectedMonth!.getFullYear()
 
-            // Determine if the date filtering should be applied.
-            const isDateMatching = checkRole || (month === selectedMonth!.getMonth() && year === selectedMonth!.getFullYear())
+        // Determine if the date filtering should be applied.
+        const isDateMatching = checkRole || (month === selectedMonth!.getMonth() && year === selectedMonth!.getFullYear())
 
-            // Apply other filtering conditions.
-            const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
-            const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
-            const isApproveLevelMatching = searchFilterAction === 5 ? true : value.approve_level === searchFilterAction
+        // Apply other filtering conditions.
+        const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
+        const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
+        const isApproveLevelMatching = searchFilterAction === 5 ? true : value.approve_level === searchFilterAction
 
-            // Combine all conditions for filtering.
-            return (
-                isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching && isExternal && futurePeriodsMonth && futurePeriodsYear
-            )
-        })
-    )
+        // Combine all conditions for filtering.
+        return isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching && isExternal && futurePeriodsMonth && futurePeriodsYear
+    })
+
+    let filteredListeAvVakter = mapVakter(listeAvVakter)
 
     return (
         <>
@@ -268,7 +292,7 @@ const AdminLeder = ({}) => {
                     </Select>
                 </div>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
-                    <Select label="Velg handling" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
+                    <Select label="Velg status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
                         <option value={5}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
                         <option value={1}>Godkjent av ansatt</option>
@@ -276,6 +300,34 @@ const AdminLeder = ({}) => {
                         <option value={3}>Godkjent av vaktsjef</option>
                         <option value={4}>Overført til lønn</option>
                     </Select>
+                </div>
+                <div style={{ display: 'grid', alignContent: 'flex-end' }}>
+                    <Button
+                        style={{ width: '200px', marginLeft: '30px', height: '50px' }}
+                        disabled={searchFilterAction == 5 || listeAvVakter.length == 0}
+                        onClick={() =>
+                            confirm_schedules_bulk(
+                                listeAvVakter.map((vakt) => vakt.id),
+                                setResponse
+                            )
+                        }
+                    >
+                        Approve All
+                    </Button>
+                </div>
+                <div style={{ marginLeft: '15px', marginBottom: '5px', display: 'grid', alignContent: 'flex-end' }}>
+                    {' '}
+                    <HelpText strategy="fixed" title="Bakvakt?">
+                        <div>
+                            <b>Approve All</b>
+                            <br />
+                            Denne knappen vil godkjenne samtlige vakter i lista under. Du kan bruke filterfunksjonaliteten (til venstre) for å
+                            redusere antall vakter du godkjenner i bulk. <br />
+                            <br />
+                            Vakter i forskjellig status kan ikke godkjennes samtidig, derfor <b>må</b> <i>status</i> velges i nedtrekksmenyen til
+                            venstre
+                        </div>
+                    </HelpText>
                 </div>
             </div>
 
@@ -328,10 +380,10 @@ const AdminLeder = ({}) => {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {listeAvVakter.length === 0 ? (
+                    {filteredListeAvVakter.length === 0 ? (
                         <h3 style={{ margin: 'auto', color: 'red' }}>{loading ? <Loader /> : 'Ingen treff!'}</h3>
                     ) : (
-                        listeAvVakter
+                        filteredListeAvVakter
                     )}
                 </Table.Body>
             </Table>
