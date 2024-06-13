@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }: Props) => {
     const [user, setUser] = useState<User>({} as User)
 
     const fetchUser = async () => {
-        return fetch(`/vaktor/api/get_me`)
+        return fetch(`/api/get_me`)
             .then((res) => res.json())
             .then((userJson) => setUser(userJson))
     }

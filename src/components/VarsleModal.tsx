@@ -3,7 +3,7 @@ import { Button, Modal, Radio, RadioGroup } from '@navikt/ds-react'
 import { Schedules } from '../types/types'
 
 const send_alert = async (data: any) => {
-    const response = await fetch('/vaktor/api/send_alert', {
+    const response = await fetch('/api/send_alert', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -109,7 +109,7 @@ const AvstemmingBakvakter = () => {
 
     useEffect(() => {
         setLoading(true)
-        fetch(`/vaktor/api/get_all_bakvakter?type=${searchFilterType}`)
+        fetch(`/api/get_all_bakvakter?type=${searchFilterType}`)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)

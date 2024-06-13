@@ -7,7 +7,7 @@ let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
 
 const assign_leader = async (group_id: string, setResponse: Dispatch<any>) => {
-    await fetch(`/vaktor/api/assign_leader/?group_id=${group_id}`)
+    await fetch(`/api/assign_leader/?group_id=${group_id}`)
         .then((r) => r.json())
         .then((data) => {
             setResponse(data)
@@ -15,7 +15,7 @@ const assign_leader = async (group_id: string, setResponse: Dispatch<any>) => {
 }
 
 const remove_leader = async (group_id: string, setResponse: Dispatch<any>) => {
-    await fetch(`/vaktor/api/remove_leader/?group_id=${group_id}`)
+    await fetch(`/api/remove_leader/?group_id=${group_id}`)
         .then((r) => r.json())
         .then((data) => {
             setResponse(data)
@@ -37,7 +37,7 @@ const Leveranseleder = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([fetch('/vaktor/api/groups')])
+        Promise.all([fetch('/api/groups')])
             .then(async ([groupsRes]) => {
                 const groupsjson = await groupsRes.json()
                 return [groupsjson]

@@ -8,7 +8,7 @@ import VaktlagMembers from './VaktlagMembers'
 
 const updateUsers = async (users: User[], setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
     var user_order = users.sort((a: User, b: User) => a.group_order_index! - b.group_order_index!).map((user: User) => user.id) // bare en liste med identer
-    var url = `/vaktor/api/create_schedule/?group_id=${users[0].groups[0].id}&rolloverTime=${'text'}`
+    var url = `/api/create_schedule/?group_id=${users[0].groups[0].id}&rolloverTime=${'text'}`
     var fetchOptions = {
         method: 'POST',
         body: JSON.stringify(user_order),
@@ -42,7 +42,7 @@ const createVaktlag = async (
     setResponse: Dispatch<any>,
     setResponseError: Dispatch<string>
 ) => {
-    var url = `/vaktor/api/create_new_vaktlag/?name=${name}&type=${type}&phone=${phone}&teamkatalog=${teamkatalog}&description=${description}`
+    var url = `/api/create_new_vaktlag/?name=${name}&type=${type}&phone=${phone}&teamkatalog=${teamkatalog}&description=${description}`
     var fetchOptions = {
         method: 'POST',
     }
@@ -177,7 +177,7 @@ const VaktlagAdmin = () => {
         if (selectedVaktlag === undefined) {
             return
         }
-        fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag.id}`)
+        fetch(`/api/get_my_groupmembers?group_id=${selectedVaktlag.id}`)
             .then((membersRes) => membersRes.json())
             .then((groupMembersJson) => {
                 setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))

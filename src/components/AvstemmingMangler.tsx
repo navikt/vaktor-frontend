@@ -143,7 +143,7 @@ const AvstemmingMangler = () => {
 
     useEffect(() => {
         setLoading(true)
-        const path = `/vaktor/api/unfinished_schedules`
+        const path = `/api/unfinished_schedules`
         fetch(path)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {

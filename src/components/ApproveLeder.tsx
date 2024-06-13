@@ -44,7 +44,7 @@ const AdminLeder = ({}) => {
     const confirm_schedules_bulk = async (scheduleIds: string[], setResponse: Dispatch<any>) => {
         setLoading(true)
         const promises = scheduleIds.map((schedule_id) =>
-            fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`).then((response) => {
+            fetch(`/api/confirm_schedule?schedule_id=${schedule_id}`).then((response) => {
                 if (!response.ok) {
                     // Assuming the server sends JSON with error details
                     return response.json().then((errorData) => {
@@ -72,7 +72,7 @@ const AdminLeder = ({}) => {
     const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
         setLoading(true)
         try {
-            const response = await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
+            const response = await fetch(`/api/confirm_schedule?schedule_id=${schedule_id}`)
             if (!response.ok) {
                 // Check if the response was not ok (status code in the range 200-299)
                 const errorData = await response.json() // Assuming the server sends JSON with error details
@@ -96,7 +96,7 @@ const AdminLeder = ({}) => {
     const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
         setLoading(true)
         try {
-            const response = await fetch(`/vaktor/api/disprove_schedule?schedule_id=${schedule_id}`)
+            const response = await fetch(`/api/disprove_schedule?schedule_id=${schedule_id}`)
             if (!response.ok) {
                 // Check if the response was not ok (status code not in the range 200-299)
                 const errorData = await response.json() // Assuming the server sends JSON with error details
@@ -232,7 +232,7 @@ const AdminLeder = ({}) => {
 
     useEffect(() => {
         setLoading(true)
-        fetch('/vaktor/api/leader_schedules')
+        fetch('/api/leader_schedules')
             .then((scheduleRes) => scheduleRes.json())
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)

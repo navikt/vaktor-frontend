@@ -34,7 +34,7 @@ const Navbar: React.FC = () => {
                 {/* Logo and greeting */}
                 <div style={{ marginTop: '10px' }}>
                     <Image
-                        src={today.getMonth() === 11 ? '/vaktor/images/vaktor-santa.png' : '/vaktor/images/vaktor-logo.png'}
+                        src={today.getMonth() === 11 ? '/images/vaktor-santa.png' : '/images/vaktor-logo.png'}
                         alt="Vaktor logo"
                         width={70}
                         height={70}

@@ -68,7 +68,7 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                                     Total Sum: <b style={{ color: 'green' }}> {cost.total_cost}</b>
                                     <br />
                                     Koststed: <b>{cost.koststed}</b>
-                                    {prevTotalCost !== undefined && cost.type_id > 1 && idx > 0 && (
+                                    {prevTotalCost !== undefined && cost.type_id >= 1 && idx > 0 && (
                                         <div style={{ color: diff < 0 ? 'red' : 'green' }}>
                                             Diff: ({diff < 0 ? '-' : '+'}
                                             {Math.abs(diff).toFixed(2)})
@@ -106,10 +106,6 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                             </div>
                         </div>
                     )
-                    // if (props.vakt.cost.length > 0) {
-                    //     const currentTotalCost = props.vakt.cost[idx].total_cost
-                    //     setPrevTotalCost(currentTotalCost)
-                    // }
                     return element
                 }),
 

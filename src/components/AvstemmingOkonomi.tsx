@@ -81,7 +81,7 @@ const AvstemmingOkonomi = () => {
         setResponse: Dispatch<any>,
         setResponseError: Dispatch<string>
     ) => {
-        var url = `/vaktor/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
+        var url = `/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
         console.log('Recalculating: ', start_timestamp, end_timestamp, action_reason, approve_level)
         var fetchOptions = {
             method: 'POST',
@@ -224,7 +224,7 @@ const AvstemmingOkonomi = () => {
 
     useEffect(() => {
         setLoading(true)
-        const path = `/vaktor/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
+        const path = `/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
         fetch(path)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {

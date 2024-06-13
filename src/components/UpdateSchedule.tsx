@@ -30,7 +30,7 @@ const UpdateSchedule = () => {
 
     const group_calendar = async (group_id: string) => {
         try {
-            const response = await fetch(`/vaktor/api/group_calendar?group_id=${group_id}`)
+            const response = await fetch(`/api/group_calendar?group_id=${group_id}`)
             if (response.ok) {
                 const icalData = await response.text()
                 const blob = new Blob([icalData], { type: 'text/calendar' })
@@ -59,7 +59,7 @@ const UpdateSchedule = () => {
 
     const my_calendar = async () => {
         try {
-            const response = await fetch(`/vaktor/api/my_calendar`)
+            const response = await fetch(`/api/my_calendar`)
 
             if (response.ok) {
                 const icalData = await response.text()
@@ -88,7 +88,7 @@ const UpdateSchedule = () => {
     }
 
     useEffect(() => {
-        fetch('/vaktor/api/group_schedules')
+        fetch('/api/group_schedules')
             .then((scheduleRes) => scheduleRes.json())
             .then((scheduleData) => {
                 scheduleData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
