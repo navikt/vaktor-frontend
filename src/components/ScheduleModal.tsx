@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 
 const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
     await fetch(
-        `/vaktor/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
+        `/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
     )
         .then((r) => r.json())
         .then((data) => {
@@ -49,7 +49,7 @@ const ScheduleModal = (props: {
     })
 
     useEffect(() => {
-        Promise.all([fetch(`/vaktor/api/get_my_groupmembers?group_id=${props.schedule.group_id}`)])
+        Promise.all([fetch(`/api/get_my_groupmembers?group_id=${props.schedule.group_id}`)])
             .then(async ([membersRes]) => {
                 props.setResponse(membersRes.status)
                 const groupData = await membersRes.json()

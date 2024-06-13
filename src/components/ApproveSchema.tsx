@@ -12,7 +12,7 @@ let today = Date.now() / 1000
 const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>, setLoading: Dispatch<any>) => {
     setLoading(true)
 
-    await fetch(`/vaktor/api/confirm_schedule?schedule_id=${schedule_id}`)
+    await fetch(`/api/confirm_schedule?schedule_id=${schedule_id}`)
         .then((r) => r.json())
         .then((data) => {
             setLoading(false)
@@ -22,7 +22,7 @@ const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>,
 
 const disprove_schedule = async (schedule_id: string, setResponse: Dispatch<any>, setLoading: Dispatch<any>) => {
     setLoading(true)
-    await fetch(`/vaktor/api/disprove_schedule?schedule_id=${schedule_id}`)
+    await fetch(`/api/disprove_schedule?schedule_id=${schedule_id}`)
         .then((r) => r.json())
         .then((data) => {
             setLoading(false)
@@ -120,7 +120,7 @@ const DineVakter = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([fetch('/vaktor/api/get_current_user_schedules')])
+        Promise.all([fetch('/api/get_current_user_schedules')])
             .then(async ([scheduleRes]) => {
                 const schedulejson = await scheduleRes.json()
                 return [schedulejson]

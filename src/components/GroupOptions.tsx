@@ -3,7 +3,7 @@ import { User } from '../types/types'
 import { Button } from '@navikt/ds-react'
 
 const assign_vaktsjef = async (vaktsjef_id: string, group_id: string, setVaktsjef: Dispatch<any>) => {
-    await fetch(`/vaktor/api/assign_vaktsjef/?group_id=${group_id}&user_id=${vaktsjef_id}`, { method: 'POST' })
+    await fetch(`/api/assign_vaktsjef/?group_id=${group_id}&user_id=${vaktsjef_id}`, { method: 'POST' })
         .then((r) => r.json())
         .then((data) => {
             setVaktsjef(data)

@@ -80,7 +80,7 @@ const Admin = () => {
 
     const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
         try {
-            const response = await fetch(`/vaktor/api/delete_schedule?schedule_id=${schedule_id}`)
+            const response = await fetch(`/api/delete_schedule?schedule_id=${schedule_id}`)
             const data = await response.json()
             setResponse(data)
             console.log(`Sletter periode med id: ${schedule_id}`)
@@ -92,7 +92,7 @@ const Admin = () => {
     }
 
     const update_schedule = async (schedulelulu: Schedules, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
-        var url = `/vaktor/api/admin_update_schedule`
+        var url = `/api/admin_update_schedule`
         console.log('Updating period with id: ', schedulelulu.id)
         var fetchOptions = {
             method: 'PUT',
@@ -241,7 +241,7 @@ const Admin = () => {
 
     useEffect(() => {
         setLoading(true)
-        const path = `/vaktor/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
+        const path = `/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
         fetch(path)
             .then(async (scheduleRes) => scheduleRes.json())
             .then((itemData) => {

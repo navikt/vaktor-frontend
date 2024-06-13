@@ -10,7 +10,7 @@ const UpdateUserInfo = async (user: User) => {
         body: JSON.stringify(user),
     }
 
-    await fetch(`/vaktor/api/update_user/`, fetchOptions)
+    await fetch(`/api/update_user/`, fetchOptions)
 }
 
 // Required props

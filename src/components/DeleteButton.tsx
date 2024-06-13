@@ -2,7 +2,7 @@ import { Button, Popover } from '@navikt/ds-react'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 
 const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
-    await fetch(`/vaktor/api/delete_schedule?schedule_id=${schedule_id}`)
+    await fetch(`/api/delete_schedule?schedule_id=${schedule_id}`)
         .then((r) => r.json())
         .then((data) => {
             setResponse(data)

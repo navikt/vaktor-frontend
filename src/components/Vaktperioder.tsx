@@ -38,7 +38,7 @@ const createSchedule = async (
     rolloverTime: number
 ) => {
     var user_order = users.sort((a: User, b: User) => a.group_order_index! - b.group_order_index!).map((user: User) => user.id) // bare en liste med identer
-    var url = `/vaktor/api/create_schedule/?group_id=${group}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amountOfWeeks=${amountOfWeeks}&rolloverDay=${rolloverDay}&rolloverTime=${rolloverTime}`
+    var url = `/api/create_schedule/?group_id=${group}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&midlertidlig_vakt=${midlertidlig_vakt}&amountOfWeeks=${amountOfWeeks}&rolloverDay=${rolloverDay}&rolloverTime=${rolloverTime}`
     var fetchOptions = {
         method: 'POST',
         body: JSON.stringify(user_order),
@@ -70,7 +70,7 @@ const createTempSchedule = async (
     setResponse: Dispatch<any>,
     setResponseError: Dispatch<string>
 ) => {
-    var url = `/vaktor/api/create_temp_schedule/?user_id=${user_id}&group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&`
+    var url = `/api/create_temp_schedule/?user_id=${user_id}&group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&`
     console.log('createTempSchedule: ', user_id, start_timestamp, end_timestamp)
     var fetchOptions = {
         method: 'POST',
@@ -239,10 +239,7 @@ const Vaktperioder = () => {
     //// #####
 
     useEffect(() => {
-        Promise.all([
-            fetch(`/vaktor/api/get_my_groupmembers?group_id=${selectedVaktlag}`),
-            fetch(`/vaktor/api/last_schedule?group_id=${selectedVaktlag}`),
-        ])
+        Promise.all([fetch(`/api/get_my_groupmembers?group_id=${selectedVaktlag}`), fetch(`/api/last_schedule?group_id=${selectedVaktlag}`)])
             .then(async ([membersRes, scheduleRes]) => {
                 const membersjson = await membersRes.json().catch((error) => {
                     console.error(`Error parsing JSON from 'membersRes': ${error.message}`)
