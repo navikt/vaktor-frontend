@@ -19,7 +19,7 @@ spec:
     image: {{ image }}
     port: 3000
     ingresses:
-        - https://status.nav.no/vaktor
+        - https://vaktor.ansatt.nav.no
     env:
     {{#each env}}
         - name: {{this.name}}
