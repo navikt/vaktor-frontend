@@ -1,4 +1,4 @@
-import { Button, Table, Loader, Select, MonthPicker, useMonthpicker } from '@navikt/ds-react'
+import { Button, Table, Loader, Select, MonthPicker, useMonthpicker, HelpText } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { Schedules } from '../types/types'
@@ -81,6 +81,31 @@ const DineVakter = () => {
                         minute: '2-digit',
                     })}
                 </Table.DataCell>
+                <Table.DataCell>
+                    <div style={{ marginTop: '15px', marginBottom: '15px' }}>
+                        {/* {vakter.vakter.length !== 0 ? "Endringer:" : ""} */}
+                        {vakter.vakter.map((endringer, idx: number) => (
+                            <div key={idx}>
+                                <b> {endringer.type}:</b> {endringer.user.name} <br />
+                                {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
+                                <br />
+                                {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
+                            </div>
+                        ))}
+                    </div>
+                </Table.DataCell>
                 <Table.DataCell style={{ maxWidth: '230px' }}>
                     <div>
                         <Button
@@ -152,7 +177,6 @@ const DineVakter = () => {
             <div
                 style={{
                     minWidth: '900px',
-                    maxWidth: '1200px',
                     backgroundColor: 'white',
                     marginBottom: '3vh',
                     display: 'grid',
@@ -185,6 +209,31 @@ const DineVakter = () => {
                         <Table.Row>
                             <Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
                             <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignContent: 'space-around',
+                                        gap: '10px',
+                                    }}
+                                >
+                                    <div>Endringer</div>
+                                    <HelpText strategy="fixed" title="Bakvakt?">
+                                        <b>Bistand</b>
+                                        <br />
+                                        <b>Hvem får betalt:</b> Både opprinnelig vakthaver og den personen som legges til som bistand får betalt.
+                                        <br />
+                                        <b>Hvem vises i vaktplanen:</b> Den som bistår vises i vaktplanen for angitte periode
+                                        <hr />
+                                        <b>Bytte</b>
+                                        <br />
+                                        <b>Hvem får betalt:</b> Kun den personen med aktiv vakt får betalt.
+                                        <br />
+                                        <b>Hvem vises i vaktplanen:</b> Kun den personen med aktiv vakt vises i vaktplanen. Endringen vil legge seg
+                                        oppå opprinnelig vakt for angitte periode
+                                    </HelpText>
+                                </div>
+                            </Table.HeaderCell>
                             <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
                             <Table.HeaderCell scope="col">Status</Table.HeaderCell>
                             <Table.HeaderCell scope="col">Godtgjørelse</Table.HeaderCell>
