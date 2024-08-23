@@ -1,10 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 interface ScheduleRequest {
-    start_timestamp: number
-    end_timestamp: number
+    schedule_ids: string[]
     action_reason: number
-    approve_level: number
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,19 +12,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    const start_timestamp = parseInt(encodeURIComponent(req.query.start_timestamp as string) as string)
-    const end_timestamp = parseInt(encodeURIComponent(req.query.end_timestamp as string) as string)
+    const schedule_ids = req.body.schedule_ids
     const action_reason = parseInt(encodeURIComponent(req.query.action_reason as string) as string)
-    const approve_level = parseInt(encodeURIComponent(req.query.approve_level as string) as string)
 
-    const body: ScheduleRequest = {
-        start_timestamp,
-        end_timestamp,
-        action_reason,
-        approve_level,
-    }
-
-    const path = `${process.env.BACKEND_URL}/api/v1/okonomi/rekjoring?start_timestamp=${start_timestamp}&end_timetamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
+    const path = `${process.env.BACKEND_URL}/api/v1/okonomi/rekjoring?&action_reason=${action_reason}`
 
     const backendResponse = await fetch(path, {
         headers: {
@@ -34,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         },
         method: 'POST',
-        //        body: JSON.stringify(body),
+        body: JSON.stringify(schedule_ids),
     })
 
     //console.log(body)
