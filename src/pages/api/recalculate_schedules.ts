@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    const schedule_ids = req.body.schedule_ids
+    const schedule_ids = req.body
     const action_reason = parseInt(encodeURIComponent(req.query.action_reason as string) as string)
 
     const path = `${process.env.BACKEND_URL}/api/v1/okonomi/rekjoring?action_reason=${action_reason}`
@@ -25,9 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         method: 'POST',
         body: JSON.stringify(schedule_ids),
     })
-
-    //console.log(body)
-    console.log('Path and queries used:', path)
 
     try {
         if (backendResponse.ok) {
