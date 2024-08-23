@@ -23,8 +23,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             'Content-Type': 'application/json',
         },
         method: 'POST',
-        body: JSON.stringify(schedule_ids),
+        body: schedule_ids,
     })
+
+    console.log('ids: ', schedule_ids)
+    console.log('Path and queries used:', path)
 
     try {
         if (backendResponse.ok) {
