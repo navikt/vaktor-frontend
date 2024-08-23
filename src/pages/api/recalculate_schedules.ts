@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const schedule_ids = req.body.schedule_ids
     const action_reason = parseInt(encodeURIComponent(req.query.action_reason as string) as string)
 
-    const path = `${process.env.BACKEND_URL}/api/v1/okonomi/rekjoring?&action_reason=${action_reason}`
+    const path = `${process.env.BACKEND_URL}/api/v1/okonomi/rekjoring?action_reason=${action_reason}`
 
     const backendResponse = await fetch(path, {
         headers: {
