@@ -74,17 +74,15 @@ const AvstemmingOkonomi = () => {
     }
 
     const recalculateSchedules = async (
-        start_timestamp: number,
-        end_timestamp: number,
+        schedule_ids: string[],
         action_reason: number,
-        approve_level: number,
         setResponse: Dispatch<any>,
         setResponseError: Dispatch<string>
     ) => {
-        var url = `/api/recalculate_schedules?start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&action_reason=${action_reason}&approve_level=${approve_level}`
-        console.log('Recalculating: ', start_timestamp, end_timestamp, action_reason, approve_level)
+        var url = `/api/recalculate_schedules?action_reason=${action_reason}`
         var fetchOptions = {
             method: 'POST',
+            body: JSON.stringify(schedule_ids),
         }
 
         await fetch(url, fetchOptions)
@@ -110,17 +108,14 @@ const AvstemmingOkonomi = () => {
 
     const mapVakter = (vaktliste: Schedules[]) => {
         // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce(
-            (acc: Record<string, Schedules[]>, current) => {
-                const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
-                if (!acc[koststed]) {
-                    acc[koststed] = []
-                }
-                acc[koststed].push(current)
-                return acc
-            },
-            {} as Record<string, Schedules[]>
-        )
+        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
+            const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
+            if (!acc[koststed]) {
+                acc[koststed] = []
+            }
+            acc[koststed].push(current)
+            return acc
+        }, {} as Record<string, Schedules[]>)
 
         // Sort each group by start_timestamp
         Object.keys(groupedByKoststed).forEach((koststedKey) => {
@@ -276,26 +271,22 @@ const AvstemmingOkonomi = () => {
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
 
-    function matchesFilterCriteria(value: Schedules): boolean {
+    const filteredVakter = itemData.filter((value: Schedules) => {
         const isMonthMatch =
             new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
             new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-        const isApproveLevelMatch =
-            searchFilterAction === 9
-                ? true
-                : searchFilterAction === -1
-                  ? value.approve_level !== 5 && value.approve_level !== 8
-                  : value.approve_level === searchFilterAction
+        const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
-    }
+    })
 
-    let listeAvVakter = mapVakter(itemData.filter(matchesFilterCriteria))
-    let totalCost_filtered = itemData.filter(matchesFilterCriteria)
+    let listeAvVakter = mapVakter(filteredVakter)
+
+    let totalCost_filtered = filteredVakter
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
         return accumulator + (currentSchedule.cost.length > 0 ? currentSchedule.cost[currentSchedule.cost.length - 1].total_cost : 0)
@@ -329,16 +320,6 @@ const AvstemmingOkonomi = () => {
                                     <option value={4}>Sekundærkjøring</option>
                                 </Select>
                             </div>
-                            <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                                <Select label="Velg Approve Level" onChange={(e) => setApproveLevel(Number(e.target.value))}>
-                                    <option value="">Gjør et valg</option>
-                                    <option value={1}>Godkjent av ansatt</option>
-                                    <option value={3}>Godkjent av vaktsjef</option>
-                                    <option value={4}>Godkjent av BDM</option>
-                                    <option value={5}>Overført til lønn</option>
-                                    <option value={7}>Utregning fullført med diff</option>
-                                </Select>
-                            </div>
 
                             <Button
                                 onClick={() => {
@@ -350,10 +331,10 @@ const AvstemmingOkonomi = () => {
                                     marginTop: '5px',
                                     marginBottom: '5px',
                                 }}
-                                disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
+                                disabled={isLoading || !actionReason} // disable button when loading
                                 ref={buttonRef}
                             >
-                                Rekalkuler {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
+                                Reberegn {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
                             </Button>
                             <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
                                 <Popover.Content
@@ -366,21 +347,16 @@ const AvstemmingOkonomi = () => {
                                         maxWidth: '250px',
                                     }}
                                 >
-                                    Er du sikker på at du vil rekalkulere alle perioder for{' '}
-                                    <b>{selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}?</b>
+                                    Er du sikker på vil reberegne perioder for{' '}
+                                    {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''} for{' '}
+                                    <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
                                     <Button
                                         variant="danger"
                                         onClick={() => {
                                             if (selectedMonth) {
-                                                const start_timestamp = Math.floor(selectedMonth.getTime() / 1000)
-                                                const end_timestamp = Math.floor(
-                                                    new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)).getTime() / 1000
-                                                )
                                                 recalculateSchedules(
-                                                    start_timestamp,
-                                                    end_timestamp,
+                                                    filteredVakter.map((s) => s.id),
                                                     actionReason,
-                                                    approveLevel,
                                                     setResponse,
                                                     setResponseError
                                                 )
@@ -389,7 +365,7 @@ const AvstemmingOkonomi = () => {
                                                 console.log('SelectedMonth not set')
                                             }
                                         }}
-                                        disabled={isLoading || !approveLevel || !actionReason} // disable button when loading
+                                        disabled={isLoading || !actionReason} // disable button when loading
                                     >
                                         {isLoading ? <Loader /> : 'Rekalkuler nå!'}
                                     </Button>
