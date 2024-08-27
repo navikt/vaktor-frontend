@@ -34,26 +34,53 @@ const AvstemmingMangler = () => {
     let rowCount = 0
 
     const generateFile = async (schedule_ids: string[], fileType: number, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
-        var url = `/api/generate_transactions?action_reason=${fileType}`
+        const url = `/api/generate_transactions?file_type=${fileType}`
 
-        var fetchOptions = {
+        const fetchOptions = {
             method: 'POST',
             body: JSON.stringify(schedule_ids),
         }
-        console.log('Type fil: ', fileType)
-        console.log('Vakter: ', schedule_ids)
+
+        console.log('Type file: ', fileType)
+        console.log('Schedule IDs: ', schedule_ids)
 
         await fetch(url, fetchOptions)
-            .then(async (r) => {
-                if (!r.ok) {
-                    const rText = await r.json()
+            .then(async (response) => {
+                if (!response.ok) {
+                    const rText = await response.json()
                     setResponseError(rText.detail)
-                    return []
+                    return null // Return null instead of [] to indicate an error
                 }
-                return r.json()
+
+                // Check if the response has a file to download
+                const blob = await response.blob()
+                const contentDisposition = response.headers.get('Content-Disposition')
+                let filename = 'downloaded-file.txt' // Default filename
+
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename="(.+)"/)
+                    if (match && match.length > 1) {
+                        filename = match[1]
+                    }
+                }
+
+                // Create a download link for the file
+                const url = window.URL.createObjectURL(blob)
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', filename)
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+                window.URL.revokeObjectURL(url)
+
+                return response.json() // Continue with processing the response as JSON if needed
             })
-            .then((data: Schedules) => {
-                setResponse(data)
+            .then((data) => {
+                if (data) {
+                    // Check if data is not null
+                    setResponse(data)
+                }
                 setIsLoading(false)
             })
             .catch((error: Error) => {
@@ -64,17 +91,14 @@ const AvstemmingMangler = () => {
 
     const mapVakter = (vaktliste: Schedules[]) => {
         // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce(
-            (acc: Record<string, Schedules[]>, current) => {
-                const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
-                if (!acc[koststed]) {
-                    acc[koststed] = []
-                }
-                acc[koststed].push(current)
-                return acc
-            },
-            {} as Record<string, Schedules[]>
-        )
+        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
+            const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
+            if (!acc[koststed]) {
+                acc[koststed] = []
+            }
+            acc[koststed].push(current)
+            return acc
+        }, {} as Record<string, Schedules[]>)
 
         // Sort each group by start_timestamp
         Object.keys(groupedByKoststed).forEach((koststedKey) => {
@@ -250,8 +274,8 @@ const AvstemmingMangler = () => {
             searchFilterAction === 9
                 ? true
                 : searchFilterAction === -1
-                  ? value.approve_level !== 5 && value.approve_level !== 8
-                  : value.approve_level === searchFilterAction
+                ? value.approve_level !== 5 && value.approve_level !== 8
+                : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
