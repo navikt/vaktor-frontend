@@ -1,6 +1,6 @@
-import { Table, Loader, Search, Select, CheckboxGroup, Checkbox } from '@navikt/ds-react'
+import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, useMonthpicker } from '@navikt/ds-react'
 import moment from 'moment'
-import { useEffect, useRef, useState } from 'react'
+import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
@@ -25,21 +25,53 @@ const AvstemmingMangler = () => {
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
 
+    const buttonRef = useRef<HTMLButtonElement>(null)
+    const [openState, setOpenState] = useState<boolean>(false)
+    const [fileType, setFileType] = useState(Number)
+    const [isLoading, setIsLoading] = useState(false)
+    const [responseError, setResponseError] = useState('')
+
     let rowCount = 0
+
+    const generateFile = async (schedule_ids: string[], fileType: number, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
+        var url = `/api/recalculate_schedules?action_reason=${fileType}`
+
+        var fetchOptions = {
+            method: 'POST',
+            body: JSON.stringify(schedule_ids),
+        }
+        console.log('Type fil: ', fileType)
+        console.log('Vakter: ', schedule_ids)
+
+        await fetch(url, fetchOptions)
+            .then(async (r) => {
+                if (!r.ok) {
+                    const rText = await r.json()
+                    setResponseError(rText.detail)
+                    return []
+                }
+                return r.json()
+            })
+            .then((data: Schedules) => {
+                setResponse(data)
+                setIsLoading(false)
+            })
+            .catch((error: Error) => {
+                console.error(error.name, error.message)
+                setIsLoading(false)
+            })
+    }
 
     const mapVakter = (vaktliste: Schedules[]) => {
         // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce(
-            (acc: Record<string, Schedules[]>, current) => {
-                const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
-                if (!acc[koststed]) {
-                    acc[koststed] = []
-                }
-                acc[koststed].push(current)
-                return acc
-            },
-            {} as Record<string, Schedules[]>
-        )
+        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
+            const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
+            if (!acc[koststed]) {
+                acc[koststed] = []
+            }
+            acc[koststed].push(current)
+            return acc
+        }, {} as Record<string, Schedules[]>)
 
         // Sort each group by start_timestamp
         Object.keys(groupedByKoststed).forEach((koststedKey) => {
@@ -194,20 +226,20 @@ const AvstemmingMangler = () => {
 
     if (itemData === undefined) return <></>
 
-    function matchesFilterCriteria(value: Schedules): boolean {
-        let isNotCurrentMonth = true
+    const filteredVakter = itemData.filter((value: Schedules) => {
+        const isNotCurrentMonth =
+            !FilterExcludeCurrentMonth ||
+            (() => {
+                const currentDate = new Date()
+                const currentMonth = currentDate.getMonth()
+                const currentYear = currentDate.getFullYear()
 
-        if (FilterExcludeCurrentMonth) {
-            const currentDate = new Date()
-            const currentMonth = currentDate.getMonth()
-            const currentYear = currentDate.getFullYear()
+                const valueDate = new Date(value.start_timestamp * 1000)
+                const valueMonth = valueDate.getMonth()
+                const valueYear = valueDate.getFullYear()
 
-            const valueDate = new Date(value.start_timestamp * 1000)
-            const valueMonth = valueDate.getMonth()
-            const valueYear = valueDate.getFullYear()
-
-            isNotCurrentMonth = valueMonth !== currentMonth || valueYear !== currentYear
-        }
+                return valueMonth !== currentMonth || valueYear !== currentYear
+            })()
 
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
@@ -215,15 +247,15 @@ const AvstemmingMangler = () => {
             searchFilterAction === 9
                 ? true
                 : searchFilterAction === -1
-                  ? value.approve_level !== 5 && value.approve_level !== 8
-                  : value.approve_level === searchFilterAction
+                ? value.approve_level !== 5 && value.approve_level !== 8
+                : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
 
         return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
-    }
+    })
 
-    let listeAvVakter = mapVakter(itemData.filter(matchesFilterCriteria))
-    let totalCost_filtered = itemData.filter(matchesFilterCriteria)
+    let listeAvVakter = mapVakter(filteredVakter)
+    let totalCost_filtered = filteredVakter
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
         return accumulator + (currentSchedule.cost.length > 0 ? currentSchedule.cost[currentSchedule.cost.length - 1].total_cost : 0)
@@ -241,6 +273,75 @@ const AvstemmingMangler = () => {
                 margin: 'auto',
             }}
         >
+            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end' }}>
+                <ExpansionCard aria-label="generer-pr28-fil" size="small" style={{ justifyContent: 'center', width: '280px' }}>
+                    <ExpansionCard.Header>
+                        <ExpansionCard.Title>Generer pr28-fil</ExpansionCard.Title>
+                    </ExpansionCard.Header>
+                    <ExpansionCard.Content>
+                        <div style={{ display: 'grid', justifyContent: 'center', gap: '10px' }}>
+                            <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
+                                <Select label="Velg type fil" onChange={(e) => setFileType(Number(e.target.value))}>
+                                    <option value="">Gjør et valg</option>
+                                    <option value={1}>Ordinær kjøring</option>
+                                    <option value={2}>Diff-fil</option>
+                                </Select>
+                            </div>
+
+                            <Button
+                                onClick={() => {
+                                    setOpenState(true)
+                                }}
+                                style={{
+                                    maxWidth: '210px',
+                                    marginLeft: '30px',
+                                    marginTop: '5px',
+                                    marginBottom: '5px',
+                                }}
+                                disabled={isLoading || !fileType} // disable button when loading
+                                ref={buttonRef}
+                            >
+                                Generer pr28-fil
+                            </Button>
+                            <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
+                                <Popover.Content
+                                    style={{
+                                        textAlign: 'center',
+                                        backgroundColor: 'rgba(241, 241, 241, 1)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px',
+                                        maxWidth: '250px',
+                                    }}
+                                >
+                                    Er du sikker på vil generere fil for for for{' '}
+                                    <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
+                                    <Button
+                                        variant="danger"
+                                        onClick={() => {
+                                            if (filteredVakter) {
+                                                generateFile(
+                                                    filteredVakter.map((s) => s.id),
+                                                    fileType,
+                                                    setResponse,
+                                                    setResponseError
+                                                )
+                                                setIsLoading(true)
+                                            } else {
+                                                console.log('Noe gikk galt :shrug:')
+                                            }
+                                        }}
+                                        disabled={isLoading || !fileType} // disable button when loading
+                                    >
+                                        {isLoading ? <Loader /> : 'Generer fil nå!'}
+                                    </Button>
+                                </Popover.Content>
+                            </Popover>
+                        </div>
+                    </ExpansionCard.Content>
+                </ExpansionCard>
+            </div>
+
             <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', columnGap: '15px', marginTop: '15px' }}>
                 <div>
                     <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
