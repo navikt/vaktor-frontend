@@ -21,7 +21,6 @@ const AvstemmingOkonomi = () => {
     const [responseError, setResponseError] = useState('')
 
     const [actionReason, setActionReason] = useState(Number)
-    const [approveLevel, setApproveLevel] = useState(Number)
 
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
@@ -108,14 +107,17 @@ const AvstemmingOkonomi = () => {
 
     const mapVakter = (vaktliste: Schedules[]) => {
         // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
-            const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
-            if (!acc[koststed]) {
-                acc[koststed] = []
-            }
-            acc[koststed].push(current)
-            return acc
-        }, {} as Record<string, Schedules[]>)
+        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce(
+            (acc: Record<string, Schedules[]>, current) => {
+                const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
+                if (!acc[koststed]) {
+                    acc[koststed] = []
+                }
+                acc[koststed].push(current)
+                return acc
+            },
+            {} as Record<string, Schedules[]>
+        )
 
         // Sort each group by start_timestamp
         Object.keys(groupedByKoststed).forEach((koststedKey) => {
