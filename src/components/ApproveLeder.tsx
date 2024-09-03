@@ -41,6 +41,33 @@ const AdminLeder = ({}) => {
         ),
     })
 
+    function getMonthTimestamps(currentMonth: Date) {
+        const year = currentMonth.getFullYear()
+        const month = currentMonth.getMonth()
+
+        // Start of the month
+        const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0)
+        const startTimestamp = Math.floor(startOfMonth.getTime() / 1000)
+
+        // End of the month (start of the next month)
+        const startOfNextMonth = new Date(year, month + 1, 1, 0, 0, 0, 0)
+        const endTimestamp = Math.floor(startOfNextMonth.getTime() / 1000)
+
+        return { startTimestamp, endTimestamp }
+    }
+
+    let startTimestamp: number, endTimestamp: number
+
+    if (selectedMonth !== undefined) {
+        const timestamps = getMonthTimestamps(selectedMonth)
+        startTimestamp = timestamps.startTimestamp
+        endTimestamp = timestamps.endTimestamp
+    } else {
+        const now = new Date()
+        startTimestamp = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime() / 1000
+        endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
+    }
+
     const confirm_schedules_bulk = async (scheduleIds: string[], setResponse: Dispatch<any>) => {
         setLoading(true)
         const promises = scheduleIds.map((schedule_id) =>
@@ -232,14 +259,15 @@ const AdminLeder = ({}) => {
 
     useEffect(() => {
         setLoading(true)
-        fetch('/api/leader_schedules')
+        const path = `/api/leader_schedules?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
+        fetch(path)
             .then((scheduleRes) => scheduleRes.json())
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
                 setItemData(itemData)
                 setLoading(false)
             })
-    }, [response, setItemData])
+    }, [response, selectedMonth, setItemData])
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
