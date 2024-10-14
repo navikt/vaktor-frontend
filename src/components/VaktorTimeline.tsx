@@ -1,11 +1,11 @@
-import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, TodayMarker, CustomMarker, CursorMarker } from 'react-calendar-timeline'
+import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, CustomMarker, CursorMarker } from 'react-calendar-timeline'
 import { useState, useEffect } from 'react'
 import { Moment } from 'moment'
 import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './SetColors'
 import { Information } from '@navikt/ds-icons'
 import GroupDetailsModal from './GroupDetailsModal'
 import ItemDetailsModal from './ItemDetailsModal'
-import { BodyShort, Label, Loader, Button, Search } from '@navikt/ds-react'
+import { BodyShort, Label, Loader, Search } from '@navikt/ds-react'
 import styled from 'styled-components'
 import moment from 'moment'
 import { Spring, animated, AnimatedProps } from 'react-spring'
@@ -41,14 +41,6 @@ const SidebarIcon = styled.div`
     opacity: 0.6;
 `
 
-const LoadingWrapper = styled.div`
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    -webkit-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%);
-`
-
 function VaktorTimeline() {
     const { user } = useAuth()
     const [groupData, setGroupData] = useState(null)
@@ -74,8 +66,8 @@ function VaktorTimeline() {
 
     const [searchFilter, setSearchFilter] = useState('')
 
-    const [visibleTimeStart, setVisibleTimeStart] = useState(moment().startOf('isoWeek').valueOf())
-    const [visibleTimeEnd, setVisibleTimeEnd] = useState(moment().startOf('isoWeek').add(7, 'day').valueOf())
+    const [visibleTimeStart, setVisibleTimeStart] = useState(Math.floor(moment().startOf('isoWeek').valueOf()))
+    const [visibleTimeEnd, setVisibleTimeEnd] = useState(Math.floor(moment().startOf('isoWeek').add(8, 'day').valueOf()))
     const [timeUnit, setTimeUnit] = useState('week')
 
     const date = (timestamp: number) => {
@@ -95,8 +87,15 @@ function VaktorTimeline() {
 
     useEffect(() => {
         setLoading(true)
+        let start = Math.floor(visibleTimeStart / 1000) - 7 * 24 * 60 * 60
+        let end = Math.floor(visibleTimeEnd / 1000)
 
-        Promise.all([fetch('/api/groups'), fetch('/api/schedules')])
+        Promise.all([
+            fetch('/api/groups'),
+            fetch(`/api/schedules_with_limit?start_timestamp=${start}&end_timestamp=${end}`),
+            //fetch(`/api/schedules`),
+        ])
+
             .then(async ([groupRes, scheduleRes]) => {
                 const groupjson = await groupRes.json()
                 const schedulejson = await scheduleRes.json()
@@ -107,14 +106,8 @@ function VaktorTimeline() {
                 setItemData(itemData)
                 setLoading(false)
             })
-    }, [])
+    }, [visibleTimeStart])
 
-    if (isLoading)
-        return (
-            <LoadingWrapper>
-                <Loader variant="neutral" size="3xlarge" title="venter..." />
-            </LoadingWrapper>
-        )
     if (!groupData) return <p>No profile data</p>
 
     /*
@@ -309,10 +302,9 @@ function VaktorTimeline() {
         return classes
     }
 
-    const helgedager = []
-
     const format = 'DD.MM.YYYY'
     const holidays = [
+        // 2022
         moment('01.01.2022', format), // Lørdag 1. januar: 1. nyttårsdag
         moment('10.04.2022', format), // Søndag 10. april: Palmesøndag
         moment('14.04.2022', format), // Torsdag 14. april: Skjærtorsdag
@@ -326,6 +318,7 @@ function VaktorTimeline() {
         moment('05.06.2022', format), // Søndag 5. juni: 2. pinsedag
         moment('25.12.2022', format), // Mandag 25. desember: 1. juledag
         moment('26.12.2022', format), // Tirsdag 26. desember: 2. juledag
+        // 2023
         moment('01.01.2023', format), // Søndag 1. januar: 1. nyttårsdag
         moment('02.04.2023', format), // Søndag 2. april: Palmesøndag
         moment('06.04.2023', format), // Torsdag 6. april: Skjærtorsdag
@@ -339,6 +332,7 @@ function VaktorTimeline() {
         moment('29.05.2023', format), // Mandag 29. mai: 2. pinsedag
         moment('25.12.2023', format), // Mandag 25. desember: 1. juledag
         moment('26.12.2023', format), // Tirsdag 26. desember: 2. juledag
+        // 2024
         moment('01.01.2024', format), // Tirsdag 1. januar: 1. nyttårsdag
         moment('24.03.2024', format), // Søndag 24. mars: Palmesøndag
         moment('28.03.2024', format), // Torsdag 28. mars: Skjærtorsdag
@@ -352,6 +346,34 @@ function VaktorTimeline() {
         moment('20.05.2024', format), // Mandag 20. mai: 2. pinsedag
         moment('25.12.2024', format), // Onsdag 25. desember: 1. juledag
         moment('26.12.2024', format), // Torsdag 26. desember: 2. juledag
+        // Helligdager i 2025
+        moment('01.01.2025', format), // Onsdag 1. januar: 1. nyttårsdag
+        moment('13.04.2025', format), // Søndag 13. april: Palmesøndag
+        moment('17.04.2025', format), // Torsdag 17. april: Skjærtorsdag
+        moment('18.04.2025', format), // Fredag 18. april: Langfredag
+        moment('20.04.2025', format), // Søndag 20. april: 1. påskedag
+        moment('21.04.2025', format), // Mandag 21. april: 2. påskedag
+        moment('01.05.2025', format), // Torsdag 1. mai: Offentlig høytidsdag
+        moment('17.05.2025', format), // Lørdag 17. mai: Grunnlovsdag
+        moment('29.05.2025', format), // Torsdag 29. mai: Kristi Himmelfartsdag
+        moment('08.06.2025', format), // Søndag 8. juni: 1. pinsedag
+        moment('09.06.2025', format), // Mandag 9. juni: 2. pinsedag
+        moment('25.12.2025', format), // Torsdag 25. desember: 1. juledag
+        moment('26.12.2025', format), // Fredag 26. desember: 2. juledag
+        // Helligdager i 2026
+        moment('01.01.2026', format), // Torsdag 1. januar: 1. nyttårsdag
+        moment('29.03.2026', format), // Søndag 29. mars: Palmesøndag
+        moment('02.04.2026', format), // Torsdag 2. april: Skjærtorsdag
+        moment('03.04.2026', format), // Fredag 3. april: Langfredag
+        moment('05.04.2026', format), // Søndag 5. april: 1. påskedag
+        moment('06.04.2026', format), // Mandag 6. april: 2. påskedag
+        moment('01.05.2026', format), // Fredag 1. mai: Offentlig høytidsdag
+        moment('17.05.2026', format), // Søndag 17. mai: Grunnlovsdag
+        moment('14.05.2026', format), // Torsdag 14. mai: Kristi Himmelfartsdag
+        moment('24.05.2026', format), // Søndag 24. mai: 1. pinsedag
+        moment('25.05.2026', format), // Mandag 25. mai: 2. pinsedag
+        moment('25.12.2026', format), // Fredag 25. desember: 1. juledag
+        moment('26.12.2026', format), // Lørdag 26. desember: 2. juledag
     ]
 
     const AnimatedTimeline = animated(({ animatedVisibleTimeStart, animatedVisibleTimeEnd, visibleTimeStart, visibleTimeEnd, ...props }) => (
@@ -370,7 +392,10 @@ function VaktorTimeline() {
             ) : (
                 <>
                     <form style={{ width: '400px', marginBottom: '10px' }}>
-                        <Search label="Søk etter vaktlag" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
+                        <div style={{ display: 'flex' }}>
+                            <Search label="Søk etter vaktlag" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
+                            {isLoading ? <Loader variant="neutral" size="2xlarge" title="venter..." /> : <></>}
+                        </div>
                     </form>
 
                     <Spring
@@ -389,7 +414,7 @@ function VaktorTimeline() {
                             <AnimatedTimeline
                                 groups={groups}
                                 items={items}
-                                minZoom={86400000}
+                                traditionalZoom={true}
                                 sidebarContent="Vaktlag"
                                 itemHeightRatio={0.8}
                                 sidebarWidth={240}
