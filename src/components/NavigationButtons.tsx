@@ -1,9 +1,9 @@
-import { Moment } from 'moment'
 import { Left, Right } from '@navikt/ds-icons'
 import { Button } from '@navikt/ds-react'
 import styled from 'styled-components'
 import moment from 'moment'
-import { useState, useEffect, Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction } from 'react'
+import { timeEnd } from 'console'
 
 const NavigateBtn = styled.div`
     position: absolute;
@@ -87,6 +87,7 @@ export const NavigationButtons = (props: {
 
     const handleTimeHeaderChange = (unit: string) => {
         props.setTimeUnit(unit)
+        console.log(unit)
 
         if (unit === 'day') {
             props.setVisibleTimeStart(moment().startOf('day').valueOf())
@@ -108,20 +109,20 @@ export const NavigationButtons = (props: {
     return (
         <NavigateBtn>
             <Timeframebtns>
-                <Button size="small" onClick={() => handleTimeHeaderChange('day')}>
+                {/* <Button size="small" onClick={() => handleTimeHeaderChange('day')}>
                     Dag
-                </Button>
+                </Button> */}
                 <Button size="small" onClick={() => handleTimeHeaderChange('week')}>
                     Uke
                 </Button>
                 <Button size="small" onClick={() => handleTimeHeaderChange('month')}>
                     Måned
                 </Button>
-                <Button size="small" onClick={() => handleTimeHeaderChange('year')}>
+                {/* <Button size="small" onClick={() => handleTimeHeaderChange('year')}>
                     År
-                </Button>
+                </Button> */}
             </Timeframebtns>
-            <Button size="small" onClick={() => onPrevClick()} icon={<Left />} />
+            <Button size="small" onClick={() => (onPrevClick(), console.log(props.timeStart))} icon={<Left />} />
             <Button size="small" onClick={() => onNextClick()} icon={<Right />} />
         </NavigateBtn>
     )
