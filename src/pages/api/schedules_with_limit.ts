@@ -14,7 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const path = `${process.env.BACKEND_URL}/api/v1/schedules/?start=${start_timestamp}&end=${end_timestamp}`
-    console.log(path)
 
     try {
         const backendResponse = await fetch(path, {

@@ -63,6 +63,7 @@ function VaktorTimeline() {
     const [itemStartTime, setItemStartTime] = useState('')
     const [itemEndTime, setItemEndTime] = useState('')
     const [itemUser, setItemUser] = useState<User | undefined>(undefined)
+    const [itemScheduleId, setItemScheduleId] = useState('')
 
     const [searchFilter, setSearchFilter] = useState('')
 
@@ -178,7 +179,8 @@ function VaktorTimeline() {
         startTime: string,
         endTime: string,
         groupId: string,
-        user: User
+        user: User,
+        schedule_id: string
     ) => {
         setItemModalOpen(modalstate)
         setItemUserName(name)
@@ -189,6 +191,7 @@ function VaktorTimeline() {
         setItemStartTime(startTime)
         setItemEndTime(endTime)
         setItemGrpId(groupId)
+        setItemScheduleId(schedule_id)
     }
 
     itemList
@@ -216,7 +219,8 @@ function VaktorTimeline() {
                             formattedDate(itemStart),
                             formattedDate(itemEnd),
                             itemObj.group_id,
-                            itemObj.user
+                            itemObj.user,
+                            itemObj.id
                         )
                     },
 
@@ -263,7 +267,8 @@ function VaktorTimeline() {
                                     formattedDate(interruptionStart),
                                     formattedDate(interruptionEnd),
                                     interruptionObj.group_id,
-                                    interruptionObj.user
+                                    interruptionObj.user,
+                                    interruptionObj.id
                                 )
                             },
 
@@ -481,6 +486,7 @@ function VaktorTimeline() {
                             endTime={itemEndTime}
                             canEdit={user.id.toUpperCase() === itemUser!.id ? true : false}
                             user={itemUser!}
+                            schedule_id={itemScheduleId}
                         />
                     )}
                 </>

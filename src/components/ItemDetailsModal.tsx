@@ -1,9 +1,10 @@
-import { Modal } from '@navikt/ds-react'
+import { Button, Modal } from '@navikt/ds-react'
 import { InformationColored, People, CoApplicant, Calender, Telephone, Notes, Dialog } from '@navikt/ds-icons'
 import '@navikt/ds-css'
 import { useEffect } from 'react'
 import { User } from '../types/types'
 import UserInfoDetails from './userInfoDetails'
+import { useAuth } from '../context/AuthContext'
 
 const iconStyle = {
     display: 'flex',
@@ -12,6 +13,12 @@ const iconStyle = {
     height: '53px',
     marginRight: '10px',
 }
+
+const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
+    return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
+}
+
+
 
 const ItemDetailsModal = (props: {
     handleClose: Function
@@ -23,10 +30,15 @@ const ItemDetailsModal = (props: {
     endTime?: string
     canEdit: boolean
     user: User
+    schedule_id: string
 }) => {
     useEffect(() => {}, [])
-
+    const { user } = useAuth()
     const phonetext = props.telephone == '??' ? 'n/a' : '(+47) ' + props.telephone
+
+    const handleSplitSchedule = async () => {
+        await fetch(`/api/split_schedule/?schedule_id=${props.schedule_id}`).then(props.handleClose())
+    }
 
     return (
         <>
@@ -72,6 +84,8 @@ const ItemDetailsModal = (props: {
                         infoText={`${props.startTime} - ${props.endTime}`}
                         icon={<Calender style={iconStyle} />}
                     />
+                    {hasAnyRole(user, ["admin"]) ? <Button onClick={handleSplitSchedule}>Split vakt</Button> : <></>}
+
                 </Modal.Body>
             </Modal>
         </>
