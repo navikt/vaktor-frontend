@@ -118,7 +118,7 @@ const Vaktperioder = () => {
     const { monthpickerProps, inputProps, selectedMonth } = useMonthpicker({
         required: true,
         fromDate: new Date('Jan 01 2023'),
-        toDate: new Date('Feb 01 2025'),
+        toDate: new Date('Dec 31 2027'),
         defaultYear: new Date('Jan 01 2023'),
         defaultSelected: new Date('Jan 01 2023'),
     })
