@@ -1,12 +1,11 @@
 import { Button, Table, useMonthpicker, MonthPicker, Search, Select, ReadMore } from '@navikt/ds-react'
-import { Dispatch, useEffect, useState } from 'react'
-import { Schedules, User, Vaktlag } from '../types/types'
+import { useEffect, useState } from 'react'
+import { Schedules, Vaktlag } from '../types/types'
 import moment from 'moment'
 import ScheduleModal from './ScheduleModal'
 import ScheduleChanges from './ScheduleChanges'
 import { useAuth } from '../context/AuthContext'
 import { CalendarIcon } from '@navikt/aksel-icons'
-import styled from 'styled-components'
 
 const UpdateSchedule = () => {
     const { user } = useAuth()
@@ -19,7 +18,7 @@ const UpdateSchedule = () => {
     const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
 
     const fromDate = moment('Oct 01 2022', 'MMM DD YYYY').toDate()
-    const toDate = moment('Aug 23 2025', 'MMM DD YYYY').toDate()
+    const toDate = moment('2027', 'YYYY').endOf('year').toDate() // December 31, 2027
     const defaultSelected = moment().locale('en-GB').startOf('month').toDate()
 
     const { monthpickerProps, inputProps, selectedMonth } = useMonthpicker({
