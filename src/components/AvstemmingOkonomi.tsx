@@ -107,17 +107,14 @@ const AvstemmingOkonomi = () => {
 
     const mapVakter = (vaktliste: Schedules[]) => {
         // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce(
-            (acc: Record<string, Schedules[]>, current) => {
-                const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
-                if (!acc[koststed]) {
-                    acc[koststed] = []
-                }
-                acc[koststed].push(current)
-                return acc
-            },
-            {} as Record<string, Schedules[]>
-        )
+        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
+            const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
+            if (!acc[koststed]) {
+                acc[koststed] = []
+            }
+            acc[koststed].push(current)
+            return acc
+        }, {} as Record<string, Schedules[]>)
 
         // Sort each group by start_timestamp
         Object.keys(groupedByKoststed).forEach((koststedKey) => {
@@ -243,11 +240,11 @@ const AvstemmingOkonomi = () => {
                             return data.audits
                                 .map((audit: { action: string }) => {
                                     const regex =
-                                        /(Overført til lønn ved fil|Sendt til utbetaling ved fil): (\w{3}-\d{2}-\d{4})(-?\w*)\.txt( - Vaktor Lonn)?/
+                                        /(Diff )?([Oo]verført til lønn ved fil|Sendt til utbetaling ved fil): (\w{3}-\d{2}-\d{4})(-[a-zA-Z]+(?:-diff)?)?\.txt( - Vaktor Lonn)?/
                                     const match = audit.action.match(regex)
                                     if (match) {
-                                        const datePart = match[2]
-                                        const optionalSuffix = match[3] || '' // Will be empty string if not present
+                                        const datePart = match[3]
+                                        const optionalSuffix = match[4] || '' // Will be empty string if not present
                                         const filename = `${datePart}${optionalSuffix}.txt`
                                         return filename.trim()
                                     }
