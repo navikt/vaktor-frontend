@@ -1,4 +1,4 @@
-import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button } from '@navikt/ds-react'
+import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Checkbox, CheckboxGroup } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -29,6 +29,7 @@ const Admin = () => {
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(9)
+    const [FilterExternal, setFilterExternal] = useState(false)
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [varsleModalOpen, setVarsleModalOpen] = useState(false)
@@ -295,8 +296,9 @@ const Admin = () => {
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
+        const isExternalMatch = !FilterExternal || !value.user.ekstern
 
-        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isExternalMatch
     })
 
     let listeAvVakter = mapVakter(filteredVakter)
@@ -375,6 +377,11 @@ const Admin = () => {
                         <option value={7}>Utregning fullført med diff</option>
                         <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
+                </div>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <CheckboxGroup legend="Eksterne" onChange={(val: string[]) => setFilterExternal(val.includes('true'))}>
+                        <Checkbox value="true">Skjul Eksterne</Checkbox>
+                    </CheckboxGroup>
                 </div>
                 <div style={{ width: '200px', marginLeft: '30px', marginTop: '30px' }}>
                     <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
