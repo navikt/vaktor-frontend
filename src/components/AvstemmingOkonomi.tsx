@@ -288,7 +288,12 @@ const AvstemmingOkonomi = () => {
     let totalCost_filtered = filteredVakter
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
-        return accumulator + (currentSchedule.cost.length > 0 ? currentSchedule.cost[currentSchedule.cost.length - 1].total_cost : 0)
+        if (!currentSchedule || !Array.isArray(currentSchedule.cost)) return accumulator
+        const lastCost =
+            currentSchedule.cost.length > 0 && currentSchedule.cost[currentSchedule.cost.length - 1].total_cost
+                ? Number(currentSchedule.cost[currentSchedule.cost.length - 1].total_cost)
+                : 0
+        return accumulator + lastCost
     }, 0)
 
     return (
