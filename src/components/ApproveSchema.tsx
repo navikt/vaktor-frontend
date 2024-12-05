@@ -135,7 +135,7 @@ const DineVakter = () => {
                         </Button>
                     </div>
                 </Table.DataCell>
-                <MapApproveStatus status={vakter.approve_level} />
+                <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
                 <Table.DataCell style={{ minWidth: '300px' }}>
                     {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                 </Table.DataCell>

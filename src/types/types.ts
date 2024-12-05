@@ -59,6 +59,7 @@ export interface Schedules {
     cost: Cost[]
     vakter: Schedules[]
     audits: Audit[]
+    error_messages: Error_messages[]
     is_double: boolean
 }
 
@@ -113,4 +114,12 @@ export interface Artskoder {
     type: string
     sum: string
     hours: string
+}
+
+export interface Error_messages {
+    id: string
+    ok: boolean
+    created_at: string
+    schedule_id: string
+    error: string
 }

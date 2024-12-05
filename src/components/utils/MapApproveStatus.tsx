@@ -2,14 +2,17 @@
 
 import { Table } from '@navikt/ds-react'
 import React from 'react'
+import { Error_messages } from '../../types/types'
 
 interface ApproveStatusProps {
     status: number
+    error: any
 }
 
-const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status }) => {
+const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
     let statusText = ''
     let statusColor = ''
+    let errorText = ''
 
     switch (status) {
         case 1:
@@ -17,8 +20,18 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status }) => {
             statusColor = '#66CBEC'
             break
         case 2:
-            statusText = 'Venter på utregning'
+            statusText = 'Venter på utregning '
             statusColor = '#99DEAD'
+            errorText = error.map((messages: Error_messages, idx: number) => (
+                <div
+                    key={idx}
+                    style={{
+                        color: 'red',
+                    }}
+                >
+                    {messages.error}
+                </div>
+            ))
             break
         case 3:
             statusText = 'Godkjent av vaktsjef'
@@ -59,6 +72,7 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status }) => {
             }}
         >
             {statusText}
+            {errorText}
         </Table.DataCell>
     )
 }
