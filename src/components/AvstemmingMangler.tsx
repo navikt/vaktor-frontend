@@ -186,7 +186,7 @@ const AvstemmingMangler = () => {
                             <br />
                         </div>
                     </Table.DataCell>
-                    <MapApproveStatus status={vakter.approve_level} />
+                    <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
                     <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
                         {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>
