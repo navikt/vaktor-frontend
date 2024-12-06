@@ -95,7 +95,7 @@ const AvstemmingBakvakter = () => {
                         })}
                         <br />
                     </Table.DataCell>
-                    <MapApproveStatus status={vakter.approve_level} />
+                    <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
                     {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) && (
                         <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
                             {vakter.cost ? <MapCost cost={vakter.cost} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
