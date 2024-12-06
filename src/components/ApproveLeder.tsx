@@ -244,7 +244,7 @@ const AdminLeder = ({}) => {
                         )}
                     </div>
                 </Table.DataCell>
-                <MapApproveStatus status={vakter.approve_level} />
+                <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
                 {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? (
                     <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
                         {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
