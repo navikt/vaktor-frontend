@@ -23,7 +23,7 @@ const AdminLeder = ({}) => {
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterRole, setSearchFilterRole] = useState('')
-    const [searchFilterAction, setSearchFilterAction] = useState(5)
+    const [searchFilterAction, setSearchFilterAction] = useState(9)
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -283,7 +283,7 @@ const AdminLeder = ({}) => {
         const isExternal = value.user.ekstern == false
         // Ignore approved periods in the future
         const futurePeriodsMonth = month <= selectedMonth!.getMonth()
-        const futurePeriodsYear = year == selectedMonth!.getFullYear()
+        const futurePeriodsYear = year <= selectedMonth!.getFullYear()
 
         // Determine if the date filtering should be applied.
         const isDateMatching = checkRole || (month === selectedMonth!.getMonth() && year === selectedMonth!.getFullYear())
@@ -291,7 +291,7 @@ const AdminLeder = ({}) => {
         // Apply other filtering conditions.
         const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
         const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
-        const isApproveLevelMatching = searchFilterAction === 5 ? true : value.approve_level === searchFilterAction
+        const isApproveLevelMatching = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
 
         // Combine all conditions for filtering.
         return isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching && isExternal && futurePeriodsMonth && futurePeriodsYear
@@ -321,12 +321,16 @@ const AdminLeder = ({}) => {
                 </div>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <Select label="Velg status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                        <option value={5}>Alle</option>
+                        <option value={9}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
                         <option value={1}>Godkjent av ansatt</option>
                         <option value={2}>Venter på utregning</option>
                         <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Overført til lønn</option>
+                        <option value={4}>Godkjent av BDM</option>
+                        <option value={5}>Overført til lønn</option>
+                        <option value={6}>Venter på utregning av diff</option>
+                        <option value={7}>Utregning fullført med diff</option>
+                        <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
                 </div>
                 <div style={{ display: 'grid', alignContent: 'flex-end' }}>
