@@ -35,7 +35,9 @@ const DineVakter = () => {
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
-    const [searchFilterAction, setSearchFilterAction] = useState(5)
+    const [searchFilterAction, setSearchFilterAction] = useState(9)
+
+    const currentDate = new Date()
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -162,15 +164,27 @@ const DineVakter = () => {
     if (selectedMonth === undefined) setSelected(new Date())
     if (itemData === undefined) return <></>
 
-    let listeAvVakter = mapVakter(
-        itemData.filter(
-            (value: Schedules) =>
-                // value.user_id.toLowerCase() !== user.id.toLowerCase() &&
-                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
-                (searchFilterAction === 5 ? true : value.approve_level === searchFilterAction)
-        )
-    )
+    currentDate.setMonth(currentDate.getMonth() + 1) // Move to the next month
+    currentDate.setDate(0) // Go to the last day of the previous month (last day of the current month)
+    currentDate.setHours(23, 59) // Set to 23:59
+
+    const filteredVakter = itemData.filter((value: Schedules) => {
+        const scheduleDate = new Date(value.start_timestamp * 1000)
+
+        // Determine if the schedule is in the past or within the selected month
+        const isPastDate = scheduleDate < currentDate
+        const isCurrentMonth = scheduleDate.getMonth() === selectedMonth!.getMonth() && scheduleDate.getFullYear() === selectedMonth!.getFullYear()
+
+        // Evaluate the approve level criteria
+        const isApproveLevelRelevant = value.approve_level < 4 ? isPastDate : isCurrentMonth
+
+        // Check if approve level matches the search filter action
+        const isApproveLevelMatch = searchFilterAction === 9 || value.approve_level === searchFilterAction
+
+        return isApproveLevelRelevant && isApproveLevelMatch
+    })
+
+    let listeAvVakter = mapVakter(filteredVakter)
 
     return (
         <>
@@ -191,16 +205,21 @@ const DineVakter = () => {
                             <MonthPicker.Input {...inputProps} label="Velg måned" />
                         </div>
                     </MonthPicker>
+
                     <div></div>
 
                     <div style={{ width: '200px', marginLeft: '30px' }}>
                         <Select label="Filtrer på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                            <option value={5}>Alle</option>
+                            <option value={9}>Alle</option>
                             <option value={0}>Trenger godkjenning</option>
                             <option value={1}>Godkjent av ansatt</option>
                             <option value={2}>Venter på utregning</option>
                             <option value={3}>Godkjent av vaktsjef</option>
-                            <option value={4}>Overført til lønn</option>
+                            <option value={4}>Godkjent av BDM</option>
+                            <option value={5}>Overført til lønn</option>
+                            <option value={6}>Venter på utregning av diff</option>
+                            <option value={7}>Utregning fullført med diff</option>
+                            <option value={8}>Overført til lønn etter rekjøring</option>
                         </Select>
                     </div>
                 </div>
