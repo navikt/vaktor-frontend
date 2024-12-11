@@ -39,7 +39,7 @@ const DineVakter = () => {
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
-        toDate: new Date('Aug 23 2025'),
+        toDate: new Date('Dec 31 2027'),
         defaultSelected: new Date(
             new Date().getDate() - 10 > 0
                 ? moment().locale('en-GB').format('ll')
