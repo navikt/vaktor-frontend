@@ -1,14 +1,13 @@
 import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, useMonthpicker } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
-import { useAuth } from '../context/AuthContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import MapApproveStatus from './utils/MapApproveStatus'
+import VarsleModal from './VarsleModal'
 
 const AvstemmingMangler = () => {
-    const { user } = useAuth()
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [loading, setLoading] = useState(false)
 
@@ -30,6 +29,11 @@ const AvstemmingMangler = () => {
     const [fileType, setFileType] = useState(Number)
     const [isLoading, setIsLoading] = useState(false)
     const [responseError, setResponseError] = useState('')
+
+    const [varsleModalOpen, setVarsleModalOpen] = useState(false)
+
+    const currentDate = new Date()
+    const selectedMonth = currentDate.getMonth()
 
     let rowCount = 0
 
@@ -374,6 +378,12 @@ const AvstemmingMangler = () => {
                 </ExpansionCard>
             </div>
 
+            <div>
+                {varsleModalOpen && (
+                    <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={currentDate || new Date()} />
+                )}
+            </div>
+
             <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', columnGap: '15px', marginTop: '15px' }}>
                 <div>
                     <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
@@ -432,6 +442,11 @@ const AvstemmingMangler = () => {
                     <CheckboxGroup legend="!= denne måned" onChange={(val: string[]) => setFilterExcludeCurrentMonth(val.includes('true'))}>
                         <Checkbox value="true">!= denne måned</Checkbox>
                     </CheckboxGroup>
+                </div>
+                <div style={{ width: '200px', marginLeft: '30px', marginTop: '30px' }}>
+                    <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
+                        Send påminnelse
+                    </Button>
                 </div>
             </div>
             <div>
