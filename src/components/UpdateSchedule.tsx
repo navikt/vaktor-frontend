@@ -87,6 +87,7 @@ const UpdateSchedule = () => {
     }
 
     useEffect(() => {
+        console.log(inputProps)
         fetch('/api/group_schedules')
             .then((scheduleRes) => scheduleRes.json())
             .then((scheduleData) => {
@@ -141,6 +142,7 @@ const UpdateSchedule = () => {
                             <MonthPicker.Input {...inputProps} label="Velg måned" />
                         </div>
                     </MonthPicker>
+
                     <form style={{ width: '300px' }}>
                         <Search
                             label="Søk etter person"
@@ -208,9 +210,23 @@ const UpdateSchedule = () => {
                                                 ? ' - ' + moment(schedule.end_timestamp * 1000).week()
                                                 : ''}
                                             <br />
-                                            Fra: {new Date(schedule.start_timestamp * 1000).toLocaleString().slice(0, -3)}
+                                            Fra:{' '}
+                                            {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
                                             <br />
-                                            Til: {new Date(schedule.end_timestamp * 1000).toLocaleString().slice(0, -3)}
+                                            Til:{' '}
+                                            {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
                                             <br />
                                             <Button
                                                 style={{
