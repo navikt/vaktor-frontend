@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Button, Alert } from '@navikt/ds-react'
-import Image from 'next/image'
+
 import { useAuth } from '../context/AuthContext'
 import { User } from '../types/types'
 import * as Routes from '../types/routes'
@@ -14,7 +14,7 @@ const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
 const Navbar: React.FC = () => {
     const { user } = useAuth()
     const today = new Date()
-    const greetings = ['Hei, ', 'Vooof! ', 'Voff, voff, ', today.getMonth() === 11 ? 'God jul, ' : ''].filter(Boolean)
+    const greetings = ['Hei, ', today.getMonth() === 11 ? 'God jul, ' : ''].filter(Boolean)
 
     // Function to get a random greeting
     const getGreeting = () => greetings[Math.floor(Math.random() * greetings.length)]
@@ -31,15 +31,6 @@ const Navbar: React.FC = () => {
     return (
         <>
             <nav>
-                {/* Logo and greeting */}
-                <div style={{ marginTop: '10px' }}>
-                    <Image
-                        src={today.getMonth() === 11 ? '/images/vaktor-santa.png' : '/images/vaktor-logo.png'}
-                        alt="Vaktor logo"
-                        width={70}
-                        height={70}
-                    />
-                </div>
                 <div className="logo">
                     {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
                         <h3>
@@ -65,13 +56,6 @@ const Navbar: React.FC = () => {
                 {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterUnfinished} />}
                 {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterVaktlagAdmin} />}
                 {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterAdmin} />}
-
-                {/* Alert if no roles */}
-                {!hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
-                    <Alert variant="info" size="small" style={{ maxWidth: '250px', minWidth: '250px', marginBottom: '20px', marginTop: '-20px' }}>
-                        Du har ingen rolle i vaktor
-                    </Alert>
-                )}
             </nav>
         </>
     )

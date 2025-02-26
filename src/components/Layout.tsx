@@ -1,5 +1,6 @@
 import Navbar from './NavBar'
-import { Header, Footer } from '@navikt/status-components-react'
+import { Footer } from '@navikt/status-components-react'
+import Header from './Header'
 import Head from 'next/head'
 import { useAuth } from '../context/AuthContext'
 
@@ -15,7 +16,8 @@ const Layout = ({ children }: any) => {
 
     return (
         <div className="mainContainer">
-            <Header imageURL="/assets/navblack.png" userID={user.id} userName={user.name} />
+            <Header></Header>
+            {/* <Header imageURL="/assets/navblack.png" userID={user.id} userName={user.name} /> */}
 
             {today.getMonth() === 11 ? (
                 <Head>
