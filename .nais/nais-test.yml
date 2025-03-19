@@ -1,10 +1,10 @@
-apiVersion: nais.io/v1alpha1
+apiVersion: nais.io/v2
 kind: Application
 metadata:
     name: vaktor
     namespace: vaktor   
     labels:
-        team: navdig
+        team: vaktor
 spec:
     accessPolicy:
         inbound:
