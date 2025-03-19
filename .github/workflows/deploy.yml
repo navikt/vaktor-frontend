@@ -22,7 +22,7 @@ jobs:
     name: Build and push Docker container
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       
       - name: Authenticate with private NPM package
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
@@ -35,23 +35,6 @@ jobs:
           docker build --tag ${docker_image} --build-arg NPM_TOKEN=${{ secrets.NPM_TOKEN }} .
           docker push ${docker_image}
   
-  # sentry-bump-version-release:
-  #   name: Sentry Create and Finalize Release
-  #   runs-on: ubuntu-latest
-  #   steps:
-
-  #     - uses: actions/checkout@v2
-    
-  #     - name: Install Sentry CLI
-  #       run: |
-  #         curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="${SENTRY_CLI_VERSION}" bash
-
-  #     - name: Create and Finalize Release
-  #       run: |
-  #         VERSION="${GITHUB_SHA}"  # Use the commit hash as the release name
-  #         sentry-cli releases new "$VERSION"
-  #         sentry-cli releases set-commits "$VERSION" --auto
-  #         sentry-cli releases finalize "$VERSION"
 
   deploy-test:
     name: Deploy application to test env
@@ -59,10 +42,9 @@ jobs:
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: nais/deploy/actions/deploy@v1
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais-test.yml
           VAR: image=${{ env.docker_image }}
@@ -73,10 +55,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: nais/deploy/actions/deploy@v1
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais.yml
           VAR: image=${{ env.docker_image }}
