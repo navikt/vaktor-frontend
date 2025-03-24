@@ -197,7 +197,6 @@ const DineVakter = () => {
     let listeAvVakter = mapVakter(filteredVakter)
 
     // if listeAvVakter is empty, return a message
-    if (listeAvVakter.length === 0) return <>Ingen vakter funnet</>
     return (
         <>
             <div
