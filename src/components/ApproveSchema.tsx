@@ -169,9 +169,7 @@ const DineVakter = () => {
     currentDate.setDate(0) // Go to the last day of the previous month (last day of the current month)
     currentDate.setHours(23, 59) // Set to 23:59
 
-    if (!selectedMonth) return []
-
-    if (!selectedMonth) return []
+    if (!selectedMonth) return null
 
     const selectedYear = selectedMonth.getFullYear()
     const selectedMonthIndex = selectedMonth.getMonth()
