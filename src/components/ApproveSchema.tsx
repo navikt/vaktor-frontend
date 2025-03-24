@@ -5,6 +5,7 @@ import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import MapApproveStatus from './utils/MapApproveStatus'
+import { TRUE, Value } from 'sass'
 
 let today = Date.now() / 1000
 
@@ -34,7 +35,7 @@ const DineVakter = () => {
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
-    const [filterYear, setFilterYear] = useState(false)
+    const [filterYear, setFilterYear] = useState(true)
 
     const [searchFilterAction, setSearchFilterAction] = useState(9)
 
@@ -234,7 +235,11 @@ const DineVakter = () => {
                         </Select>
                     </div>
                     <div style={{ width: '200px', marginLeft: '30px' }}>
-                        <CheckboxGroup legend="Vis hele året" onChange={(val: string[]) => setFilterYear(val.includes('true'))}>
+                        <CheckboxGroup
+                            legend="Vis hele året"
+                            onChange={(val: string[]) => setFilterYear(val.includes('true'))}
+                            defaultValue={['true']}
+                        >
                             <Checkbox value="true">Vis alle vakter for {selectedMonth.getFullYear()} </Checkbox>
                         </CheckboxGroup>
                     </div>
