@@ -1,4 +1,4 @@
-import { Button, Table, Loader, Select, MonthPicker, useMonthpicker, HelpText } from '@navikt/ds-react'
+import { Button, Table, Loader, Select, MonthPicker, useMonthpicker, HelpText, Checkbox, CheckboxGroup } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { Schedules } from '../types/types'
@@ -7,7 +7,6 @@ import MapAudit from './utils/mapAudit'
 import MapApproveStatus from './utils/MapApproveStatus'
 
 let today = Date.now() / 1000
-//let today = 1668470400  // 15. November 2022 00:00:00
 
 const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>, setLoading: Dispatch<any>) => {
     setLoading(true)
@@ -34,6 +33,8 @@ const DineVakter = () => {
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
+
+    const [filterYear, setFilterYear] = useState(false)
 
     const [searchFilterAction, setSearchFilterAction] = useState(9)
 
@@ -168,20 +169,31 @@ const DineVakter = () => {
     currentDate.setDate(0) // Go to the last day of the previous month (last day of the current month)
     currentDate.setHours(23, 59) // Set to 23:59
 
+    if (!selectedMonth) return []
+
+    if (!selectedMonth) return []
+
+    const selectedYear = selectedMonth.getFullYear()
+    const selectedMonthIndex = selectedMonth.getMonth()
+
     const filteredVakter = itemData.filter((value: Schedules) => {
         const scheduleDate = new Date(value.start_timestamp * 1000)
 
-        // Determine if the schedule is in the past or within the selected month
-        const isPastDate = scheduleDate < currentDate
-        const isCurrentMonth = scheduleDate.getMonth() === selectedMonth!.getMonth() && scheduleDate.getFullYear() === selectedMonth!.getFullYear()
+        const isPast = scheduleDate < currentDate
+        const isInSelectedMonth = scheduleDate.getMonth() === selectedMonthIndex && scheduleDate.getFullYear() === selectedYear
+        const isInSelectedYear = scheduleDate.getFullYear() === selectedYear
 
-        // Evaluate the approve level criteria
-        const isApproveLevelRelevant = value.approve_level < 4 ? isPastDate : isCurrentMonth
+        let isRelevant = false
 
-        // Check if approve level matches the search filter action
-        const isApproveLevelMatch = searchFilterAction === 9 || value.approve_level === searchFilterAction
+        if (filterYear) {
+            isRelevant = isInSelectedYear
+        } else {
+            isRelevant = (value.approve_level < 4 && isPast) || isInSelectedMonth
+        }
 
-        return isApproveLevelRelevant && isApproveLevelMatch
+        const matchesSearch = searchFilterAction === 9 || value.approve_level === searchFilterAction
+
+        return isRelevant && matchesSearch
     })
 
     let listeAvVakter = mapVakter(filteredVakter)
@@ -221,6 +233,11 @@ const DineVakter = () => {
                             <option value={7}>Utregning fullført med diff</option>
                             <option value={8}>Overført til lønn etter rekjøring</option>
                         </Select>
+                    </div>
+                    <div style={{ width: '200px', marginLeft: '30px' }}>
+                        <CheckboxGroup legend="Vis hele året" onChange={(val: string[]) => setFilterYear(val.includes('true'))}>
+                            <Checkbox value="true">Vis alle vakter for {selectedMonth.getFullYear()} </Checkbox>
+                        </CheckboxGroup>
                     </div>
                 </div>
                 <Table>
