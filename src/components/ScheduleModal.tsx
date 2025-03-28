@@ -165,7 +165,7 @@ const ScheduleModal = (props: {
                                             <DatePicker.Input {...fromInputProps} label="Fra" />
                                             <Select
                                                 label="klokken"
-                                                defaultValue={0}
+                                                value={clock_start}
                                                 error={clock_start * 3600 + startTimestamp < props.schedule.start_timestamp}
                                                 onChange={(e) => setClockStart(Number(e.target.value))}
                                             >
@@ -204,7 +204,7 @@ const ScheduleModal = (props: {
                                             <DatePicker.Input {...toInputProps} label="Til" />
                                             <Select
                                                 label="klokken"
-                                                value={0}
+                                                value={clock_end}
                                                 error={clock_end * 3600 + endTimestamp > props.schedule.end_timestamp}
                                                 onChange={(e) => setClockEnd(Number(e.target.value))}
                                             >
@@ -286,8 +286,6 @@ const ScheduleModal = (props: {
                                 setConfirmState(false)
                                 setStartTimestamp(0)
                                 setEndTimestamp(0)
-                                setClockEnd(0)
-                                setClockStart(0)
                             }}
                         >
                             Legg til endring
