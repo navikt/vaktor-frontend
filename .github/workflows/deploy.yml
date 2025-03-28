@@ -47,6 +47,7 @@ jobs:
                   CLUSTER: dev-gcp
                   RESOURCE: .nais/nais-test.yml
                   VAR: image=${{ needs.build.outputs.image }}
+                  VARS: .nais/dev.yml
 
     deploy-prod:
         name: Deploy application to prod
@@ -60,3 +61,4 @@ jobs:
                   CLUSTER: prod-gcp
                   RESOURCE: .nais/nais.yml
                   VAR: image=${{ needs.build.outputs.image }}
+                  VARS: .nais/prod.yml
