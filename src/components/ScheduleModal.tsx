@@ -1,9 +1,8 @@
 import { useEffect, useState, Dispatch } from 'react'
 import React from 'react'
 import { Button, Select, RadioGroup, Radio, Modal, ConfirmationPanel, Alert, DatePicker, useRangeDatepicker, HelpText } from '@navikt/ds-react'
-import { Schedules, User } from '../types/types'
-import { useAuth } from '../context/AuthContext'
 
+import { Schedules, User } from '../types/types'
 const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
     await fetch(
         `/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
@@ -61,7 +60,8 @@ const ScheduleModal = (props: {
         reset()
         setStartTimestamp(props.schedule.start_timestamp)
         setEndTimestamp(props.schedule.end_timestamp)
-    }, [props])
+        console.log(clock_end)
+    }, [props, update_schedule])
 
     return (
         <>
@@ -71,6 +71,7 @@ const ScheduleModal = (props: {
                     setConfirmState(false)
                     props.setIsOpen(false)
                 }}
+                aria-label="Endre vaktperiode"
             >
                 <Modal.Header closeButton>
                     <b>Gjør endringer på Vaktperiode</b>
@@ -83,6 +84,10 @@ const ScheduleModal = (props: {
                             className="buttonConfirm"
                             onChange={(e) => {
                                 setVakthaver(e.target.value)
+                                console.log('Action:', action)
+                                console.log('Start: ', startTimestamp)
+                                console.log('End: ', endTimestamp)
+                                console.log('Vakthaver: ', selectedVakthaver)
                             }}
                             size="medium"
                             style={{
@@ -165,7 +170,7 @@ const ScheduleModal = (props: {
                                             <DatePicker.Input {...fromInputProps} label="Fra" />
                                             <Select
                                                 label="klokken"
-                                                defaultValue={0}
+                                                defaultValue={clock_start}
                                                 error={clock_start * 3600 + startTimestamp < props.schedule.start_timestamp}
                                                 onChange={(e) => setClockStart(Number(e.target.value))}
                                             >
@@ -204,7 +209,7 @@ const ScheduleModal = (props: {
                                             <DatePicker.Input {...toInputProps} label="Til" />
                                             <Select
                                                 label="klokken"
-                                                defaultValue={0}
+                                                defaultValue={clock_end}
                                                 error={clock_end * 3600 + endTimestamp > props.schedule.end_timestamp}
                                                 onChange={(e) => setClockEnd(Number(e.target.value))}
                                             >
