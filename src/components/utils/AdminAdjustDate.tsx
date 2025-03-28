@@ -66,7 +66,6 @@ const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setRespon
             <Modal
                 ref={ref}
                 open={isOpen}
-                aria-label="Modal for vaktperioder"
                 onClose={() => {
                     setIsOpen(false)
                     setStartTimestamp(0)

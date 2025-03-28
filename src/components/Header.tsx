@@ -1,6 +1,5 @@
-import { Alert, Button, Heading, Link } from '@navikt/ds-react'
+import { Alert, Button, Heading, Link, Page } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
-import styled from 'styled-components'
 import { User } from '../types/types'
 import * as Routes from '../types/routes'
 import Image from 'next/image'
@@ -11,27 +10,6 @@ const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
 }
 
 const today = new Date()
-
-const HeaderContent = styled.span`
-    justify-content: center;
-    display: flex;
-    align-items: center;
-    margin-top: 20px;
-`
-
-const HeadingCustomized = styled(Heading)`
-    display: none;
-    text-align: center;
-    font-weight: normal;
-
-    @media (min-width: 390px) {
-        width: 100%;
-        display: block;
-    }
-    @media (min-width: 450px) {
-        width: 425px;
-    }
-`
 
 const Header = () => {
     const { user } = useAuth()
@@ -44,28 +22,28 @@ const Header = () => {
         </Link>
     )
     return (
-        <HeaderContent>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-                <Image
-                    src={today.getMonth() === 11 ? '/images/vaktor-santa.png' : '/images/vaktor-logo.png'}
-                    alt="Vaktor logo"
-                    width={70}
-                    height={70}
-                    onClick={() => {
-                        window.location.href = Routes.RouterVaktor.PATH
-                    }}
-                />
-                <div style={{ marginLeft: '30px', fontSize: '1.5em' }}>
-                    <b>Vaktor</b> - beredskapsvakt i Nav{' '}
+        <Page.Block width="2xl" gutters>
+            <Heading level="1" size="large">
+                <div style={{ margin: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Image
+                        src={today.getMonth() === 11 ? '/images/vaktor-santa.png' : '/images/vaktor-logo.png'}
+                        alt="Vaktor logo"
+                        width={70}
+                        height={70}
+                        onClick={() => {
+                            window.location.href = Routes.RouterVaktor.PATH
+                        }}
+                    />
+                    <b>Vaktor </b> - beredskapsvakt i Nav
                 </div>
-            </div>
-            {/* Alert if no roles */}
-            {!hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
-                <Alert variant="info" size="small" style={{ maxWidth: '250px', minWidth: '250px' }}>
-                    Du har ingen rolle i vaktor
-                </Alert>
-            )}
-        </HeaderContent>
+                {/* Alert if no roles */}
+                {!hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
+                    <Alert variant="info" size="small" style={{ maxWidth: '250px', minWidth: '250px' }}>
+                        Du har ingen rolle i vaktor
+                    </Alert>
+                )}
+            </Heading>
+        </Page.Block>
     )
 }
 
