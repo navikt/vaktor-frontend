@@ -60,7 +60,6 @@ const ScheduleModal = (props: {
         reset()
         setStartTimestamp(props.schedule.start_timestamp)
         setEndTimestamp(props.schedule.end_timestamp)
-        console.log(clock_end)
     }, [props, update_schedule])
 
     return (
@@ -84,10 +83,6 @@ const ScheduleModal = (props: {
                             className="buttonConfirm"
                             onChange={(e) => {
                                 setVakthaver(e.target.value)
-                                console.log('Action:', action)
-                                console.log('Start: ', startTimestamp)
-                                console.log('End: ', endTimestamp)
-                                console.log('Vakthaver: ', selectedVakthaver)
                             }}
                             size="medium"
                             style={{
@@ -170,7 +165,7 @@ const ScheduleModal = (props: {
                                             <DatePicker.Input {...fromInputProps} label="Fra" />
                                             <Select
                                                 label="klokken"
-                                                defaultValue={clock_start}
+                                                defaultValue={0}
                                                 error={clock_start * 3600 + startTimestamp < props.schedule.start_timestamp}
                                                 onChange={(e) => setClockStart(Number(e.target.value))}
                                             >
@@ -209,7 +204,7 @@ const ScheduleModal = (props: {
                                             <DatePicker.Input {...toInputProps} label="Til" />
                                             <Select
                                                 label="klokken"
-                                                defaultValue={clock_end}
+                                                value={0}
                                                 error={clock_end * 3600 + endTimestamp > props.schedule.end_timestamp}
                                                 onChange={(e) => setClockEnd(Number(e.target.value))}
                                             >
