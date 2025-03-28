@@ -3,10 +3,10 @@ FROM node:16-alpine
 
 # Set working directory
 WORKDIR /usr/src/app
-ARG NPM_TOKEN
 
-# Set the ARG as ENV
-ENV NPM_TOKEN=$NPM_TOKEN
+RUN --mount=type=secret,id=NPM_TOKEN sh -c \
+    'npm config set //npm.pkg.github.com/:_authToken=$(cat /run/secrets/NPM_TOKEN)'
+RUN npm config set @navikt:registry=https://npm.pkg.github.com
 
 # Copy package.json and package-lock.json before other files
 # Utilise Docker cache to save re-installing dependencies if unchanged
