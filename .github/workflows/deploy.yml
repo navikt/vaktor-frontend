@@ -18,47 +18,47 @@ permissions:
   security-events: write
 
 jobs:
-  build-and-run-tests:
-    name: Build and push Docker container
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Authenticate with private NPM package
-        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-        
-      - name: Build and publish Docker image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo ${GITHUB_TOKEN} | docker login ghcr.io --username ${GITHUB_REPOSITORY} --password-stdin
-          docker build --tag ${docker_image} --build-arg NPM_TOKEN=${{ secrets.NPM_TOKEN }} .
-          docker push ${docker_image}
-  
+    build:
+        name: Build and push Docker container
+        runs-on: ubuntu-latest
+        outputs:
+         image: ${{ steps.docker-push.outputs.image }}
+        steps:
+            - uses: actions/checkout@v4
+            
+            - name: Build and push docker image to GAR
+              uses: nais/docker-build-push@main
+              id: docker-push
+              with:
+                team: vaktor
+                project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
+                identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization variable
+                build_secrets: NODE_AUTH_TOKEN=${{ secrets.READER_TOKEN }}
 
-  deploy-test:
-    name: Deploy application to test env
-    needs: build-and-run-tests
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: dev-gcp
-          RESOURCE: .nais/nais-test.yml
-          VAR: image=${{ env.docker_image }}
-          VARS: .nais/dev.yml
-  deploy-prod:
-    name: Deploy application to prod
-    needs: build-and-run-tests
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: prod-gcp
-          RESOURCE: .nais/nais.yml
-          VAR: image=${{ env.docker_image }}
-          VARS: .nais/prod.yml
+    deploy-test:
+        name: Deploy application to test env
+        needs: build
+        if: github.ref == 'refs/heads/dev'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: nais/deploy/actions/deploy@v2
+              env:
+                  CLUSTER: dev-gcp
+                  RESOURCE: .nais/nais-test.yml
+                  VAR: image=${{ needs.build.outputs.image }}
+                  VARS: .nais/dev.yml
+
+    deploy-prod:
+        name: Deploy application to prod
+        needs: build
+        if: github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: nais/deploy/actions/deploy@v2
+              env:
+                  CLUSTER: prod-gcp
+                  RESOURCE: .nais/nais.yml
+                  VAR: image=${{ needs.build.outputs.image }}
+                  VARS: .nais/prod.yml
