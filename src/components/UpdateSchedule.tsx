@@ -1,4 +1,4 @@
-import { Button, Table, useMonthpicker, MonthPicker, Search, Select, ReadMore } from '@navikt/ds-react'
+import { Button, Table, useMonthpicker, MonthPicker, Search, Select, ReadMore, Loader } from '@navikt/ds-react'
 import { useEffect, useState } from 'react'
 import { Schedules, Vaktlag } from '../types/types'
 import moment from 'moment'
@@ -9,6 +9,7 @@ import { CalendarIcon } from '@navikt/aksel-icons'
 
 const UpdateSchedule = () => {
     const { user } = useAuth()
+    const [loading, setLoading] = useState(false)
     const [scheduleData, setScheduleData] = useState<Schedules[]>([])
     const [selectedSchedule, setSchedule] = useState<Schedules>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -87,19 +88,34 @@ const UpdateSchedule = () => {
     }
 
     useEffect(() => {
-        console.log(inputProps)
+        setLoading(true)
+
         fetch('/api/group_schedules')
             .then((scheduleRes) => scheduleRes.json())
             .then((scheduleData) => {
                 scheduleData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
                 setScheduleData(scheduleData)
+                setLoading(false)
             })
-    }, [response, Vakt])
+    }, [response, Vakt, selectedSchedule, isOpen])
 
     return (
         <>
             {selectedSchedule ? (
-                <ScheduleModal schedule={selectedSchedule} isOpen={isOpen} setIsOpen={setIsOpen} setResponse={setResponse} addVakt={addVakt} />
+                <ScheduleModal
+                    schedule={selectedSchedule}
+                    isOpen={isOpen}
+                    setIsOpen={(open) => {
+                        setIsOpen(open)
+                        if (!open) {
+                            setSchedule(undefined) // Reset selected schedule
+                            setResponse(undefined) // Reset response state
+                            addVakt(undefined) // Reset Vakt state
+                        }
+                    }}
+                    setResponse={setResponse}
+                    addVakt={addVakt}
+                />
             ) : (
                 <></>
             )}
@@ -228,22 +244,28 @@ const UpdateSchedule = () => {
                                                 minute: '2-digit',
                                             })}
                                             <br />
-                                            <Button
-                                                style={{
-                                                    height: '30px',
-                                                    marginTop: '10px',
-                                                    marginBottom: '5px',
-                                                    minWidth: '170px',
-                                                    maxWidth: '190px',
-                                                }}
-                                                onClick={() => {
-                                                    setSchedule(schedule)
-                                                    setIsOpen(true)
-                                                }}
-                                                disabled={schedule.approve_level > 0}
-                                            >
-                                                Legg til endringer
-                                            </Button>
+                                            {loading ? (
+                                                <div>
+                                                    <Loader />
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    style={{
+                                                        height: '30px',
+                                                        marginTop: '10px',
+                                                        marginBottom: '5px',
+                                                        minWidth: '170px',
+                                                        maxWidth: '190px',
+                                                    }}
+                                                    onClick={() => {
+                                                        setSchedule(schedule)
+                                                        setIsOpen(true)
+                                                    }}
+                                                    disabled={schedule.approve_level > 0}
+                                                >
+                                                    Legg til endringer
+                                                </Button>
+                                            )}
                                         </Table.DataCell>
                                         <Table.DataCell
                                             style={{
@@ -251,14 +273,20 @@ const UpdateSchedule = () => {
                                                 maxWidth: '210px',
                                             }}
                                         >
-                                            <ScheduleChanges
-                                                periods={schedule.vakter.filter((vakt) => vakt.type == 'bistand')}
-                                                setResponse={setResponse}
-                                            ></ScheduleChanges>
-                                            <ScheduleChanges
-                                                periods={schedule.vakter.filter((vakt) => vakt.type == 'bakvakt')}
-                                                setResponse={setResponse}
-                                            ></ScheduleChanges>
+                                            <div>
+                                                <ScheduleChanges
+                                                    periods={schedule.vakter.filter((vakt) => vakt.type == 'bistand')}
+                                                    setResponse={setResponse}
+                                                    loading={loading}
+                                                    modalView={false}
+                                                ></ScheduleChanges>
+                                                <ScheduleChanges
+                                                    periods={schedule.vakter.filter((vakt) => vakt.type == 'bakvakt')}
+                                                    setResponse={setResponse}
+                                                    loading={loading}
+                                                    modalView={false}
+                                                ></ScheduleChanges>
+                                            </div>
                                         </Table.DataCell>
                                         <Table.DataCell
                                             style={{
@@ -269,6 +297,8 @@ const UpdateSchedule = () => {
                                             <ScheduleChanges
                                                 periods={schedule.vakter.filter((vakt) => vakt.type == 'bytte')}
                                                 setResponse={setResponse}
+                                                loading={loading}
+                                                modalView={false}
                                             ></ScheduleChanges>
                                         </Table.DataCell>
                                     </Table.Row>
