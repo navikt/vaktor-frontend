@@ -1,7 +1,7 @@
-import { Dispatch, useState } from 'react'
+import { Dispatch } from 'react'
 import { Schedules } from '../types/types'
-import DeleteButton from './DeleteButton'
 import { Loader } from '@navikt/ds-react'
+import DeleteButton from './DeleteButton'
 
 const ScheduleChanges = (props: { periods: Schedules[]; setResponse: Dispatch<any>; loading: any; modalView: boolean }) => {
     return (
