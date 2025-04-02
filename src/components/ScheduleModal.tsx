@@ -1,8 +1,23 @@
 import { useEffect, useState, Dispatch } from 'react'
 import React from 'react'
-import { Button, Select, RadioGroup, Radio, Modal, ConfirmationPanel, Alert, DatePicker, useRangeDatepicker, HelpText } from '@navikt/ds-react'
+import {
+    Button,
+    Select,
+    RadioGroup,
+    Radio,
+    Modal,
+    ConfirmationPanel,
+    Alert,
+    DatePicker,
+    useRangeDatepicker,
+    HelpText,
+    Loader,
+    Label,
+} from '@navikt/ds-react'
 
 import { Schedules, User } from '../types/types'
+import ScheduleChanges from './ScheduleChanges'
+import moment from 'moment'
 const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
     await fetch(
         `/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
@@ -28,6 +43,9 @@ const ScheduleModal = (props: {
     setResponse: Dispatch<any>
     addVakt: Dispatch<any>
 }) => {
+    const [loading, setLoading] = useState(false)
+    const [response, setResponse] = useState()
+
     const [groupData, setgroupData] = useState<User[]>([])
     const [selectedVakthaver, setVakthaver] = useState('')
     const [action, setAction] = useState('')
@@ -36,9 +54,13 @@ const ScheduleModal = (props: {
     const [endTimestamp, setEndTimestamp] = useState<number>(props.schedule.end_timestamp)
     const [clock_start, setClockStart] = useState<number>(0)
     const [clock_end, setClockEnd] = useState<number>(0)
-    const { datepickerProps, toInputProps, fromInputProps, reset } = useRangeDatepicker({
+    const { datepickerProps, toInputProps, fromInputProps } = useRangeDatepicker({
         fromDate: new Date(props.schedule.start_timestamp * 1000),
         toDate: new Date(props.schedule.end_timestamp * 1000),
+        // defaultSelected:
+        //     props.schedule.start_timestamp && props.schedule.end_timestamp
+        //         ? { from: new Date(props.schedule.start_timestamp * 1000), to: new Date(props.schedule.end_timestamp * 1000) }
+        //         : undefined,
         onRangeChange: (val) => {
             if (val && val.from && val.to) {
                 setStartTimestamp(val.from.setHours(12) / 1000)
@@ -48,19 +70,16 @@ const ScheduleModal = (props: {
     })
 
     useEffect(() => {
-        Promise.all([fetch(`/api/get_my_groupmembers?group_id=${props.schedule.group_id}`)])
-            .then(async ([membersRes]) => {
-                props.setResponse(membersRes.status)
-                const groupData = await membersRes.json()
-                return [groupData]
-            })
-            .then(([groupData]) => {
-                setgroupData(groupData.filter((user: User) => user.role !== 'leveranseleder'))
-            })
-        reset()
+        const fetchGroupMembers = async () => {
+            const membersRes = await fetch(`/api/get_my_groupmembers?group_id=${props.schedule.group_id}`)
+            props.setResponse(membersRes.status)
+            const groupData = await membersRes.json()
+            setgroupData(groupData.filter((user: User) => user.role !== 'leveranseleder'))
+        }
+        fetchGroupMembers()
         setStartTimestamp(props.schedule.start_timestamp)
         setEndTimestamp(props.schedule.end_timestamp)
-    }, [props, update_schedule])
+    }, [props.schedule])
 
     return (
         <>
@@ -73,7 +92,14 @@ const ScheduleModal = (props: {
                 aria-label="Endre vaktperiode"
             >
                 <Modal.Header closeButton>
-                    <b>Gjør endringer på Vaktperiode</b>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <b>Gjør endringer på Vaktperiode for: {props.schedule.user.name}</b>
+                        Uke: {moment(props.schedule.start_timestamp * 1000).week()}{' '}
+                        {moment(props.schedule.start_timestamp * 1000).week() < moment(props.schedule.end_timestamp * 1000).week()
+                            ? ' - ' + moment(props.schedule.end_timestamp * 1000).week()
+                            : ''}
+                        <br />
+                    </div>
                 </Modal.Header>
                 <Modal.Body style={{ minHeight: '100%' }}>
                     {' '}
@@ -284,12 +310,43 @@ const ScheduleModal = (props: {
                                 update_schedule(period, action, selectedVakthaver, props.addVakt)
                                 props.setIsOpen(false)
                                 setConfirmState(false)
-                                setStartTimestamp(0)
-                                setEndTimestamp(0)
+                                setClockEnd(0)
+                                setClockStart(0)
                             }}
                         >
                             Legg til endring
                         </Button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <Label>Eksisterende endringer på denne vakten:</Label>
+                        <br />
+                        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                            <div>
+                                {' '}
+                                Bistand:
+                                <ScheduleChanges
+                                    periods={props.schedule.vakter.filter((vakt) => vakt.type == 'bistand')}
+                                    setResponse={setResponse}
+                                    loading={loading}
+                                    modalView={true}
+                                ></ScheduleChanges>
+                                <ScheduleChanges
+                                    periods={props.schedule.vakter.filter((vakt) => vakt.type == 'bakvakt')}
+                                    setResponse={setResponse}
+                                    loading={loading}
+                                    modalView={true}
+                                ></ScheduleChanges>
+                            </div>
+                            <div>
+                                Bytte:
+                                <ScheduleChanges
+                                    periods={props.schedule.vakter.filter((vakt) => vakt.type == 'bytte')}
+                                    setResponse={setResponse}
+                                    loading={loading}
+                                    modalView={true}
+                                ></ScheduleChanges>
+                            </div>
+                        </div>
                     </div>
                 </Modal.Body>
             </Modal>

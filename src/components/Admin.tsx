@@ -9,6 +9,7 @@ import DeleteVaktButton from './utils/DeleteVaktButton'
 import EndreVaktButton from './utils/AdminAdjustDate'
 import MapApproveStatus from './utils/MapApproveStatus'
 import VarsleModal from './VarsleModal'
+import ErrorModal from './utils/ErrorModal'
 
 const Admin = () => {
     const { user } = useAuth()
@@ -20,7 +21,7 @@ const Admin = () => {
     const [distinctFilenames, setDistinctFilenames] = useState<string[]>([])
     const [selectedFilename, setSelectedFilename] = useState<string>('')
 
-    const [response, setResponse] = useState([])
+    const [response, setResponse] = useState<ResponseType | null>(null)
     const [responseError, setResponseError] = useState('')
 
     const [selectedSchedule, setSchedule] = useState<Schedules>()
@@ -79,7 +80,7 @@ const Admin = () => {
         endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
     }
 
-    const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
+    const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
         try {
             const response = await fetch(`/api/delete_schedule?schedule_id=${schedule_id}`)
             const data = await response.json()
@@ -194,10 +195,11 @@ const Admin = () => {
 
                             <DeleteVaktButton
                                 vakt={vakter}
-                                setResponse={setResponse}
-                                deleteSchedule={delete_schedule}
-                                setLoading={setLoading}
                                 loading={loading}
+                                setLoading={setLoading}
+                                setResponse={setResponse}
+                                onError={showErrorModal}
+                                delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
                             ></DeleteVaktButton>
                         </div>
                         <div style={{ marginTop: '15px', marginBottom: '15px' }}>
@@ -315,6 +317,7 @@ const Admin = () => {
                 margin: 'auto',
             }}
         >
+            <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />
             {varsleModalOpen && (
                 <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={selectedMonth || new Date()} />
             )}

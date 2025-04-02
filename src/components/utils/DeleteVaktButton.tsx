@@ -4,22 +4,32 @@ import { Schedules } from '../../types/types'
 
 interface Props {
     vakt: Schedules
-    setResponse: Dispatch<any>
-    deleteSchedule: (scheduleId: string, setResponse: Dispatch<any>) => Promise<void>
+    setResponse: Dispatch<ResponseType>
+    delete_schedule: (scheduleId: string, setResponse: Dispatch<ResponseType>) => Promise<void>
     loading: boolean
-    setLoading: Dispatch<boolean>
+    setLoading: Dispatch<React.SetStateAction<boolean>>
+    onError: (errorMessage: string) => void
 }
 
-const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, deleteSchedule, loading, setLoading }) => {
+const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule, loading, setLoading, onError }) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
     const handleApproveClick = async () => {
         setLoading(true)
         setOpenState(false)
-        await deleteSchedule(vakt.id, setResponse)
-        console.log('Sletter vakt med id: ', vakt.id)
-        setLoading(false)
+        try {
+            await delete_schedule(vakt.id, setResponse)
+        } catch (error) {
+            console.error('There was an error deleting the schedule:', error)
+            if (error instanceof Error) {
+                onError(`Feilet ved sletting av vakt: ${error.message}`) // Using onError callback
+            } else {
+                onError('Feilet ved sletting av vakt: En ukjent feil oppstod.') // For unexpected errors
+            }
+        } finally {
+            setLoading(false)
+        }
     }
 
     const isDisabled = vakt.approve_level > 0
@@ -41,7 +51,7 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, deleteSchedule, 
                     disabled={isDisabled || loading}
                     variant="danger"
                 >
-                    {loading ? 'Laster...' : 'Slett vakt'}
+                    {loading ? <Loader /> : 'Slett vakt!'}
                 </Button>
                 <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
                     <Popover.Content
@@ -62,8 +72,8 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, deleteSchedule, 
                             }}
                             size="small"
                             variant="danger"
-                            disabled={loading}
                             onClick={handleApproveClick}
+                            disabled={loading}
                         >
                             {loading ? <Loader /> : 'Slett vakt!'}
                         </Button>
@@ -73,7 +83,7 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, deleteSchedule, 
         )
     }
 
-    return loading ? (
+    return (
         <Button
             onClick={handleApproveClick}
             style={{
@@ -83,10 +93,8 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, deleteSchedule, 
             size="small"
             disabled={isDisabled || loading}
         >
-            {<Loader />}
+            {loading ? <Loader /> : 'Slett vakt!'}
         </Button>
-    ) : (
-        <></>
     )
 }
 
