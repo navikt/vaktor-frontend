@@ -70,30 +70,26 @@ const AdminLeder = ({}) => {
 
     const confirm_schedules_bulk = async (scheduleIds: string[], setResponse: Dispatch<any>) => {
         setLoading(true)
-        const promises = scheduleIds.map((schedule_id) =>
-            fetch(`/api/confirm_schedule?schedule_id=${schedule_id}`).then((response) => {
-                if (!response.ok) {
-                    // Assuming the server sends JSON with error details
-                    return response.json().then((errorData) => {
-                        throw new Error(`Server error ${response.status}: ${errorData.message || 'No additional error information'}`)
-                    })
-                }
-                return response.json()
-            })
-        )
-
         try {
-            const results = await Promise.all(promises)
+            const results = await Promise.all(
+                scheduleIds.map(async (schedule_id) => {
+                    const response = await fetch(`/api/confirm_schedule?schedule_id=${schedule_id}`)
+                    if (!response.ok) {
+                        const errorData = await response.json()
+                        throw new Error(`Server error ${response.status}: ${errorData.message || 'No additional error information'}`)
+                    }
+                    return response.json()
+                })
+            )
             setResponse(results)
         } catch (error) {
             console.error(error)
-            let message = 'An unexpected error occurred approving schedules'
-            if (error instanceof Error) {
-                message = `Error in bulk schedule approval: ${error.message}`
-            }
+            const message =
+                error instanceof Error ? `Error in bulk schedule approval: ${error.message}` : 'An unexpected error occurred approving schedules'
             setErrorMessage(message)
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const confirm_schedule = async (schedule_id: string, setResponse: Dispatch<any>) => {
@@ -336,7 +332,7 @@ const AdminLeder = ({}) => {
                 <div style={{ display: 'grid', alignContent: 'flex-end' }}>
                     <Button
                         style={{ width: '200px', marginLeft: '30px', height: '50px' }}
-                        disabled={searchFilterAction == 5 || listeAvVakter.length == 0}
+                        disabled={!(searchFilterAction === 3 || searchFilterAction === 1) || listeAvVakter.length === 0}
                         onClick={() =>
                             confirm_schedules_bulk(
                                 listeAvVakter.map((vakt) => vakt.id),
