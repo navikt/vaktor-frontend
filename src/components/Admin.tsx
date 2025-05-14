@@ -10,6 +10,7 @@ import EndreVaktButton from './utils/AdminAdjustDate'
 import MapApproveStatus from './utils/MapApproveStatus'
 import VarsleModal from './VarsleModal'
 import ErrorModal from './utils/ErrorModal'
+import AuditModal from './AuditModal'
 
 const Admin = () => {
     const { user } = useAuth()
@@ -26,6 +27,8 @@ const Admin = () => {
 
     const [selectedSchedule, setSchedule] = useState<Schedules>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
+
+    const [isAuditOpen, setIsAuditOpen] = useState<boolean>(false)
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
@@ -238,6 +241,18 @@ const Admin = () => {
                     </Table.DataCell>
                     <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
                         {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
+                        {/* need to add new audits*/}
+                        <br />
+                        <Button
+                            size="small"
+                            onClick={() => {
+                                setSchedule(vakter)
+                                setIsAuditOpen(true)
+                            }}
+                        >
+                            {' '}
+                            Legg til audit
+                        </Button>
                     </Table.DataCell>
                 </Table.Row>
             ))
@@ -320,6 +335,9 @@ const Admin = () => {
             <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />
             {varsleModalOpen && (
                 <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={selectedMonth || new Date()} />
+            )}
+            {isAuditOpen && selectedSchedule && (
+                <AuditModal open={isAuditOpen} onClose={() => setIsAuditOpen(false)} scheduleId={selectedSchedule.id} />
             )}
             {selectedSchedule ? (
                 <>
