@@ -4,6 +4,7 @@ import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Schedules, User } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
+
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
@@ -21,9 +22,12 @@ const AdminLeder = ({}) => {
     const [loading, setLoading] = useState(false)
     //const [openState, setOpenState] = useState(false)
 
+    const [groupNames, setGroupNames] = useState<string[]>([])
+
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterRole, setSearchFilterRole] = useState('')
     const [searchFilterAction, setSearchFilterAction] = useState(9)
+    const [searchFilterGroup, setSearchFilterGroup] = useState('')
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -57,6 +61,7 @@ const AdminLeder = ({}) => {
     }
 
     let startTimestamp: number, endTimestamp: number
+    let rowCount = 0
 
     if (selectedMonth !== undefined) {
         const timestamps = getMonthTimestamps(selectedMonth)
@@ -141,18 +146,43 @@ const AdminLeder = ({}) => {
         }
     }
 
-    const mapVakter = (vaktliste: Schedules[]) =>
-        vaktliste.map((vakter: Schedules, i: number) => (
-            <Table.Row key={i}>
-                <Table.DataCell>{i + 1}</Table.DataCell>
-                <Table.HeaderCell scope="row">
-                    {vakter.user.name}
-                    <br />
-                    {vakter.group.name}
-                </Table.HeaderCell>
-                <Table.DataCell scope="row">{vakter.type}</Table.DataCell>
-                <Table.DataCell>
-                    <div>
+    const mapVakter = (vaktliste: Schedules[]) => {
+        // Use a record type to map the koststed to the corresponding array of Schedules
+        const groupedByGroupName: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
+            const groupName = current.group.name || 'group name not set'
+            if (!acc[groupName]) {
+                acc[groupName] = []
+            }
+            acc[groupName].push(current)
+            return acc
+        }, {} as Record<string, Schedules[]>)
+
+        // Sort each group by start_timestamp
+        Object.keys(groupedByGroupName).forEach((groupNameKey) => {
+            groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
+        })
+
+        // Convert the grouped and sorted schedules into an array of JSX elements
+        const groupedRows = Object.entries(groupedByGroupName).flatMap(([koststed, schedules], index) => [
+            // This is the row for the group header
+            <Table.Row key={`header-${koststed}`}>
+                <Table.DataCell colSpan={9}>
+                    <b>{koststed}</b>
+                </Table.DataCell>
+            </Table.Row>,
+            // These are the individual rows for the schedules
+            ...schedules.map((vakter, i) => (
+                <Table.Row key={`row-${vakter.id}-${i}`}>
+                    <Table.DataCell>{++rowCount}</Table.DataCell>
+                    <Table.DataCell scope="row">
+                        <b> {vakter.user.name}</b>
+                        <br />
+                        {vakter.user.id.toUpperCase()}
+                        <br />
+                        {vakter.group.name}
+                    </Table.DataCell>
+                    <Table.DataCell scope="row">{vakter.type === 'bakvakt' ? 'bistand' : vakter.type}</Table.DataCell>
+                    <Table.DataCell>
                         <b>ID: {vakter.id} </b>
                         <br />
                         Uke {moment(vakter.start_timestamp * 1000).week()}{' '}
@@ -160,6 +190,7 @@ const AdminLeder = ({}) => {
                             ? ' - ' + moment(vakter.end_timestamp * 1000).week()
                             : ''}
                         <br />
+                        Start:{' '}
                         {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
@@ -168,6 +199,7 @@ const AdminLeder = ({}) => {
                             minute: '2-digit',
                         })}
                         <br />
+                        Slutt:{' '}
                         {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
@@ -175,83 +207,88 @@ const AdminLeder = ({}) => {
                             hour: '2-digit',
                             minute: '2-digit',
                         })}
-                    </div>
-                </Table.DataCell>
-                <Table.DataCell>
-                    <div style={{ marginTop: '15px', marginBottom: '15px' }}>
-                        {/* {vakter.vakter.length !== 0 ? "Endringer:" : ""} */}
-                        {vakter.vakter.map((endringer, idx: number) => (
-                            <div key={idx}>
-                                <b> {endringer.type}:</b> {endringer.user.name} <br />
-                                {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                                <br />
-                                {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                        ))}
-                    </div>
-                </Table.DataCell>
-                <Table.DataCell style={{ maxWidth: '220px', minWidth: '220px' }}>
-                    <div>
-                        {vakter.user_id.toLowerCase() === user.id.toLowerCase() ? (
-                            <></>
-                        ) : (
-                            <>
-                                <ApproveButton
-                                    vakt={vakter}
-                                    user={user}
-                                    setResponse={setResponse as Dispatch<SetStateAction<ResponseType>>}
-                                    confirmSchedule={confirm_schedule}
-                                    setLoading={setLoading}
-                                    loading={loading}
-                                    onError={setErrorMessage}
-                                />
-
-                                <Button
-                                    disabled={
-                                        loading ||
-                                        vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
-                                        vakter.approve_level === 0 ||
-                                        vakter.approve_level === 2 ||
-                                        vakter.approve_level >= 3
-                                    }
-                                    style={{
-                                        backgroundColor: '#f96c6c',
-                                        height: '30px',
-                                        minWidth: '210px',
-                                    }}
-                                    onClick={() => disprove_schedule(vakter.id, setResponse)}
-                                >
-                                    {' '}
-                                    {loading ? <Loader /> : 'Avgodkjenn'}
-                                </Button>
-                            </>
-                        )}
-                    </div>
-                </Table.DataCell>
-                <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
-                {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? (
-                    <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '300px' }}>
-                        {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>
-                ) : null}
+                    <Table.DataCell>
+                        <div style={{ marginTop: '15px', marginBottom: '15px' }}>
+                            {/* {vakter.vakter.length !== 0 ? "Endringer:" : ""} */}
+                            {vakter.vakter.map((endringer, idx: number) => (
+                                <div key={idx}>
+                                    <b> {endringer.type}:</b> {endringer.user.name} <br />
+                                    {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
+                                    <br />
+                                    {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+                    </Table.DataCell>
 
-                <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
-                    {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
-                </Table.DataCell>
-            </Table.Row>
-        ))
+                    <Table.DataCell style={{ maxWidth: '220px', minWidth: '220px' }}>
+                        <div>
+                            {vakter.user_id.toLowerCase() === user.id.toLowerCase() ? (
+                                <></>
+                            ) : (
+                                <>
+                                    <ApproveButton
+                                        vakt={vakter}
+                                        user={user}
+                                        setResponse={setResponse as Dispatch<SetStateAction<ResponseType>>}
+                                        confirmSchedule={confirm_schedule}
+                                        setLoading={setLoading}
+                                        loading={loading}
+                                        onError={setErrorMessage}
+                                    />
+
+                                    <Button
+                                        disabled={
+                                            loading ||
+                                            vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
+                                            vakter.approve_level === 0 ||
+                                            vakter.approve_level === 2 ||
+                                            vakter.approve_level >= 3
+                                        }
+                                        style={{
+                                            backgroundColor: '#f96c6c',
+                                            height: '30px',
+                                            minWidth: '210px',
+                                        }}
+                                        onClick={() => disprove_schedule(vakter.id, setResponse)}
+                                    >
+                                        {' '}
+                                        {loading ? <Loader /> : 'Avgodkjenn'}
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    </Table.DataCell>
+
+                    <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
+
+                    {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? (
+                        <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
+                            {vakter.cost.length !== 0 ? <MapCost vakt={vakter}></MapCost> : 'ingen beregning foreligger'}
+                        </Table.DataCell>
+                    ) : null}
+
+                    <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
+                        {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
+                    </Table.DataCell>
+                </Table.Row>
+            )),
+        ])
+        return groupedRows
+    }
 
     useEffect(() => {
         setLoading(true)
@@ -263,6 +300,10 @@ const AdminLeder = ({}) => {
                 setItemData(itemData)
                 setLoading(false)
             })
+
+        const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
+        const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
+        setGroupNames(sortedGroupNames)
     }, [response, selectedMonth, setItemData])
 
     if (itemData === undefined) return <></>
@@ -287,10 +328,20 @@ const AdminLeder = ({}) => {
         // Apply other filtering conditions.
         const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
         const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
+        const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatching = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
 
         // Combine all conditions for filtering.
-        return isDateMatching && isNameMatching && isRoleMatching && isApproveLevelMatching && isExternal && futurePeriodsMonth && futurePeriodsYear
+        return (
+            isDateMatching &&
+            isNameMatching &&
+            isRoleMatching &&
+            isGroupMatch &&
+            isApproveLevelMatching &&
+            isExternal &&
+            futurePeriodsMonth &&
+            futurePeriodsYear
+        )
     })
 
     let filteredListeAvVakter = mapVakter(listeAvVakter)
@@ -308,6 +359,16 @@ const AdminLeder = ({}) => {
                 <form style={{ width: '300px', marginLeft: '30px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
+                        <option value="">Alle</option>
+                        {groupNames.map((groupName) => (
+                            <option key={groupName} value={groupName}>
+                                {groupName}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <Select label="Velg rolle" onChange={(e) => setSearchFilterRole(e.target.value)}>
                         <option value="">Alle</option>

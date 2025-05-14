@@ -9,3 +9,11 @@ package.json
 .prettierrc
 .eslintrc.json
 .vscode/settings.json
+.env.*
+*.gitignore
+.husky/**
+*.npmrc
+*.png
+*.ico
+.prettierignore
+Dockerfile
