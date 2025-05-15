@@ -48,6 +48,16 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
         case 6:
             statusText = 'Venter på utregning av diff'
             statusColor = '#99DEAD'
+            errorText = error.map((messages: Error_messages, idx: number) => (
+                <div
+                    key={idx}
+                    style={{
+                        color: 'red',
+                    }}
+                >
+                    {messages.error}
+                </div>
+            ))
             break
         case 7:
             statusText = 'Utregning fullført med diff'
