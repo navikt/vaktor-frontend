@@ -396,7 +396,7 @@ const AvstemmingOkonomi = () => {
                     </div>
                 </MonthPicker>
                 <form style={{ width: '300px', marginLeft: '30px' }}>
-                    <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
+                    <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text.toLowerCase())} />
                 </form>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
