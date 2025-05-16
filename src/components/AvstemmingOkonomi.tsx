@@ -296,6 +296,13 @@ const AvstemmingOkonomi = () => {
         return accumulator + lastCost
     }, 0)
 
+    const totalCostDiff = totalCost_filtered.reduce((accumulator, currentSchedule) => {
+        if (!currentSchedule || !Array.isArray(currentSchedule.cost) || currentSchedule.cost.length < 2) return accumulator
+        const latestCost = Number(currentSchedule.cost[currentSchedule.cost.length - 1].total_cost) || 0
+        const secondLatestCost = Number(currentSchedule.cost[currentSchedule.cost.length - 2].total_cost) || 0
+        return accumulator + (latestCost - secondLatestCost)
+    }, 0)
+
     return (
         <div
             style={{
@@ -383,6 +390,9 @@ const AvstemmingOkonomi = () => {
             <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', columnGap: '15px', marginTop: '15px' }}>
                 <div>
                     <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                </div>
+                <div>
+                    <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                 </div>
                 <div>
                     <b>Antall vakter: {rowCount}</b>
