@@ -23,6 +23,7 @@ const AvstemmingMangler = () => {
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
+    const [limit300, setLimit300] = useState(false)
 
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
@@ -257,7 +258,7 @@ const AvstemmingMangler = () => {
 
     if (itemData === undefined) return <></>
 
-    const filteredVakter = itemData.filter((value: Schedules) => {
+    let filteredVakter = itemData.filter((value: Schedules) => {
         const isNotCurrentMonth =
             !FilterExcludeCurrentMonth ||
             (() => {
@@ -281,10 +282,14 @@ const AvstemmingMangler = () => {
                 ? value.approve_level !== 5 && value.approve_level !== 8
                 : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
+        const isLimit300Match = !limit300 || value.cost.length <= 300
 
-        return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+        return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isLimit300Match
     })
-
+    // Limit the filtered schedules to 300
+    if (limit300 && filteredVakter.length > 300) {
+        filteredVakter = filteredVakter.slice(0, 300)
+    }
     let listeAvVakter = mapVakter(filteredVakter)
     let totalCost_filtered = filteredVakter
 
@@ -442,6 +447,11 @@ const AvstemmingMangler = () => {
                         <option value={8}>Overført til lønn etter rekjøring</option>
                         <option value={-1}>Ikke overført lønn</option>
                     </Select>
+                </div>
+                <div style={{ width: '200px', marginLeft: '30px' }}>
+                    <CheckboxGroup legend="Begrens til 300" onChange={(val: string[]) => setLimit300(val.includes('true'))}>
+                        <Checkbox value="true">Begrens til 300</Checkbox>
+                    </CheckboxGroup>
                 </div>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
                     <CheckboxGroup legend="Dobbel vakt" onChange={(val: string[]) => setFilterOnDoubleSchedules(val.includes('true'))}>
