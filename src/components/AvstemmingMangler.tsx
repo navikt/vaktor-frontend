@@ -282,13 +282,13 @@ const AvstemmingMangler = () => {
                 ? value.approve_level !== 5 && value.approve_level !== 8
                 : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
-        const isLimit300Match = !limit300 || value.cost.length <= 300
+        const isLimit300Match = !limit300 || value.cost.length <= 500
 
         return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isLimit300Match
     })
     // Limit the filtered schedules to 300
-    if (limit300 && filteredVakter.length > 300) {
-        filteredVakter = filteredVakter.slice(0, 300)
+    if (limit300 && filteredVakter.length > 500) {
+        filteredVakter = filteredVakter.slice(0, 500)
     }
     let listeAvVakter = mapVakter(filteredVakter)
     let totalCost_filtered = filteredVakter
@@ -363,6 +363,25 @@ const AvstemmingMangler = () => {
                                     }}
                                 >
                                     Er du sikker på vil generere fil for for for{' '}
+                                    <Button
+                                        variant="danger"
+                                        onClick={() => {
+                                            if (filteredVakter) {
+                                                generateFile(
+                                                    filteredVakter.map((s) => s.id),
+                                                    fileType,
+                                                    setResponse,
+                                                    setResponseError
+                                                )
+                                                setIsLoading(true)
+                                            } else {
+                                                console.log('Noe gikk galt :shrug:')
+                                            }
+                                        }}
+                                        disabled={isLoading || !fileType} // disable button when loading
+                                    >
+                                        {isLoading ? <Loader /> : 'Generer fil nå!'}
+                                    </Button>
                                     <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
                                     <Button
                                         variant="danger"
@@ -409,10 +428,10 @@ const AvstemmingMangler = () => {
             </div>
 
             <div className="min-h-96" style={{ display: 'flex' }}>
-                <form style={{ width: '300px', marginLeft: '30px' }}>
+                <form style={{ width: '300px', marginLeft: '15px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px', marginLeft: '15px' }}>
                     <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
                         <option value="">Alle</option>
                         {groupNames.map((groupName) => (
@@ -422,7 +441,7 @@ const AvstemmingMangler = () => {
                         ))}
                     </Select>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px', marginLeft: '15px' }}>
                     <Select label="Velg Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
                         <option value="">Alle</option>
                         {distinctFilenames.map((filename) => (
@@ -433,7 +452,7 @@ const AvstemmingMangler = () => {
                     </Select>
                 </div>
 
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px', marginLeft: '15px' }}>
                     <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
                         <option value={9}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
@@ -448,22 +467,22 @@ const AvstemmingMangler = () => {
                         <option value={-1}>Ikke overført lønn</option>
                     </Select>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px', marginLeft: '15px' }}>
                     <CheckboxGroup legend="Begrens til 300" onChange={(val: string[]) => setLimit300(val.includes('true'))}>
-                        <Checkbox value="true">Begrens til 300</Checkbox>
+                        <Checkbox value="true">Begrens til 500</Checkbox>
                     </CheckboxGroup>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px', marginLeft: '15px' }}>
                     <CheckboxGroup legend="Dobbel vakt" onChange={(val: string[]) => setFilterOnDoubleSchedules(val.includes('true'))}>
                         <Checkbox value="true">Er dobbeltvakt</Checkbox>
                     </CheckboxGroup>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px', marginLeft: '15px' }}>
                     <CheckboxGroup legend="!= denne måned" onChange={(val: string[]) => setFilterExcludeCurrentMonth(val.includes('true'))}>
                         <Checkbox value="true">!= denne måned</Checkbox>
                     </CheckboxGroup>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px', marginTop: '30px' }}>
+                <div style={{ width: '200px', marginLeft: '15px', marginTop: '30px' }}>
                     <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
                         Send påminnelse
                     </Button>
