@@ -73,7 +73,7 @@ const PerioderOptions = (props: { member: User; setItemData: Dispatch<User[]>; i
             <Table.DataCell>{props.member.name}</Table.DataCell>
             <Table.DataCell>{props.member.role}</Table.DataCell>
             <Table.DataCell>
-                <Switch checked={props.member.group_order_index !== 100} onChange={(e) => handleChange(e.target.checked)}>
+                <Switch checked={props.member.group_order_index !== 100} onChange={(e) => handleChange(e.target.checked)} defaultChecked={false}>
                     Aktiv
                 </Switch>
             </Table.DataCell>

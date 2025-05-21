@@ -479,6 +479,9 @@ const Vaktperioder = () => {
                                             <Radio value="12">12:00</Radio>
                                         </RadioGroup>
                                         <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
+                                            <Radio value="4">1 måned</Radio>
+                                            <Radio value="8">2 måneder</Radio>
+                                            <Radio value="13">3 måneder</Radio>
                                             <Radio value="26">6 måneder</Radio>
                                             <Radio value="52">12 måneder</Radio>
                                         </RadioGroup>
@@ -520,6 +523,9 @@ const Vaktperioder = () => {
                                             <Radio value="12">12:00</Radio>
                                         </RadioGroup>
                                         <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
+                                            <Radio value="4">1 måned</Radio>
+                                            <Radio value="8">2 måneder</Radio>
+                                            <Radio value="13">3 måneder</Radio>
                                             <Radio value="26">6 måneder</Radio>
                                             <Radio value="52">12 måneder</Radio>
                                         </RadioGroup>
