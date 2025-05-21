@@ -64,7 +64,7 @@ const AdminLeder = ({}) => {
                 start: new Date(change.start_timestamp * 1000),
                 end: new Date(change.end_timestamp * 1000),
                 status: 'info',
-                icon: <RecycleIcon aria-hidden />,
+                icon: <FirstAidKitIcon aria-hidden />,
                 statusLabel: 'Bistand',
                 children: <div>{change.user.name}</div>,
             }))
