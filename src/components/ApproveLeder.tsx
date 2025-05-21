@@ -1,4 +1,4 @@
-import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, HelpText } from '@navikt/ds-react'
+import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, HelpText, Timeline, TimelinePeriodProps } from '@navikt/ds-react'
 import moment from 'moment'
 import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -9,6 +9,7 @@ import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
+import { Buldings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
 
 const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
     return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
@@ -44,6 +45,69 @@ const AdminLeder = ({}) => {
                       .format('L')
         ),
     })
+
+    const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
+        const vakter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'ordinær vakt') // eller `s.type`, `s.role`, etc.
+            .map((schedule) => ({
+                start: new Date(schedule.start_timestamp * 1000),
+                end: new Date(schedule.end_timestamp * 1000),
+                status: 'success',
+                icon: <WaitingRoomIcon aria-hidden />,
+                statusLabel: 'Vakt',
+                children: <div>{schedule.user.name}</div>,
+            }))
+
+        const vaktbistand: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bistand') // eller annen egenskap som skiller dem
+            .map((change) => ({
+                start: new Date(change.start_timestamp * 1000),
+                end: new Date(change.end_timestamp * 1000),
+                status: 'info',
+                icon: <RecycleIcon aria-hidden />,
+                statusLabel: 'Bistand',
+                children: <div>{change.user.name}</div>,
+            }))
+
+        const vaktbytter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bytte') // eller annen egenskap som skiller dem
+            .map((change) => ({
+                start: new Date(change.start_timestamp * 1000),
+                end: new Date(change.end_timestamp * 1000),
+                status: 'warning',
+                icon: <RecycleIcon aria-hidden />,
+                statusLabel: 'Bytte',
+                children: <div>{change.user.name}</div>,
+            }))
+
+        return (
+            <div className="min-w-[800px]">
+                <Timeline>
+                    <Timeline.Row label="Vakter" icon={<Buldings3Icon aria-hidden />}>
+                        {vakter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bistand" icon={<FirstAidKitIcon aria-hidden />}>
+                        {vaktbistand.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bytter" icon={<RecycleIcon aria-hidden />}>
+                        {vaktbytter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                </Timeline>
+            </div>
+        )
+    }
 
     function getMonthTimestamps(currentMonth: Date) {
         const year = currentMonth.getFullYear()
@@ -165,9 +229,12 @@ const AdminLeder = ({}) => {
         // Convert the grouped and sorted schedules into an array of JSX elements
         const groupedRows = Object.entries(groupedByGroupName).flatMap(([koststed, schedules], index) => [
             // This is the row for the group header
+
+            // TODO: Make a timeline visualization of the schedule
             <Table.Row key={`header-${koststed}`}>
                 <Table.DataCell colSpan={9}>
                     <b>{koststed}</b>
+                    <TimeLine schedules={schedules} />
                 </Table.DataCell>
             </Table.Row>,
             // These are the individual rows for the schedules
