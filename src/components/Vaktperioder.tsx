@@ -177,7 +177,7 @@ const Vaktperioder = () => {
     const [isMidlertidlig, setIsMidlertidlig] = useState(true)
     const [rolloverDay, setRolloverDay] = useState<number>(2)
     const [rolloverTime, setRolloverTime] = useState<number>(12)
-    const [amountOfWeeks, setAmountOfWeeks] = useState<number>(52)
+    const [amountOfWeeks, setAmountOfWeeks] = useState<number>(0)
     const [page, setPage] = useState(1)
 
     const [open, setOpen] = useState(false)
@@ -580,12 +580,12 @@ const Vaktperioder = () => {
                                             <Radio value="8">08:00</Radio>
                                             <Radio value="12">12:00</Radio>
                                         </RadioGroup>
-                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
-                                            <Radio value="4">1 måned</Radio>
-                                            <Radio value="8">2 måneder</Radio>
-                                            <Radio value="13">3 måneder</Radio>
-                                            <Radio value="26">6 måneder</Radio>
-                                            <Radio value="52">12 måneder</Radio>
+                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)}>
+                                            <Radio value="1">1 måned</Radio>
+                                            <Radio value="2">2 måneder</Radio>
+                                            <Radio value="3">3 måneder</Radio>
+                                            <Radio value="6">6 måneder</Radio>
+                                            <Radio value="12">12 måneder</Radio>
                                         </RadioGroup>
                                     </div>
                                 </div>
@@ -624,12 +624,12 @@ const Vaktperioder = () => {
                                             <Radio value="8">08:00</Radio>
                                             <Radio value="12">12:00</Radio>
                                         </RadioGroup>
-                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
-                                            <Radio value="4">1 måned</Radio>
-                                            <Radio value="8">2 måneder</Radio>
-                                            <Radio value="13">3 måneder</Radio>
-                                            <Radio value="26">6 måneder</Radio>
-                                            <Radio value="52">12 måneder</Radio>
+                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)}>
+                                            <Radio value="1">1 måned</Radio>
+                                            <Radio value="2">2 måneder</Radio>
+                                            <Radio value="3">3 måneder</Radio>
+                                            <Radio value="6">6 måneder</Radio>
+                                            <Radio value="12">12 måneder</Radio>
                                         </RadioGroup>
                                     </div>
                                 </div>
@@ -719,7 +719,7 @@ const Vaktperioder = () => {
                                 </Table>
                             </DndContext>
                             <Button
-                                disabled={response.length !== 0}
+                                disabled={response.length !== 0 || amountOfWeeks == 0}
                                 style={{
                                     minWidth: '210px',
                                     marginBottom: '15px',
