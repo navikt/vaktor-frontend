@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let user_order = JSON.parse(req.body)
 
-    let path = `${process.env.BACKEND_URL}/api/v1/schedules/?group_id=${queryParams.group_id}&start_timestamp=${queryParams.start_timestamp}&end_timestamp=${queryParams.end_timestamp}&midlertidlig_vakt=${queryParams.midlertidlig_vakt}&amount_of_weeks=${queryParams.amountOfWeeks}&rollover_day=${queryParams.rolloverDay}&rollover_time=${queryParams.rolloverTime}`
+    let path = `${process.env.BACKEND_URL}/api/v1/schedules/?group_id=${queryParams.group_id}&start_timestamp=${queryParams.start_timestamp}&end_timestamp=${queryParams.end_timestamp}&midlertidlig_vakt=${queryParams.midlertidlig_vakt}&months=${queryParams.amountOfWeeks}&rollover_day=${queryParams.rolloverDay}&rollover_time=${queryParams.rolloverTime}`
 
     const backendResponse = await fetch(path, {
         headers: {

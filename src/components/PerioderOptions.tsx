@@ -1,19 +1,14 @@
-import { Dispatch, useCallback, useEffect, useState } from 'react'
+import { Dispatch, useEffect, useState } from 'react'
 import { User } from '../types/types'
-import { Switch, Table, TextField } from '@navikt/ds-react'
+import { Table, Button } from '@navikt/ds-react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
-const findFirstMissing = (array: number[]): number => {
-    for (var i = 0; i < array.length; i++) {
-        if (array[i] !== i + 1) {
-            return i + 1
-        }
-    }
-    return 0
-}
-
-const PerioderOptions = (props: { member: User; setItemData: Dispatch<User[]>; itemData: User[] }) => {
+const PerioderOptions = (props: { member: User; setItemData: Dispatch<User[]>; itemData: User[]; index: number }) => {
     const [error, setError] = useState('')
     const [groupOrderIndexes, setGroupOrderIndexes] = useState<number[]>([])
+
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.member.ressursnummer })
 
     useEffect(() => {
         props.itemData
@@ -31,51 +26,40 @@ const PerioderOptions = (props: { member: User; setItemData: Dispatch<User[]>; i
         setGroupOrderIndexes(indexList)
     }, [props, setGroupOrderIndexes])
 
-    const handleIndexChange = (index: number) => {
-        var tmpArray = [...props.itemData]
-
-        tmpArray.forEach((user) => {
-            if (user.ressursnummer === props.member.ressursnummer) {
-                user.group_order_index = index
+    const handleRemove = () => {
+        // Remove this user from the list
+        const updated = props.itemData.filter((user) => user.ressursnummer !== props.member.ressursnummer)
+        // Re-index group_order_index for remaining users (skip those with group_order_index === 100)
+        let idx = 1
+        for (let user of updated) {
+            if (user.group_order_index !== 100) {
+                user.group_order_index = idx
+                idx++
             }
-        })
-
-        props.setItemData(tmpArray) // sortering
+        }
+        props.setItemData(updated)
     }
 
-    const handleChange = (isActive: boolean) => {
-        if (isActive == true) {
-            handleIndexChange(findFirstMissing(groupOrderIndexes))
-        } else {
-            handleIndexChange(100)
-        }
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        cursor: 'grab',
     }
 
     return (
-        <Table.Row key={props.member.name}>
+        <Table.Row key={props.member.name} ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <Table.DataCell>
-                <TextField
-                    label="ID"
-                    hideLabel
-                    defaultValue={props.member.group_order_index === 100 ? '' : props.member.group_order_index}
-                    disabled={props.member.group_order_index === 100}
-                    maxLength={2}
-                    size="small"
-                    htmlSize={14}
-                    type="number"
-                    min={1}
-                    max={99}
-                    onChange={(e) => handleIndexChange(Number(e.target.value))}
-                    error={error !== '' ? error : false}
-                />
+                {/* Numbered from 1, based on index prop */}
+                {props.index + 1}
             </Table.DataCell>
             <Table.HeaderCell scope="row">{props.member.id}</Table.HeaderCell>
             <Table.DataCell>{props.member.name}</Table.DataCell>
             <Table.DataCell>{props.member.role}</Table.DataCell>
             <Table.DataCell>
-                <Switch checked={props.member.group_order_index !== 100} onChange={(e) => handleChange(e.target.checked)} defaultChecked={false}>
-                    Aktiv
-                </Switch>
+                <Button size="xsmall" variant="danger" onClick={handleRemove}>
+                    Fjern
+                </Button>
             </Table.DataCell>
         </Table.Row>
     )

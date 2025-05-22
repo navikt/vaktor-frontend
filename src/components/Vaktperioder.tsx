@@ -1,13 +1,11 @@
 import {
     Button,
     Table,
-    Loader,
     MonthPicker,
     useMonthpicker,
     HelpText,
     Radio,
     RadioGroup,
-    useRangeDatepicker,
     Pagination,
     Alert,
     Select,
@@ -16,14 +14,14 @@ import {
     BodyLong,
     Heading,
 } from '@navikt/ds-react'
-import { findSourceMap } from 'module'
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
-import { start } from 'repl'
 import { useAuth } from '../context/AuthContext'
 import { Schedules, User, Vaktlag } from '../types/types'
 import DatePickeroo from './MidlertidigeVaktperioder'
 import PerioderOptions from './PerioderOptions'
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { arrayMove, SortableContext } from '@dnd-kit/sortable'
 
 const createSchedule = async (
     users: User[],
@@ -94,6 +92,82 @@ const createTempSchedule = async (
         })
 }
 
+const mapResponse = (schedules: Schedules[], page: number, setPage: Dispatch<number>, error: string) => {
+    const rowsPerPage = 10
+    let sortData = schedules
+    sortData = sortData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
+    if (error !== '') {
+        return (
+            <div style={{ height: '60vh' }}>
+                <Alert
+                    style={{
+                        maxWidth: '50%',
+                        minWidth: '550px',
+                        margin: 'auto',
+                    }}
+                    variant="error"
+                >
+                    Woopsie, det har skjedd en feil. <br />
+                    <i>{error}</i>
+                </Alert>
+                <Button style={{ marginTop: '20px' }} onClick={() => window.location.reload()}>
+                    Last inn siden på nytt
+                </Button>
+            </div>
+        )
+    }
+    return (
+        <div
+            className="grid gap-4"
+            style={{
+                maxWidth: '650px',
+                margin: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '20px',
+            }}
+        >
+            <Alert variant="success">Disse vaktene ble opprettet:</Alert>
+            <Table size="small">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                        <Table.HeaderCell scope="col">Uke</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {sortData.map((schedule: Schedules, idx: number) => (
+                        <Table.Row key={idx}>
+                            <Table.HeaderCell
+                                scope="row"
+                                style={{
+                                    minWidth: '210px',
+                                    maxWidth: '210px',
+                                }}
+                            >
+                                {schedule.user.name}
+                            </Table.HeaderCell>
+
+                            <Table.DataCell>
+                                Uke: {moment(schedule.start_timestamp * 1000).week()}{' '}
+                                {moment(schedule.start_timestamp * 1000).week() < moment(schedule.end_timestamp * 1000).week()
+                                    ? ' - ' + moment(schedule.end_timestamp * 1000).week()
+                                    : ''}
+                                <br />
+                            </Table.DataCell>
+                        </Table.Row>
+                    ))}
+                </Table.Body>
+            </Table>
+            <Pagination page={page} onPageChange={setPage} count={Math.ceil(schedules.length / rowsPerPage)} style={{ marginLeft: '0' }} />
+            <Button style={{ marginTop: '20px' }} onClick={() => window.location.reload()}>
+                Last inn siden på nytt
+            </Button>
+        </div>
+    )
+}
+
 const Vaktperioder = () => {
     const { user } = useAuth()
     const [itemData, setItemData] = useState<User[]>([])
@@ -101,13 +175,9 @@ const Vaktperioder = () => {
     const [responseError, setResponseError] = useState('')
     const [loading, setLoading] = useState(false)
     const [isMidlertidlig, setIsMidlertidlig] = useState(true)
-    const [startTimestamp, setStartTimestamp] = useState<number>(new Date('Jan 01 2023').setHours(12) / 1000)
-    const [endTimestamp, setEndTimestamp] = useState<number>(0)
-    const [clock_start, setClockStart] = useState<number>(0)
-    const [clock_end, setClockEnd] = useState<number>(0)
     const [rolloverDay, setRolloverDay] = useState<number>(2)
     const [rolloverTime, setRolloverTime] = useState<number>(12)
-    const [amountOfWeeks, setAmountOfWeeks] = useState<number>(52)
+    const [amountOfWeeks, setAmountOfWeeks] = useState<number>(0)
     const [page, setPage] = useState(1)
 
     const [open, setOpen] = useState(false)
@@ -122,17 +192,6 @@ const Vaktperioder = () => {
         defaultYear: new Date('Jan 01 2023'),
         defaultSelected: new Date('Jan 01 2023'),
     })
-
-    const mapMembers = (members: User[]) =>
-        members
-            .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
-            .map((user, index) => {
-                if (user.group_order_index === undefined) {
-                    user.group_order_index = index + 1
-                }
-                user.id = user.id.toUpperCase()
-                return <PerioderOptions member={user} key={index} itemData={members} setItemData={setItemData}></PerioderOptions>
-            })
 
     const mapMembersMidlertidig = (members: User[]) =>
         members.map((user, index) => {
@@ -256,13 +315,23 @@ const Vaktperioder = () => {
             .then(([groupMembersJson, lastVaktJson]) => {
                 if (!groupMembersJson || !lastVaktJson) {
                     console.error('Error fetching data')
-                    setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))
+                    // Sort itemData here to avoid duplicate index warnings
+                    setItemData(
+                        groupMembersJson
+                            .filter((user: User) => user.role !== 'leveranseleder')
+                            .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
+                    )
                     setIsMidlertidlig(user.groups.filter((group) => group.id == selectedVaktlag)[0].type === 'Midlertidlig')
                     setLastVakt(undefined)
                     setLoading(false)
                     //return
                 } else {
-                    setItemData(groupMembersJson.filter((user: User) => user.role !== 'leveranseleder'))
+                    // Sort itemData here to avoid duplicate index warnings
+                    setItemData(
+                        groupMembersJson
+                            .filter((user: User) => user.role !== 'leveranseleder')
+                            .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
+                    )
                     setIsMidlertidlig(user.groups.filter((group) => group.id == selectedVaktlag)[0].type === 'Midlertidlig')
                     setLastVakt(lastVaktJson)
                     setLoading(false)
@@ -273,7 +342,40 @@ const Vaktperioder = () => {
             })
     }, [response, user, selectedVaktlag])
 
-    if (loading === true) return <Loader></Loader>
+    // DND-kit sensors and handlers
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    )
+
+    // IDs for DnD: use ressursnummer for uniqueness
+    const activeIds = itemData
+        .filter((user: User) => user.group_order_index !== 100)
+        .sort((a, b) => a.group_order_index! - b.group_order_index!)
+        .map((user) => user.ressursnummer)
+
+    const handleDragEnd = (event: any) => {
+        const { active, over } = event
+        if (!over || active.id === over.id) return
+
+        // Figure out if we're dragging within active or inactive
+        const activeIndex = activeIds.indexOf(active.id)
+        const overIndex = activeIds.indexOf(over.id)
+        if (activeIndex !== -1 && overIndex !== -1) {
+            // Only reorder within active
+            const newActive = arrayMove(activeIds, activeIndex, overIndex)
+            // Map new order to group_order_index
+            const updated = [...itemData]
+            newActive.forEach((id, idx) => {
+                const u = updated.find((user) => user.ressursnummer === id)
+                if (u) u.group_order_index = idx + 1
+            })
+            setItemData(updated)
+        }
+    }
 
     return (
         <>
@@ -282,7 +384,7 @@ const Vaktperioder = () => {
                     <>
                         <Modal
                             open={open}
-                            aria-label="Modal demo"
+                            aria-label="Modal for midlertidige vakter"
                             onClose={() => {
                                 setOpen((x) => !x)
                                 setResponse([])
@@ -478,12 +580,12 @@ const Vaktperioder = () => {
                                             <Radio value="8">08:00</Radio>
                                             <Radio value="12">12:00</Radio>
                                         </RadioGroup>
-                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
-                                            <Radio value="4">1 måned</Radio>
-                                            <Radio value="8">2 måneder</Radio>
-                                            <Radio value="13">3 måneder</Radio>
-                                            <Radio value="26">6 måneder</Radio>
-                                            <Radio value="52">12 måneder</Radio>
+                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)}>
+                                            <Radio value="1">1 måned</Radio>
+                                            <Radio value="2">2 måneder</Radio>
+                                            <Radio value="3">3 måneder</Radio>
+                                            <Radio value="6">6 måneder</Radio>
+                                            <Radio value="12">12 måneder</Radio>
                                         </RadioGroup>
                                     </div>
                                 </div>
@@ -522,12 +624,12 @@ const Vaktperioder = () => {
                                             <Radio value="8">08:00</Radio>
                                             <Radio value="12">12:00</Radio>
                                         </RadioGroup>
-                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)} defaultValue="52">
-                                            <Radio value="4">1 måned</Radio>
-                                            <Radio value="8">2 måneder</Radio>
-                                            <Radio value="13">3 måneder</Radio>
-                                            <Radio value="26">6 måneder</Radio>
-                                            <Radio value="52">12 måneder</Radio>
+                                        <RadioGroup legend="Opprett vaktplan for: " onChange={(val: any) => setAmountOfWeeks(val)}>
+                                            <Radio value="1">1 måned</Radio>
+                                            <Radio value="2">2 måneder</Radio>
+                                            <Radio value="3">3 måneder</Radio>
+                                            <Radio value="6">6 måneder</Radio>
+                                            <Radio value="12">12 måneder</Radio>
                                         </RadioGroup>
                                     </div>
                                 </div>
@@ -551,65 +653,73 @@ const Vaktperioder = () => {
                         </>
                     ) : (
                         <>
-                            <Table
-                                style={{
-                                    minWidth: '650px',
-                                    maxWidth: '60vw',
-                                    backgroundColor: 'white',
-                                    marginTop: '2vh',
-                                    marginBottom: '3vh',
-                                }}
-                            >
-                                <Table.Header>
-                                    <Table.Row>
-                                        <Table.HeaderCell scope="col">
-                                            <div
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'space-around',
-                                                }}
-                                            >
-                                                ID
-                                                <HelpText
-                                                    title="Hva brukes ID til?"
+                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                <Table
+                                    style={{
+                                        minWidth: '650px',
+                                        maxWidth: '60vw',
+                                        backgroundColor: 'white',
+                                        marginTop: '2vh',
+                                        marginBottom: '3vh',
+                                    }}
+                                >
+                                    <Table.Header>
+                                        <Table.Row>
+                                            <Table.HeaderCell scope="col">
+                                                <div
                                                     style={{
-                                                        marginLeft: '10px',
+                                                        display: 'flex',
+                                                        alignItems: 'space-around',
                                                     }}
                                                 >
-                                                    <b>Id:</b> Brukes for å bestemme hvilken rekkefølge vakthaverne skal gå vakt. Den som står øverst
-                                                    vil få første vakt når nye perioder genereres
-                                                </HelpText>
-                                            </div>
-                                        </Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">Ident</Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">Rolle</Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">
-                                            <div
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'space-around',
-                                                }}
-                                            >
-                                                Aktiv
-                                                <HelpText
-                                                    title="Hva brukes aktiv toggle til?"
+                                                    ID
+                                                    <HelpText
+                                                        title="Hva brukes ID til?"
+                                                        style={{
+                                                            marginLeft: '10px',
+                                                        }}
+                                                    >
+                                                        <b>Id:</b> Brukes for å bestemme hvilken rekkefølge vakthaverne skal gå vakt. Den som står
+                                                        øverst vil få første vakt når nye perioder genereres
+                                                    </HelpText>
+                                                </div>
+                                            </Table.HeaderCell>
+                                            <Table.HeaderCell scope="col">Ident</Table.HeaderCell>
+                                            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                                            <Table.HeaderCell scope="col">Rolle</Table.HeaderCell>
+                                            <Table.HeaderCell scope="col">
+                                                <div
                                                     style={{
-                                                        marginLeft: '10px',
+                                                        display: 'flex',
+                                                        alignItems: 'space-around',
                                                     }}
                                                 >
-                                                    <b>Aktiv toggle:</b> Toggles til av dersom en vakthaver <b>ikke</b> skal inkluderes i nye
-                                                    vaktperioder
-                                                    <br />
-                                                </HelpText>
-                                            </div>
-                                        </Table.HeaderCell>
-                                    </Table.Row>
-                                </Table.Header>
-                                <Table.Body>{itemData ? mapMembers(itemData) : <Table.Row></Table.Row>}</Table.Body>
-                            </Table>
+                                                    {/* Fjern header */}
+                                                    Fjern
+                                                </div>
+                                            </Table.HeaderCell>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
+                                        <SortableContext items={activeIds}>
+                                            {itemData
+                                                .filter((user: User) => user.group_order_index !== 100)
+                                                .sort((a, b) => a.group_order_index! - b.group_order_index!)
+                                                .map((user, idx) => (
+                                                    <PerioderOptions
+                                                        member={user}
+                                                        key={user.ressursnummer}
+                                                        itemData={itemData}
+                                                        setItemData={setItemData}
+                                                        index={idx}
+                                                    />
+                                                ))}
+                                        </SortableContext>
+                                    </Table.Body>
+                                </Table>
+                            </DndContext>
                             <Button
-                                disabled={response.length !== 0}
+                                disabled={response.length !== 0 || amountOfWeeks == 0}
                                 style={{
                                     minWidth: '210px',
                                     marginBottom: '15px',
@@ -640,73 +750,3 @@ const Vaktperioder = () => {
 }
 
 export default Vaktperioder
-
-const mapResponse = (schedules: Schedules[], page: number, setPage: Dispatch<number>, error: string) => {
-    const rowsPerPage = 10
-    let sortData = schedules
-    sortData = sortData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
-    if (error !== '') {
-        return (
-            <div style={{ height: '60vh' }}>
-                <Alert
-                    style={{
-                        maxWidth: '50%',
-                        minWidth: '550px',
-                        margin: 'auto',
-                    }}
-                    variant="error"
-                >
-                    Woopsie, det har skjedd en feil. <br />
-                    <i>{error}</i>
-                </Alert>
-            </div>
-        )
-    }
-    return (
-        <div
-            className="grid gap-4"
-            style={{
-                maxWidth: '650px',
-                margin: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '20px',
-            }}
-        >
-            <Alert variant="success">Disse vaktene ble opprettet:</Alert>
-            <Table size="small">
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-                        <Table.HeaderCell scope="col">Uke</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {sortData.map((schedule: Schedules, idx: number) => (
-                        <Table.Row key={idx}>
-                            <Table.HeaderCell
-                                scope="row"
-                                style={{
-                                    minWidth: '210px',
-                                    maxWidth: '210px',
-                                }}
-                            >
-                                {schedule.user.name}
-                            </Table.HeaderCell>
-
-                            <Table.DataCell>
-                                Uke: {moment(schedule.start_timestamp * 1000).week()}{' '}
-                                {moment(schedule.start_timestamp * 1000).week() < moment(schedule.end_timestamp * 1000).week()
-                                    ? ' - ' + moment(schedule.end_timestamp * 1000).week()
-                                    : ''}
-                                <br />
-                            </Table.DataCell>
-                        </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table>
-            <Pagination page={page} onPageChange={setPage} count={Math.ceil(schedules.length / rowsPerPage)} style={{ marginLeft: '0' }} />
-        </div>
-    )
-}
