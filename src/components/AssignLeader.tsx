@@ -22,12 +22,29 @@ const remove_leader = async (group_id: string, setResponse: Dispatch<any>) => {
         })
 }
 
-const mapLeaders = (leder: User[]) =>
-    leder.map((leader, index) => (
-        <div key={index}>
-            {leader.name} - {leader.role}
-        </div>
-    ))
+const mapLeaders = (leaders: User[]) =>
+    leaders
+        .sort((a, b) => (a.role === 'leveranseleder' ? 1 : b.role === 'leveranseleder' ? -1 : 0))
+        .map((leader, index) => (
+            <div key={index}>
+                <span style={{ fontWeight: leader.role === 'leveranseleder' ? 'bold' : 'normal' }}>
+                    {leader.name} - {leader.roles.map((role) => role.title).join(', ')}
+                </span>
+            </div>
+        ))
+
+const mapMembers = (members: User[]) =>
+    members
+        .filter((member) => member.role !== 'leveranseleder')
+        .sort((a, b) => {
+            const roleOrder = ['vaktsjef', 'vakthaver']
+            return roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role)
+        })
+        .map((member, index) => (
+            <div key={index}>
+                {member.name} - {member.roles.map((role) => role.title).join(', ')}
+            </div>
+        ))
 
 const Leveranseleder = () => {
     const [groupData, setgroupData] = useState<Vaktlag[]>([])
@@ -62,7 +79,8 @@ const Leveranseleder = () => {
                 <Table.Row>
                     <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
                     <Table.HeaderCell scope="col">Leder(e)</Table.HeaderCell>
-                    <Table.HeaderCell scope="col">Sett leveranseleder</Table.HeaderCell>
+                    <Table.HeaderCell scope="col">Medlemmer</Table.HeaderCell>
+                    {/* <Table.HeaderCell scope="col">Sett leveranseleder</Table.HeaderCell> */}
                     <Table.HeaderCell scope="col">Velg vaktsjef</Table.HeaderCell>
                 </Table.Row>
             </Table.Header>
@@ -77,11 +95,13 @@ const Leveranseleder = () => {
                             </Table.HeaderCell>
 
                             <Table.DataCell>
-                                {mapLeaders(vaktlag.vaktsjef)}
-                                {mapLeaders(vaktlag.leveranseleder)}
+                                {mapLeaders(vaktlag.members.filter((user: User) => user.role === 'leveranseleder'))}
+                                {mapLeaders(vaktlag.members.filter((user: User) => user.role === 'vaktsjef'))}
                             </Table.DataCell>
 
-                            <Table.DataCell style={{ maxWidth: '150px' }}>
+                            <Table.DataCell>{mapMembers(vaktlag.members)}</Table.DataCell>
+
+                            {/* <Table.DataCell style={{ maxWidth: '150px' }}>
                                 <div>
                                     <Button
                                         style={{
@@ -118,7 +138,7 @@ const Leveranseleder = () => {
                                         Fjern meg som leder
                                     </Button>
                                 </div>
-                            </Table.DataCell>
+                            </Table.DataCell> */}
                             <Table.DataCell style={{ maxWidth: '200px', margin: '50px' }}>
                                 <GroupOptions
                                     user_list={vaktlag.members.filter((user: User) => user.role !== 'leveranseleder')}
