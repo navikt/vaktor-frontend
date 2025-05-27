@@ -44,6 +44,7 @@ export interface Vaktlag {
     members: User[]
     leveranseleder: User[]
     vaktsjef: User[]
+    koststed: string[]
 }
 
 export interface Schedules {

@@ -23,26 +23,30 @@ const remove_leader = async (group_id: string, setResponse: Dispatch<any>) => {
 }
 
 const mapLeaders = (leaders: User[]) =>
-    leaders
-        .sort((a, b) => (a.role === 'leveranseleder' ? 1 : b.role === 'leveranseleder' ? -1 : 0))
-        .map((leader, index) => (
-            <div key={index}>
-                <span style={{ fontWeight: leader.role === 'leveranseleder' ? 'bold' : 'normal' }}>
-                    {leader.name} - {leader.roles.map((role) => role.title).join(', ')}
-                </span>
-            </div>
-        ))
+    leaders.map((leader, index) => (
+        <div key={index}>
+            <span
+                style={{
+                    fontWeight: leader.roles.some((role) => role.title === 'leveranseleder') ? 'bold' : 'normal',
+                }}
+            >
+                {leader.id.charAt(0).toUpperCase() + leader.id.slice(1)} - {leader.name} - {leader.roles.map((role) => role.title).join(', ')}
+            </span>
+        </div>
+    ))
 
 const mapMembers = (members: User[]) =>
     members
-        .filter((member) => member.role !== 'leveranseleder')
+        .filter((member) => !member.roles.some((role) => role.title === 'leveranseleder'))
         .sort((a, b) => {
             const roleOrder = ['vaktsjef', 'vakthaver']
-            return roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role)
+            const aRoleIndex = a.roles.findIndex((role) => roleOrder.includes(role.title))
+            const bRoleIndex = b.roles.findIndex((role) => roleOrder.includes(role.title))
+            return aRoleIndex - bRoleIndex
         })
         .map((member, index) => (
             <div key={index}>
-                {member.name} - {member.roles.map((role) => role.title).join(', ')}
+                {member.id.charAt(0).toUpperCase() + member.id.slice(1)} - {member.name} - {member.roles.map((role) => role.title).join(', ')}
             </div>
         ))
 
@@ -92,11 +96,22 @@ const Leveranseleder = () => {
                         <Table.Row key={i}>
                             <Table.HeaderCell scope="row" style={{ maxWidth: '150px' }}>
                                 {vaktlag.name}
+                                <br />
+                                <span style={{ fontWeight: 'normal', fontSize: '0.9em' }}>{vaktlag.id}</span>
+                                <br />
+                                <br />
+                                <span style={{ fontWeight: 'normal', fontSize: '0.9em' }}>Koststed: {vaktlag.koststed}</span>
                             </Table.HeaderCell>
 
                             <Table.DataCell>
-                                {mapLeaders(vaktlag.members.filter((user: User) => user.role === 'leveranseleder'))}
-                                {mapLeaders(vaktlag.members.filter((user: User) => user.role === 'vaktsjef'))}
+                                {mapLeaders(vaktlag.members.filter((user: User) => user.roles.some((role) => role.title === 'leveranseleder')))}
+                                {mapLeaders(
+                                    vaktlag.members.filter(
+                                        (user: User) =>
+                                            user.roles.some((role) => role.title === 'vaktsjef') &&
+                                            !user.roles.some((role) => role.title === 'leveranseleder')
+                                    )
+                                )}
                             </Table.DataCell>
 
                             <Table.DataCell>{mapMembers(vaktlag.members)}</Table.DataCell>
@@ -141,7 +156,7 @@ const Leveranseleder = () => {
                             </Table.DataCell> */}
                             <Table.DataCell style={{ maxWidth: '200px', margin: '50px' }}>
                                 <GroupOptions
-                                    user_list={vaktlag.members.filter((user: User) => user.role !== 'leveranseleder')}
+                                    user_list={vaktlag.members.filter((user: User) => !user.roles.some((role) => role.title === 'leveranseleder'))}
                                     group_id={vaktlag.id}
                                     //setLoading={setLoading}
                                     setVaksjef={setVaktsjef}
