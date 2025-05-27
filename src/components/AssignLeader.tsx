@@ -35,20 +35,25 @@ const mapLeaders = (leaders: User[]) =>
         </div>
     ))
 
-const mapMembers = (members: User[]) =>
-    members
+const mapMembers = (members: User[]) => {
+    const rolePriority = ['vaktsjef', 'vakthaver']
+
+    return members
         .filter((member) => !member.roles.some((role) => role.title === 'leveranseleder'))
         .sort((a, b) => {
-            const roleOrder = ['vaktsjef', 'vakthaver']
-            const aRoleIndex = a.roles.findIndex((role) => roleOrder.includes(role.title))
-            const bRoleIndex = b.roles.findIndex((role) => roleOrder.includes(role.title))
-            return aRoleIndex - bRoleIndex
+            const aPriority = Math.min(...a.roles.map((r) => rolePriority.indexOf(r.title)).filter((i) => i !== -1), Infinity)
+            const bPriority = Math.min(...b.roles.map((r) => rolePriority.indexOf(r.title)).filter((i) => i !== -1), Infinity)
+
+            if (aPriority !== bPriority) return aPriority - bPriority
+
+            return a.id.localeCompare(b.id)
         })
         .map((member, index) => (
             <div key={index}>
                 {member.id.charAt(0).toUpperCase() + member.id.slice(1)} - {member.name} - {member.roles.map((role) => role.title).join(', ')}
             </div>
         ))
+}
 
 const Leveranseleder = () => {
     const [groupData, setgroupData] = useState<Vaktlag[]>([])
@@ -97,10 +102,29 @@ const Leveranseleder = () => {
                             <Table.HeaderCell scope="row" style={{ maxWidth: '150px' }}>
                                 {vaktlag.name}
                                 <br />
-                                <span style={{ fontWeight: 'normal', fontSize: '0.9em' }}>{vaktlag.id}</span>
+                                <span
+                                    style={{
+                                        fontWeight: 'normal',
+                                        fontSize: '0.9em',
+                                        display: 'inline-block',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        maxWidth: '100%',
+                                        border: '1px solid #ccc',
+                                        padding: '2px 5px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#f9f9f9',
+                                    }}
+                                    onClick={() => navigator.clipboard.writeText(vaktlag.id)}
+                                    title="Click to copy"
+                                >
+                                    {vaktlag.id}
+                                </span>
                                 <br />
-                                <br />
-                                <span style={{ fontWeight: 'normal', fontSize: '0.9em' }}>Koststed: {vaktlag.koststed}</span>
+                                <span style={{ fontWeight: 'normal', fontSize: '0.9em' }}>
+                                    Koststed: <b>{vaktlag.koststed}</b>
+                                </span>
                             </Table.HeaderCell>
 
                             <Table.DataCell>
