@@ -34,7 +34,7 @@ const DineVakter = () => {
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
 
-    const [filterYear, setFilterYear] = useState(true)
+    const [filterYear, setFilterYear] = useState(false)
 
     const [searchFilterAction, setSearchFilterAction] = useState(9)
 
@@ -237,7 +237,7 @@ const DineVakter = () => {
                         <CheckboxGroup
                             legend="Vis hele året"
                             onChange={(val: string[]) => setFilterYear(val.includes('true'))}
-                            defaultValue={['true']}
+                            defaultValue={['false']}
                         >
                             <Checkbox value="true">Vis alle vakter for {selectedMonth.getFullYear()} </Checkbox>
                         </CheckboxGroup>

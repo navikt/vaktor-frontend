@@ -48,7 +48,7 @@ const AdminLeder = ({}) => {
 
     const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
         const vakter: TimelinePeriodProps[] = schedules
-            .filter((s) => s.type === 'ordinær vakt') // eller `s.type`, `s.role`, etc.
+            .filter((s) => s.type === 'ordinær vakt') // Vakter av type 'ordinær vakt'
             .map((schedule) => ({
                 start: new Date(schedule.start_timestamp * 1000),
                 end: new Date(schedule.end_timestamp * 1000),
@@ -59,7 +59,7 @@ const AdminLeder = ({}) => {
             }))
 
         const vaktbistand: TimelinePeriodProps[] = schedules
-            .filter((s) => s.type === 'bistand') // eller annen egenskap som skiller dem
+            .filter((s) => s.type === 'bistand') // Vakter av type 'bistand'
             .map((change) => ({
                 start: new Date(change.start_timestamp * 1000),
                 end: new Date(change.end_timestamp * 1000),
@@ -70,7 +70,7 @@ const AdminLeder = ({}) => {
             }))
 
         const vaktbytter: TimelinePeriodProps[] = schedules
-            .filter((s) => s.type === 'bytte') // eller annen egenskap som skiller dem
+            .filter((s) => s.type === 'bytte') // Vakter av type 'bytte'
             .map((change) => ({
                 start: new Date(change.start_timestamp * 1000),
                 end: new Date(change.end_timestamp * 1000),
@@ -394,7 +394,10 @@ const AdminLeder = ({}) => {
 
         // Apply other filtering conditions.
         const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
-        const isRoleMatching = value.user.role.toLowerCase().includes(searchFilterRole.toLowerCase())
+        const isRoleMatching =
+            searchFilterRole === ''
+                ? true
+                : value.user.roles?.some((role) => role.title.toLowerCase().includes(searchFilterRole.toLowerCase())) ?? false
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatching = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
 
@@ -437,7 +440,22 @@ const AdminLeder = ({}) => {
                     </Select>
                 </div>
                 <div style={{ width: '200px', marginLeft: '30px' }}>
-                    <Select label="Velg rolle" onChange={(e) => setSearchFilterRole(e.target.value)}>
+                    <Select
+                        label={
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span>Velg rolle</span>
+                                <HelpText strategy="fixed" title="Om rollefilter">
+                                    <div>
+                                        <b>Velg rolle</b>
+                                        <br />
+                                        Her kan du velge for eksempel <i>Vaktsjef</i> for kun å vise vakter fra de som har denne rollen. Dette er
+                                        nyttig for leveranseledere.
+                                    </div>
+                                </HelpText>
+                            </div>
+                        }
+                        onChange={(e) => setSearchFilterRole(e.target.value)}
+                    >
                         <option value="">Alle</option>
                         <option value="vakthaver">Vakthaver</option>
                         <option value="vaktsjef">Vaktsjef</option>
