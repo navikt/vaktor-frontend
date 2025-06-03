@@ -365,12 +365,15 @@ const AdminLeder = ({}) => {
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
                 setItemData(itemData)
+
+                // Ensure group names are set after itemData is fetched
+                const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
+                const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
+                setGroupNames(sortedGroupNames)
+
                 setLoading(false)
             })
-
-        const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
-        const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
-        setGroupNames(sortedGroupNames)
+            .catch(() => setLoading(false))
     }, [response, selectedMonth, setItemData])
 
     if (itemData === undefined) return <></>
