@@ -182,84 +182,35 @@ const ScheduleModal = (props: {
                             >
                                 <div style={{ margin: 'auto' }}>
                                     <DatePicker {...datepickerProps} showWeekNumber>
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                gap: '15px',
-                                            }}
-                                        >
-                                            <DatePicker.Input {...fromInputProps} label="Fra" />
-                                            <Select
-                                                label="klokken"
-                                                value={clock_start}
-                                                error={clock_start * 3600 + startTimestamp < props.schedule.start_timestamp}
-                                                onChange={(e) => setClockStart(Number(e.target.value))}
+                                        {['Fra', 'Til'].map((label, index) => (
+                                            <div
+                                                key={label}
+                                                style={{
+                                                    display: 'flex',
+                                                    gap: '15px',
+                                                }}
                                             >
-                                                <option value={-12}>00:00</option>
-                                                <option value={-11}>01:00</option>
-                                                <option value={-10}>02:00</option>
-                                                <option value={-9}>03:00</option>
-                                                <option value={-8}>04:00</option>
-                                                <option value={-7}>05:00</option>
-                                                <option value={-6}>06:00</option>
-                                                <option value={-5}>07:00</option>
-                                                <option value={-4}>08:00</option>
-                                                <option value={-3}>09:00</option>
-                                                <option value={-2}>10:00</option>
-                                                <option value={-1}>11:00</option>
-                                                <option value={0}>12:00</option>
-                                                <option value={1}>13:00</option>
-                                                <option value={2}>14:00</option>
-                                                <option value={3}>15:00</option>
-                                                <option value={4}>16:00</option>
-                                                <option value={5}>17:00</option>
-                                                <option value={6}>18:00</option>
-                                                <option value={7}>19:00</option>
-                                                <option value={8}>20:00</option>
-                                                <option value={9}>21:00</option>
-                                                <option value={10}>22:00</option>
-                                                <option value={11}>23:00</option>
-                                            </Select>
-                                        </div>
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                gap: '15px',
-                                            }}
-                                        >
-                                            <DatePicker.Input {...toInputProps} label="Til" />
-                                            <Select
-                                                label="klokken"
-                                                value={clock_end}
-                                                error={clock_end * 3600 + endTimestamp > props.schedule.end_timestamp}
-                                                onChange={(e) => setClockEnd(Number(e.target.value))}
-                                            >
-                                                <option value={-12}>00:00</option>
-                                                <option value={-11}>01:00</option>
-                                                <option value={-10}>02:00</option>
-                                                <option value={-9}>03:00</option>
-                                                <option value={-8}>04:00</option>
-                                                <option value={-7}>05:00</option>
-                                                <option value={-6}>06:00</option>
-                                                <option value={-5}>07:00</option>
-                                                <option value={-4}>08:00</option>
-                                                <option value={-3}>09:00</option>
-                                                <option value={-2}>10:00</option>
-                                                <option value={-1}>11:00</option>
-                                                <option value={0}>12:00</option>
-                                                <option value={1}>13:00</option>
-                                                <option value={2}>14:00</option>
-                                                <option value={3}>15:00</option>
-                                                <option value={4}>16:00</option>
-                                                <option value={5}>17:00</option>
-                                                <option value={6}>18:00</option>
-                                                <option value={7}>19:00</option>
-                                                <option value={8}>20:00</option>
-                                                <option value={9}>21:00</option>
-                                                <option value={10}>22:00</option>
-                                                <option value={11}>23:00</option>
-                                            </Select>
-                                        </div>
+                                                <DatePicker.Input {...(index === 0 ? fromInputProps : toInputProps)} label={label} />
+                                                <Select
+                                                    label="klokken"
+                                                    value={index === 0 ? clock_start : clock_end}
+                                                    error={
+                                                        index === 0
+                                                            ? clock_start * 3600 + startTimestamp < props.schedule.start_timestamp
+                                                            : clock_end * 3600 + endTimestamp > props.schedule.end_timestamp
+                                                    }
+                                                    onChange={(e) =>
+                                                        index === 0 ? setClockStart(Number(e.target.value)) : setClockEnd(Number(e.target.value))
+                                                    }
+                                                >
+                                                    {Array.from({ length: 24 }, (_, i) => (
+                                                        <option key={i - 12} value={i - 12}>
+                                                            {`${(i % 24).toString().padStart(2, '0')}:00`}
+                                                        </option>
+                                                    ))}
+                                                </Select>
+                                            </div>
+                                        ))}
                                     </DatePicker>
                                 </div>
                                 {(clock_start * 3600 + startTimestamp < props.schedule.start_timestamp ||
@@ -301,13 +252,23 @@ const ScheduleModal = (props: {
                                 minWidth: '300px',
                             }}
                             onClick={() => {
+                                let computedAction = action
+                                const computedStart = action === 'replace' ? props.schedule.start_timestamp : startTimestamp + clock_start * 3600
+                                const computedEnd = action === 'replace' ? props.schedule.end_timestamp : endTimestamp + clock_end * 3600
+                                if (
+                                    action === 'bytte' &&
+                                    computedStart === props.schedule.start_timestamp &&
+                                    computedEnd === props.schedule.end_timestamp
+                                ) {
+                                    computedAction = 'replace'
+                                }
                                 let period = {
                                     ...props.schedule,
-                                    start_timestamp: action === 'replace' ? props.schedule.start_timestamp : startTimestamp + clock_start * 3600,
-                                    end_timestamp: action === 'replace' ? props.schedule.end_timestamp : endTimestamp + clock_end * 3600,
+                                    start_timestamp: computedStart,
+                                    end_timestamp: computedEnd,
                                     schedule_id: props.schedule.id,
                                 }
-                                update_schedule(period, action, selectedVakthaver, props.addVakt)
+                                update_schedule(period, computedAction, selectedVakthaver, props.addVakt)
                                 props.setIsOpen(false)
                                 setConfirmState(false)
                                 setClockEnd(0)
@@ -320,33 +281,27 @@ const ScheduleModal = (props: {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <Label>Eksisterende endringer på denne vakten:</Label>
                         <br />
-                        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                            <div>
-                                {' '}
-                                Bistand:
-                                <ScheduleChanges
-                                    periods={props.schedule.vakter.filter((vakt) => vakt.type == 'bistand')}
-                                    setResponse={setResponse}
-                                    loading={loading}
-                                    modalView={true}
-                                ></ScheduleChanges>
-                                <ScheduleChanges
-                                    periods={props.schedule.vakter.filter((vakt) => vakt.type == 'bakvakt')}
-                                    setResponse={setResponse}
-                                    loading={loading}
-                                    modalView={true}
-                                ></ScheduleChanges>
+                        {props.schedule.vakter.length === 0 ? (
+                            <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                                <p>Ingen endringer funnet</p>
                             </div>
-                            <div>
-                                Bytte:
-                                <ScheduleChanges
-                                    periods={props.schedule.vakter.filter((vakt) => vakt.type == 'bytte')}
-                                    setResponse={setResponse}
-                                    loading={loading}
-                                    modalView={true}
-                                ></ScheduleChanges>
+                        ) : (
+                            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                                {['bistand', 'bytte'].map((type) => (
+                                    <div key={type}>
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}:
+                                        <ScheduleChanges
+                                            periods={props.schedule.vakter.filter((vakt) =>
+                                                type === 'bistand' ? vakt.type === 'bistand' || vakt.type === 'bakvakt' : vakt.type === type
+                                            )}
+                                            setResponse={setResponse}
+                                            loading={loading}
+                                            modalView={true}
+                                        />
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        )}
                     </div>
                 </Modal.Body>
             </Modal>
