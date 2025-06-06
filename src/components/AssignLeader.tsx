@@ -94,53 +94,53 @@ const Leveranseleder = () => {
                 </Table.Row>
             </Table.Header>
             <Table.Body>
-                {groupData.map((vaktlag: Vaktlag, i) => {
-                    var currentselect = ''
-                    //approve_level = 0;
-                    return (
-                        <Table.Row key={i}>
-                            <Table.HeaderCell scope="row" style={{ maxWidth: '150px' }}>
-                                {vaktlag.name}
-                                <br />
-                                <span
-                                    style={{
-                                        fontWeight: 'normal',
-                                        fontSize: '0.9em',
-                                        display: 'inline-block',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                        maxWidth: '100%',
-                                        border: '1px solid #ccc',
-                                        padding: '2px 5px',
-                                        cursor: 'pointer',
-                                        backgroundColor: '#f9f9f9',
-                                    }}
-                                    onClick={() => navigator.clipboard.writeText(vaktlag.id)}
-                                    title="Click to copy"
-                                >
-                                    {vaktlag.id}
-                                </span>
-                                <br />
-                                <span style={{ fontWeight: 'normal', fontSize: '0.9em' }}>
-                                    Koststed: <b>{vaktlag.koststed}</b>
-                                </span>
-                            </Table.HeaderCell>
+                {groupData
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((vaktlag: Vaktlag, i) => {
+                        return (
+                            <Table.Row key={i}>
+                                <Table.HeaderCell scope="row" style={{ maxWidth: '150px' }}>
+                                    {vaktlag.name}
+                                    <br />
+                                    <span
+                                        style={{
+                                            fontWeight: 'normal',
+                                            fontSize: '0.9em',
+                                            display: 'inline-block',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            maxWidth: '100%',
+                                            border: '1px solid #ccc',
+                                            padding: '2px 5px',
+                                            cursor: 'pointer',
+                                            backgroundColor: '#f9f9f9',
+                                        }}
+                                        onClick={() => navigator.clipboard.writeText(vaktlag.id)}
+                                        title="Click to copy"
+                                    >
+                                        {vaktlag.id}
+                                    </span>
+                                    <br />
+                                    <span style={{ fontWeight: 'normal', fontSize: '0.9em' }}>
+                                        Koststed: <b>{vaktlag.koststed}</b>
+                                    </span>
+                                </Table.HeaderCell>
 
-                            <Table.DataCell>
-                                {mapLeaders(vaktlag.members.filter((user: User) => user.roles.some((role) => role.title === 'leveranseleder')))}
-                                {mapLeaders(
-                                    vaktlag.members.filter(
-                                        (user: User) =>
-                                            user.roles.some((role) => role.title === 'vaktsjef') &&
-                                            !user.roles.some((role) => role.title === 'leveranseleder')
-                                    )
-                                )}
-                            </Table.DataCell>
+                                <Table.DataCell>
+                                    {mapLeaders(vaktlag.members.filter((user: User) => user.roles.some((role) => role.title === 'leveranseleder')))}
+                                    {mapLeaders(
+                                        vaktlag.members.filter(
+                                            (user: User) =>
+                                                user.roles.some((role) => role.title === 'vaktsjef') &&
+                                                !user.roles.some((role) => role.title === 'leveranseleder')
+                                        )
+                                    )}
+                                </Table.DataCell>
 
-                            <Table.DataCell>{mapMembers(vaktlag.members)}</Table.DataCell>
+                                <Table.DataCell>{mapMembers(vaktlag.members)}</Table.DataCell>
 
-                            {/* <Table.DataCell style={{ maxWidth: '150px' }}>
+                                {/* <Table.DataCell style={{ maxWidth: '150px' }}>
                                 <div>
                                     <Button
                                         style={{
@@ -178,17 +178,19 @@ const Leveranseleder = () => {
                                     </Button>
                                 </div>
                             </Table.DataCell> */}
-                            <Table.DataCell style={{ maxWidth: '200px', margin: '50px' }}>
-                                <GroupOptions
-                                    user_list={vaktlag.members.filter((user: User) => !user.roles.some((role) => role.title === 'leveranseleder'))}
-                                    group_id={vaktlag.id}
-                                    //setLoading={setLoading}
-                                    setVaksjef={setVaktsjef}
-                                />
-                            </Table.DataCell>
-                        </Table.Row>
-                    )
-                })}
+                                <Table.DataCell style={{ maxWidth: '200px', margin: '50px' }}>
+                                    <GroupOptions
+                                        user_list={vaktlag.members.filter(
+                                            (user: User) => !user.roles.some((role) => role.title === 'leveranseleder')
+                                        )}
+                                        group_id={vaktlag.id}
+                                        //setLoading={setLoading}
+                                        setVaksjef={setVaktsjef}
+                                    />
+                                </Table.DataCell>
+                            </Table.Row>
+                        )
+                    })}
             </Table.Body>
         </Table>
     )
