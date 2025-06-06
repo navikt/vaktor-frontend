@@ -10,6 +10,7 @@ import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
 import { Buldings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
+import NextDeadlineBox from './NextDeadline'
 
 const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
     return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
@@ -360,13 +361,12 @@ const AdminLeder = ({}) => {
     useEffect(() => {
         setLoading(true)
         const path = `/api/leader_schedules?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
-        fetch(path)
-            .then((scheduleRes) => scheduleRes.json())
-            .then((itemData) => {
+
+        Promise.all([fetch(path).then((res) => res.json())])
+            .then(([itemData]) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
                 setItemData(itemData)
 
-                // Ensure group names are set after itemData is fetched
                 const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
                 const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
                 setGroupNames(sortedGroupNames)
@@ -505,6 +505,9 @@ const AdminLeder = ({}) => {
                             venstre
                         </div>
                     </HelpText>
+                </div>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <NextDeadlineBox />
                 </div>
             </div>
 
