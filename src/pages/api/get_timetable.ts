@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (process.env.FAKE_TOKEN) {
         authorizationHeader = process.env.FAKE_TOKEN
     }
-    let path = `${process.env.BACKEND_URL}/api/v1/admin/okonomi_timetable`
+    let path = `${process.env.BACKEND_URL}/api/v1/schedules/okonomi_timetable`
 
     try {
         const backendResponse = await fetch(path, {
