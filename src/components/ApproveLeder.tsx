@@ -51,12 +51,34 @@ const AdminLeder = ({}) => {
         const vakter: TimelinePeriodProps[] = schedules
             .filter((s) => s.type === 'ordinær vakt') // Vakter av type 'ordinær vakt'
             .map((schedule) => ({
-                start: new Date(schedule.start_timestamp * 1000),
-                end: new Date(schedule.end_timestamp * 1000),
+                start: new Date(Number(schedule.start_timestamp) * 1000),
+                end: new Date(Number(schedule.end_timestamp) * 1000),
                 status: 'success',
                 icon: <WaitingRoomIcon aria-hidden />,
                 statusLabel: 'Vakt',
-                children: <div>{schedule.user.name}</div>,
+                children: (
+                    <div>
+                        <b> {schedule.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
             }))
 
         const vaktbistand: TimelinePeriodProps[] = schedules
@@ -67,18 +89,61 @@ const AdminLeder = ({}) => {
                 status: 'info',
                 icon: <FirstAidKitIcon aria-hidden />,
                 statusLabel: 'Bistand',
-                children: <div>{change.user.name}</div>,
+                children: (
+                    <div>
+                        <b>{change.user.name}</b> <br />
+                        Slutt:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Start:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
             }))
 
         const vaktbytter: TimelinePeriodProps[] = schedules
             .filter((s) => s.type === 'bytte') // Vakter av type 'bytte'
             .map((change) => ({
-                start: new Date(change.start_timestamp * 1000),
-                end: new Date(change.end_timestamp * 1000),
+                start: new Date(Number(change.start_timestamp) * 1000),
+                end: new Date(Number(change.end_timestamp) * 1000),
                 status: 'warning',
                 icon: <RecycleIcon aria-hidden />,
                 statusLabel: 'Bytte',
-                children: <div>{change.user.name}</div>,
+                children: (
+                    <div>
+                        <b>{change.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
             }))
 
         return (
@@ -478,9 +543,24 @@ const AdminLeder = ({}) => {
                         <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
                 </div>
-                <div style={{ display: 'grid', alignContent: 'flex-end' }}>
+
+                <div style={{ display: 'grid', alignItems: 'start', marginLeft: '30px', width: '200px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: 'bold' }}>Godkjenn alle</span>
+                        <HelpText strategy="fixed" title="Bakvakt?">
+                            <div>
+                                <b>Approve All</b>
+                                <br />
+                                Denne knappen vil godkjenne samtlige vakter i lista under. Du kan bruke filterfunksjonaliteten (til venstre) for å
+                                redusere antall vakter du godkjenner i bulk. <br />
+                                <br />
+                                Vakter i forskjellig status kan ikke godkjennes samtidig, derfor <b>må</b> <i>status</i> velges i nedtrekksmenyen til
+                                venstre.
+                            </div>
+                        </HelpText>
+                    </div>
                     <Button
-                        style={{ width: '200px', marginLeft: '30px', height: '50px' }}
+                        style={{ width: '100%', height: '50px' }}
                         disabled={!(searchFilterAction === 3 || searchFilterAction === 1) || listeAvVakter.length === 0}
                         onClick={() =>
                             confirm_schedules_bulk(
@@ -492,21 +572,8 @@ const AdminLeder = ({}) => {
                         Approve All
                     </Button>
                 </div>
-                <div style={{ marginLeft: '15px', marginBottom: '5px', display: 'grid', alignContent: 'flex-end' }}>
-                    {' '}
-                    <HelpText strategy="fixed" title="Bakvakt?">
-                        <div>
-                            <b>Approve All</b>
-                            <br />
-                            Denne knappen vil godkjenne samtlige vakter i lista under. Du kan bruke filterfunksjonaliteten (til venstre) for å
-                            redusere antall vakter du godkjenner i bulk. <br />
-                            <br />
-                            Vakter i forskjellig status kan ikke godkjennes samtidig, derfor <b>må</b> <i>status</i> velges i nedtrekksmenyen til
-                            venstre
-                        </div>
-                    </HelpText>
-                </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+                <div style={{ marginLeft: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <NextDeadlineBox />
                 </div>
             </div>
