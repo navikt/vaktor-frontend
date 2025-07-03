@@ -58,20 +58,24 @@ const AdminLeder = ({}) => {
                 statusLabel: 'Vakt',
                 children: (
                     <div>
-                        {schedule.user.name}
+                        <b> {schedule.user.name}</b>
                         <br />
+                        Start:{' '}
                         {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
                             hour: '2-digit',
+                            minute: '2-digit',
                         })}
                         <br />
+                        Slutt:{' '}
                         {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
                             hour: '2-digit',
+                            minute: '2-digit',
                         })}
                     </div>
                 ),
@@ -87,19 +91,23 @@ const AdminLeder = ({}) => {
                 statusLabel: 'Bistand',
                 children: (
                     <div>
-                        {change.user.name} <br />
+                        <b>{change.user.name}</b> <br />
+                        Slutt:{' '}
                         {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
                             hour: '2-digit',
+                            minute: '2-digit',
                         })}
                         <br />
+                        Start:{' '}
                         {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
                             hour: '2-digit',
+                            minute: '2-digit',
                         })}
                     </div>
                 ),
@@ -115,20 +123,24 @@ const AdminLeder = ({}) => {
                 statusLabel: 'Bytte',
                 children: (
                     <div>
-                        {change.user.name}
+                        <b>{change.user.name}</b>
                         <br />
+                        Start:{' '}
                         {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
                             hour: '2-digit',
+                            minute: '2-digit',
                         })}
                         <br />
+                        Slutt:{' '}
                         {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
                             hour: '2-digit',
+                            minute: '2-digit',
                         })}
                     </div>
                 ),
