@@ -240,17 +240,16 @@ const AvstemmingOkonomi = () => {
                             return data.audits
                                 .map((audit: { action: string }) => {
                                     const regex =
-                                        /(Diff )?([Oo]verført til lønn ved fil|Sendt til utbetaling ved fil): (\w{3}-\d{2}-\d{4})(-[a-zA-Z]+(?:-diff)?)?\.txt( - Vaktor Lonn)?/
+                                        /^((?:Diff|ordinary|rest)\s)?(?:[Oo]verført til lønn ved fil|Sendt til utbetaling ved fil): (vaktor_)?(\w{3}-\d{2}-\d{4}(?:-[a-zA-Z]+)*)\.txt(?: - Vaktor Lonn)?$/
                                     const match = audit.action.match(regex)
                                     if (match) {
-                                        const datePart = match[3]
-                                        const optionalSuffix = match[4] || '' // Will be empty string if not present
-                                        const filename = `${datePart}${optionalSuffix}.txt`
-                                        return filename.trim()
+                                        const prefix = match[2] || ''
+                                        const filenamePart = match[3]
+                                        return `${prefix}${filenamePart}.txt`.trim()
                                     }
                                     return null
                                 })
-                                .filter((filename) => filename) // Filter out null or empty filenames
+                                .filter((filename): filename is string => !!filename)
                         })
                     )
                 )

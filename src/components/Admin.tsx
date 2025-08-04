@@ -276,15 +276,17 @@ const Admin = () => {
                         itemData.flatMap((data: Schedules) => {
                             return data.audits
                                 .map((audit: { action: string }) => {
-                                    const regex = /(Overført til lønn ved fil|Sendt til utbetaling ved fil): (\w{3}-\d{2}-\d{4})( - Vaktor Lonn)?/
+                                    const regex =
+                                        /^((?:Diff|ordinary|rest)\s)?(?:[Oo]verført til lønn ved fil|Sendt til utbetaling ved fil): (vaktor_)?(\w{3}-\d{2}-\d{4}(?:-[a-zA-Z]+)*)\.txt(?: - Vaktor Lonn)?$/
                                     const match = audit.action.match(regex)
                                     if (match) {
-                                        const filename = match[2]
-                                        return filename.trim()
+                                        const prefix = match[2] || ''
+                                        const filenamePart = match[3]
+                                        return `${prefix}${filenamePart}.txt`.trim()
                                     }
                                     return null
                                 })
-                                .filter((filename) => filename) // Filter out null or empty filenames
+                                .filter((filename): filename is string => !!filename)
                         })
                     )
                 )
