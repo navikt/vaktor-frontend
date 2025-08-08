@@ -28,6 +28,33 @@ const UpdateSchedule = () => {
         defaultSelected,
     })
 
+    function getMonthTimestamps(currentMonth: Date) {
+        const year = currentMonth.getFullYear()
+        const month = currentMonth.getMonth()
+
+        // Start of the month
+        const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0)
+        const startTimestamp = Math.floor(startOfMonth.getTime() / 1000)
+
+        // End of the month (start of the next month)
+        const startOfNextMonth = new Date(year, month + 1, 1, 0, 0, 0, 0)
+        const endTimestamp = Math.floor(startOfNextMonth.getTime() / 1000)
+
+        return { startTimestamp, endTimestamp }
+    }
+
+    let startTimestamp: number, endTimestamp: number
+
+    if (selectedMonth !== undefined) {
+        const timestamps = getMonthTimestamps(selectedMonth)
+        startTimestamp = timestamps.startTimestamp
+        endTimestamp = timestamps.endTimestamp
+    } else {
+        const now = new Date()
+        startTimestamp = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).getTime() / 1000
+        endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
+    }
+
     const group_calendar = async (group_id: string) => {
         try {
             const response = await fetch(`/api/group_calendar?group_id=${group_id}`)
@@ -90,14 +117,20 @@ const UpdateSchedule = () => {
     useEffect(() => {
         setLoading(true)
 
-        fetch('/api/group_schedules')
-            .then((scheduleRes) => scheduleRes.json())
-            .then((scheduleData) => {
+        const fetchSchedules = async () => {
+            try {
+                const scheduleRes = await fetch(`/api/group_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`)
+                const scheduleData = await scheduleRes.json()
                 scheduleData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
                 setScheduleData(scheduleData)
+            } catch (error) {
+                console.error(error)
+            } finally {
                 setLoading(false)
-            })
-    }, [response, Vakt, selectedSchedule, isOpen])
+            }
+        }
+        fetchSchedules()
+    }, [response, Vakt, selectedSchedule, isOpen, startTimestamp, endTimestamp])
 
     return (
         <>
