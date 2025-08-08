@@ -36,6 +36,10 @@ const mapGroupOptions = (members: User[]) => {
     ))
 }
 
+const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
+    return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
+}
+
 const ScheduleModal = (props: {
     schedule: Schedules
     isOpen: boolean
@@ -74,7 +78,8 @@ const ScheduleModal = (props: {
             const membersRes = await fetch(`/api/get_my_groupmembers?group_id=${props.schedule.group_id}`)
             props.setResponse(membersRes.status)
             const groupData = await membersRes.json()
-            setgroupData(groupData.filter((user: User) => user.role !== 'leveranseleder'))
+            setgroupData(groupData.filter((user: User) => hasAnyRole(user, ['vakthaver', 'vaktsjef'])))
+            setgroupData(groupData)
         }
         fetchGroupMembers()
         setStartTimestamp(props.schedule.start_timestamp)
