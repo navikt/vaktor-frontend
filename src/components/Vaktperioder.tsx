@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext'
 import { Schedules, User, Vaktlag } from '../types/types'
 import DatePickeroo from './MidlertidigeVaktperioder'
 import PerioderOptions from './PerioderOptions'
+import SchedulePreview from './SchedulePreview'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext } from '@dnd-kit/sortable'
 
@@ -718,29 +719,57 @@ const Vaktperioder = () => {
                                     </Table.Body>
                                 </Table>
                             </DndContext>
-                            <Button
-                                disabled={response.length !== 0 || amountOfWeeks == 0}
-                                style={{
-                                    minWidth: '210px',
-                                    marginBottom: '15px',
-                                }}
-                                onClick={() => {
-                                    createSchedule(
-                                        itemData.filter((user: User) => user.group_order_index !== 100),
-                                        selectedVaktlag,
-                                        setResponse, //setLoading
-                                        lastVakt ? Number(lastVakt.end_timestamp) : selectedMonth!.setHours(12) / 1000,
-                                        0,
-                                        isMidlertidlig,
-                                        rolloverDay,
-                                        amountOfWeeks,
-                                        setResponseError,
-                                        rolloverTime
-                                    )
-                                }}
-                            >
-                                Generer vaktperioder
-                            </Button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <SchedulePreview
+                                    groupId={selectedVaktlag}
+                                    userIds={itemData
+                                        .filter((user: User) => user.group_order_index !== 100)
+                                        .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
+                                        .map((user: User) => user.id)}
+                                    startTimestamp={lastVakt ? Number(lastVakt.end_timestamp) : selectedMonth!.setHours(12) / 1000}
+                                    months={amountOfWeeks}
+                                    rolloverDay={rolloverDay}
+                                    rolloverTime={rolloverTime}
+                                    disabled={response.length !== 0 || amountOfWeeks == 0}
+                                    onConfirm={() => {
+                                        createSchedule(
+                                            itemData.filter((user: User) => user.group_order_index !== 100),
+                                            selectedVaktlag,
+                                            setResponse,
+                                            lastVakt ? Number(lastVakt.end_timestamp) : selectedMonth!.setHours(12) / 1000,
+                                            0,
+                                            isMidlertidlig,
+                                            rolloverDay,
+                                            amountOfWeeks,
+                                            setResponseError,
+                                            rolloverTime
+                                        )
+                                    }}
+                                />
+                                <Button
+                                    disabled={response.length !== 0 || amountOfWeeks == 0}
+                                    style={{
+                                        minWidth: '210px',
+                                        marginBottom: '15px',
+                                    }}
+                                    onClick={() => {
+                                        createSchedule(
+                                            itemData.filter((user: User) => user.group_order_index !== 100),
+                                            selectedVaktlag,
+                                            setResponse,
+                                            lastVakt ? Number(lastVakt.end_timestamp) : selectedMonth!.setHours(12) / 1000,
+                                            0,
+                                            isMidlertidlig,
+                                            rolloverDay,
+                                            amountOfWeeks,
+                                            setResponseError,
+                                            rolloverTime
+                                        )
+                                    }}
+                                >
+                                    Generer vaktperioder (direkte)
+                                </Button>
+                            </div>
                         </>
                     )}
                 </div>
