@@ -33,7 +33,9 @@ jobs:
                 team: vaktor
                 project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
                 identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization variable
-                build_secrets: NODE_AUTH_TOKEN=${{ secrets.READER_TOKEN }}
+                build_secrets: |
+                  NODE_AUTH_TOKEN=${{ secrets.READER_TOKEN }}
+                  SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_TOKEN }}
 
     deploy-test:
         name: Deploy application to test env
