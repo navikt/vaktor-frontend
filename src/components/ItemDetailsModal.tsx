@@ -18,8 +18,6 @@ const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
     return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
 }
 
-
-
 const ItemDetailsModal = (props: {
     handleClose: Function
     groupName?: string
@@ -84,8 +82,7 @@ const ItemDetailsModal = (props: {
                         infoText={`${props.startTime} - ${props.endTime}`}
                         icon={<Calender style={iconStyle} />}
                     />
-                    {hasAnyRole(user, ["admin"]) ? <Button onClick={handleSplitSchedule}>Split vakt</Button> : <></>}
-
+                    {hasAnyRole(user, ['admin']) ? <Button onClick={handleSplitSchedule}>Split vakt</Button> : <></>}
                 </Modal.Body>
             </Modal>
         </>

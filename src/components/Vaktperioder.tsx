@@ -355,6 +355,7 @@ const Vaktperioder = () => {
     // IDs for DnD: use ressursnummer for uniqueness
     const activeIds = itemData
         .filter((user: User) => user.group_order_index !== 100)
+        .filter((user) => user.roles.some((role) => role.id !== '0d20adfe-2eae-446a-ae1c-3502d7ff33c4'))
         .sort((a, b) => a.group_order_index! - b.group_order_index!)
         .map((user) => user.ressursnummer)
 
@@ -705,7 +706,9 @@ const Vaktperioder = () => {
                                         <SortableContext items={activeIds}>
                                             {itemData
                                                 .filter((user: User) => user.group_order_index !== 100)
-                                                .filter((user: User) => !user.roles.some((role) => role.id === '0d20adfe-2eae-446a-ae1c-3502d7ff33c4')) //leveranseleder
+                                                .filter(
+                                                    (user: User) => !user.roles.some((role) => role.id === '0d20adfe-2eae-446a-ae1c-3502d7ff33c4')
+                                                )
                                                 .sort((a, b) => a.group_order_index! - b.group_order_index!)
                                                 .map((user, idx) => (
                                                     <PerioderOptions

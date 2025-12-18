@@ -94,7 +94,16 @@ const WeekBadge = styled.span`
     font-weight: 600;
 `
 
-const SchedulePreview = ({ groupId, userIds, startTimestamp, months, rolloverDay, rolloverTime, onConfirm, disabled = false }: SchedulePreviewProps) => {
+const SchedulePreview = ({
+    groupId,
+    userIds,
+    startTimestamp,
+    months,
+    rolloverDay,
+    rolloverTime,
+    onConfirm,
+    disabled = false,
+}: SchedulePreviewProps) => {
     const [open, setOpen] = useState(false)
     const [previewData, setPreviewData] = useState<PreviewData | null>(null)
     const [loading, setLoading] = useState(false)
@@ -191,10 +200,14 @@ const SchedulePreview = ({ groupId, userIds, startTimestamp, months, rolloverDay
                                 <StyledTable size="small" zebraStripes>
                                     <Table.Header>
                                         <Table.Row>
-                                            <Table.HeaderCell scope="col" style={{ width: '140px' }}>Bruker</Table.HeaderCell>
+                                            <Table.HeaderCell scope="col" style={{ width: '140px' }}>
+                                                Bruker
+                                            </Table.HeaderCell>
                                             <Table.HeaderCell scope="col">Fra</Table.HeaderCell>
                                             <Table.HeaderCell scope="col">Til</Table.HeaderCell>
-                                            <Table.HeaderCell scope="col" style={{ width: '120px' }}>Uker</Table.HeaderCell>
+                                            <Table.HeaderCell scope="col" style={{ width: '120px' }}>
+                                                Uker
+                                            </Table.HeaderCell>
                                         </Table.Row>
                                     </Table.Header>
                                     <Table.Body>
@@ -219,19 +232,13 @@ const SchedulePreview = ({ groupId, userIds, startTimestamp, months, rolloverDay
                             </TableContainer>
                             {previewData.periods.length > 100 && (
                                 <Box paddingBlock="2">
-                                    <Detail>
-                                        Viser 100 av {previewData.periods.length} perioder
-                                    </Detail>
+                                    <Detail>Viser 100 av {previewData.periods.length} perioder</Detail>
                                 </Box>
                             )}
                         </>
                     )}
 
-                    {error && (
-                        <Alert variant="error">
-                            {error}
-                        </Alert>
-                    )}
+                    {error && <Alert variant="error">{error}</Alert>}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setOpen(false)}>

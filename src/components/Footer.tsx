@@ -4,39 +4,35 @@ import { BodyShort, Label } from '@navikt/ds-react'
 import styled from 'styled-components'
 
 const ContactInformation = styled.div`
-    margin: 2rem 0;
     display: flex;
     flex-direction: row;
     justify-content: center;
-    text-align: center;
+    align-items: center;
     gap: 1rem;
+    flex-wrap: wrap;
+`
 
-    .externalTextLeft {
-        width: 20rem;
-        text-align: right;
-    }
-    .externalTextRight {
-        width: 20rem;
-        text-align: left;
-    }
-    .section {
-        display: flex;
-        flex-direction: row;
-        gap: 0.5rem;
-        .icon {
-            height: 1.4rem;
-            width: 1.4rem;
-            margin: 0.1rem 0;
-        }
+const Section = styled.div`
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+
+    .icon {
+        height: 1.4rem;
+        width: 1.4rem;
     }
 `
 const FooterContainer = styled.footer`
     width: 100%;
     margin-top: auto; /*Footer always at bottom (if min.height of container is 100vh)*/
-    padding: 0;
-    height: 5.5rem;
+    padding: 1rem 2rem;
+    min-height: 5.5rem;
     background-color: white;
     border-top: 1px solid #eaeaea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     img {
         width: 63px;
@@ -72,9 +68,7 @@ const FooterContainer = styled.footer`
     }
 
     @media (min-width: 600px) {
-        padding: 0 50px;
-
-        flex-direction: row;
+        padding: 1rem 3rem;
 
         ul {
             flex-direction: row;
@@ -91,29 +85,28 @@ const Footer = () => {
         <FooterContainer>
             {user ? (
                 <ContactInformation>
-                    {' '}
-                    <Label> NAV IT Operasjonssenteret </Label>
+                    <Label>NAV IT Operasjonssenteret</Label>
                     <Label>|</Label>
-                    <div className="section">
+                    <Section>
                         <EnvelopeClosedIcon className="icon" />
                         <BodyShort>
                             <a href="mailto:ops@nav.no">ops@nav.no</a>
                         </BodyShort>
-                    </div>
-                    <div className="section">
+                    </Section>
+                    <Section>
                         <PhoneIcon className="icon" />
-                        <BodyShort>{'908 64 954 (døgnbemannet)'}</BodyShort>
-                    </div>
+                        <BodyShort>908 64 954 (døgnbemannet)</BodyShort>
+                    </Section>
                 </ContactInformation>
             ) : (
                 <ContactInformation>
-                    <BodyShort className="externalTextLeft">
+                    <BodyShort>
                         <a href="https://www.nav.no/no/nav-og-samfunn/om-nav/personvern-i-arbeids-og-velferdsetaten">
                             Personvern og informasjonskapsler
                         </a>
                     </BodyShort>
                     <Label>|</Label>
-                    <BodyShort className="externalTextRight">
+                    <BodyShort>
                         <a href="https://www.nav.no/no/nav-og-samfunn/kontakt-nav/teknisk-brukerstotte/nyttig-a-vite/tilgjengelighet">
                             Tilgjengelighet
                         </a>

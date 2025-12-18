@@ -278,14 +278,17 @@ const AdminLeder = ({}) => {
 
     const mapVakter = (vaktliste: Schedules[]) => {
         // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByGroupName: Record<string, Schedules[]> = vaktliste.reduce((acc: Record<string, Schedules[]>, current) => {
-            const groupName = current.group.name || 'group name not set'
-            if (!acc[groupName]) {
-                acc[groupName] = []
-            }
-            acc[groupName].push(current)
-            return acc
-        }, {} as Record<string, Schedules[]>)
+        const groupedByGroupName: Record<string, Schedules[]> = vaktliste.reduce(
+            (acc: Record<string, Schedules[]>, current) => {
+                const groupName = current.group.name || 'group name not set'
+                if (!acc[groupName]) {
+                    acc[groupName] = []
+                }
+                acc[groupName].push(current)
+                return acc
+            },
+            {} as Record<string, Schedules[]>
+        )
 
         // Sort each group by start_timestamp
         Object.keys(groupedByGroupName).forEach((groupNameKey) => {
@@ -465,7 +468,7 @@ const AdminLeder = ({}) => {
         const isRoleMatching =
             searchFilterRole === ''
                 ? true
-                : value.user.roles?.some((role) => role.title.toLowerCase().includes(searchFilterRole.toLowerCase())) ?? false
+                : (value.user.roles?.some((role) => role.title.toLowerCase().includes(searchFilterRole.toLowerCase())) ?? false)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatching = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
 

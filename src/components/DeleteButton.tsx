@@ -45,7 +45,7 @@ const DeleteButton: Function = (props: { bakvakt: string; setResponse: Dispatch<
                         size="small"
                         variant="danger"
                         onClick={() => {
-                            delete_schedule(props.bakvakt, props.setResponse), setOpenState(false)
+                            ;(delete_schedule(props.bakvakt, props.setResponse), setOpenState(false))
                         }}
                     >
                         Slett!

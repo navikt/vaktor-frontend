@@ -12,7 +12,7 @@ const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
 const Header = () => {
     const { user } = useAuth()
     const today = new Date()
-    
+
     const LinkButton: React.FC<{ route: (typeof Routes)[keyof typeof Routes] }> = ({ route }) => (
         <Link href={route.PATH}>
             <Button variant="tertiary" style={{ marginLeft: '5px', marginRight: '5px', height: '35px' }}>

@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { Button, Alert } from '@navikt/ds-react'
+import { Button, Dropdown } from '@navikt/ds-react'
+import { MenuHamburgerIcon } from '@navikt/aksel-icons'
 
 import { useAuth } from '../context/AuthContext'
 import { User } from '../types/types'
@@ -9,6 +10,11 @@ import * as Routes from '../types/routes'
 // A function to check if the user has any of the specified roles
 const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
     return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
+}
+
+type NavRoute = {
+    route: (typeof Routes)[keyof typeof Routes]
+    roles: string[]
 }
 
 const Navbar: React.FC = () => {
@@ -23,10 +29,29 @@ const Navbar: React.FC = () => {
     const LinkButton: React.FC<{ route: (typeof Routes)[keyof typeof Routes] }> = ({ route }) => (
         <Link href={route.PATH}>
             <Button variant="tertiary" style={{ marginLeft: '5px', marginRight: '5px', height: '35px' }}>
-                <a className="link">{route.NAME}</a>
+                {route.NAME}
             </Button>
         </Link>
     )
+
+    // Define all possible navigation routes with their required roles
+    const allRoutes: NavRoute[] = [
+        { route: Routes.RouterVaktor, roles: ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'] },
+        { route: Routes.RouterAdminSchedule, roles: ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'admin'] },
+        { route: Routes.RouterVaktperioder, roles: ['vaktsjef', 'admin'] },
+        { route: Routes.RouterDineVakter, roles: ['vakthaver', 'vaktsjef', 'leveranseleder', 'admin'] },
+        { route: Routes.RouterLedergodkjenning, roles: ['vaktsjef', 'leveranseleder', 'personalleder', 'admin', 'bdm'] },
+        { route: Routes.RouterLeveranseleder, roles: ['leveranseleder', 'admin'] },
+        { route: Routes.RouterAvstemmingOkonomi, roles: ['okonomi', 'admin'] },
+        { route: Routes.RouterUnfinished, roles: ['admin'] },
+        { route: Routes.RouterVaktlagAdmin, roles: ['admin'] },
+        { route: Routes.RouterAdmin, roles: ['admin'] },
+    ]
+
+    // Filter routes based on user roles
+    const visibleRoutes = allRoutes.filter((navRoute) => hasAnyRole(user, navRoute.roles))
+
+    const MAX_VISIBLE_ITEMS = 5
 
     return (
         <>
@@ -39,23 +64,33 @@ const Navbar: React.FC = () => {
                     )}
                 </div>
 
-                {/* Buttons for various roles */}
-                {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
-                    <LinkButton route={Routes.RouterVaktor} />
+                {/* Show first items directly */}
+                {visibleRoutes.slice(0, MAX_VISIBLE_ITEMS).map((navRoute, index) => (
+                    <LinkButton key={index} route={navRoute.route} />
+                ))}
+
+                {/* Show remaining items in dropdown if more than MAX_VISIBLE_ITEMS */}
+                {visibleRoutes.length > MAX_VISIBLE_ITEMS && (
+                    <Dropdown>
+                        <Button
+                            as={Dropdown.Toggle}
+                            variant="tertiary"
+                            icon={<MenuHamburgerIcon title="Mer" />}
+                            style={{ marginLeft: '5px', marginRight: '5px', height: '35px' }}
+                        >
+                            Mer
+                        </Button>
+                        <Dropdown.Menu>
+                            <Dropdown.Menu.List>
+                                {visibleRoutes.slice(MAX_VISIBLE_ITEMS).map((navRoute, index) => (
+                                    <Dropdown.Menu.List.Item key={index} as={Link} href={navRoute.route.PATH}>
+                                        {navRoute.route.NAME}
+                                    </Dropdown.Menu.List.Item>
+                                ))}
+                            </Dropdown.Menu.List>
+                        </Dropdown.Menu>
+                    </Dropdown>
                 )}
-                {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'admin']) && (
-                    <LinkButton route={Routes.RouterAdminSchedule} />
-                )}
-                {hasAnyRole(user, ['vaktsjef', 'admin']) && <LinkButton route={Routes.RouterVaktperioder} />}
-                {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'admin']) && <LinkButton route={Routes.RouterDineVakter} />}
-                {hasAnyRole(user, ['vaktsjef', 'leveranseleder', 'personalleder', 'admin', 'bdm']) && (
-                    <LinkButton route={Routes.RouterLedergodkjenning} />
-                )}
-                {hasAnyRole(user, ['leveranseleder', 'admin']) && <LinkButton route={Routes.RouterLeveranseleder} />}
-                {hasAnyRole(user, ['okonomi', 'admin']) && <LinkButton route={Routes.RouterAvstemmingOkonomi} />}
-                {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterUnfinished} />}
-                {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterVaktlagAdmin} />}
-                {hasAnyRole(user, ['admin']) && <LinkButton route={Routes.RouterAdmin} />}
             </nav>
         </>
     )
