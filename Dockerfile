@@ -25,9 +25,9 @@ COPY sentry.edge.config.ts sentry.edge.config.ts
 #COPY .babelrc .babelrc
 #COPY babel.config.js babel.config.js
 
-# Build app with Sentry source map upload
+# Build app with Sentry source map upload (falls back gracefully if secret missing)
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
-    SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) npm run build
+    SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN 2>/dev/null || echo "") npm run build
 
 # Expose the listening port
 EXPOSE 3000

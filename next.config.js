@@ -21,6 +21,8 @@ module.exports = withSentryConfig(
         org: 'nav',
         project: 'vaktor',
         url: 'https://sentry.gc.nav.no/',
+        // Skip source map upload if no auth token (prevents build failure)
+        dryRun: !process.env.SENTRY_AUTH_TOKEN,
     },
     {
         // For all available options, see:
