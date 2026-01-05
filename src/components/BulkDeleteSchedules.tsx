@@ -1,4 +1,4 @@
-import { Modal, Button, Table, Alert, Heading, BodyShort, Box, Detail, TextField, Panel, VStack, HStack, Tooltip } from '@navikt/ds-react'
+import { Modal, Button, Table, Alert, Heading, BodyShort, Box, Detail, Panel, VStack, HStack, Tooltip } from '@navikt/ds-react'
 import { TrashIcon, CalendarIcon, InformationSquareIcon, InformationIcon } from '@navikt/aksel-icons'
 import { useState } from 'react'
 import styled from 'styled-components'
@@ -202,28 +202,38 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
 
                 <ModernCard>
                     <VStack gap="5">
-                        <TextField
-                            label="Fra dato"
-                            type="date"
-                            value={DateTime.fromSeconds(startTimestamp).toISODate() || ''}
-                            onChange={(e) => {
-                                const date = DateTime.fromISO(e.target.value)
-                                if (date.isValid) {
-                                    setStartTimestamp(Math.floor(date.toSeconds()))
-                                }
-                            }}
-                        />
-                        <TextField
-                            label="Til dato"
-                            type="date"
-                            value={DateTime.fromSeconds(endTimestamp).toISODate() || ''}
-                            onChange={(e) => {
-                                const date = DateTime.fromISO(e.target.value)
-                                if (date.isValid) {
-                                    setEndTimestamp(Math.floor(date.toSeconds()))
-                                }
-                            }}
-                        />
+                        <div>
+                            <label className="navds-label" htmlFor="fromDate">Fra dato</label>
+                            <input
+                                id="fromDate"
+                                className="navds-text-field__input"
+                                type="date"
+                                value={DateTime.fromSeconds(startTimestamp).toISODate() || ''}
+                                onChange={(e) => {
+                                    const date = DateTime.fromISO(e.target.value)
+                                    if (date.isValid) {
+                                        setStartTimestamp(Math.floor(date.toSeconds()))
+                                    }
+                                }}
+                                style={{ width: '100%', padding: '0.5rem' }}
+                            />
+                        </div>
+                        <div>
+                            <label className="navds-label" htmlFor="toDate">Til dato</label>
+                            <input
+                                id="toDate"
+                                className="navds-text-field__input"
+                                type="date"
+                                value={DateTime.fromSeconds(endTimestamp).toISODate() || ''}
+                                onChange={(e) => {
+                                    const date = DateTime.fromISO(e.target.value)
+                                    if (date.isValid) {
+                                        setEndTimestamp(Math.floor(date.toSeconds()))
+                                    }
+                                }}
+                                style={{ width: '100%', padding: '0.5rem' }}
+                            />
+                        </div>
 
                         <Button
                             variant="primary"
