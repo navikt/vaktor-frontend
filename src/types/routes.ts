@@ -50,6 +50,11 @@ export enum RouterAdmin {
     PATH = '/admin',
 }
 
+export enum RouterBrukerAdmin {
+    NAME = 'Bruker Admin',
+    PATH = '/bruker_admin',
+}
+
 // ---
 
 // Error
