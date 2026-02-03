@@ -5,7 +5,6 @@ import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
 import MapApproveStatus from './utils/MapApproveStatus'
-import NextDeadlineBox from './NextDeadline'
 
 let today = Date.now() / 1000
 
@@ -350,9 +349,6 @@ const DineVakter = () => {
                         >
                             <Checkbox value="true">Vis alle vakter for {selectedMonth.getFullYear()} </Checkbox>
                         </CheckboxGroup>
-                    </div>
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <NextDeadlineBox />
                     </div>
                 </div>
                 <Table>

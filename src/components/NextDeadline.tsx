@@ -18,12 +18,12 @@ const NextDeadlineBox = () => {
                 border: '1px solid #f96c6c',
                 borderRadius: '4px',
                 padding: '8px',
-                minWidth: '260px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
+                width: '100%',
             }}
         >
             Neste frist for godkjenning:{' '}

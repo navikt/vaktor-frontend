@@ -10,7 +10,6 @@ import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
 import { Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
-import NextDeadlineBox from './NextDeadline'
 
 const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
     return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
@@ -590,7 +589,7 @@ const AdminLeder = ({}) => {
                         <MonthPicker.Input {...inputProps} label="Velg måned" />
                     </div>
                 </MonthPicker>
-                <form style={{ width: '300px', minWidth: '250px', flex: '1 1 auto' }}>
+                <form style={{ width: '200px', minWidth: '200px', flex: '1 1 auto' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
                 <div style={{ width: '200px', minWidth: '180px', flex: '0 1 auto' }}>
@@ -667,10 +666,6 @@ const AdminLeder = ({}) => {
                     >
                         Approve All
                     </Button>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 1 auto' }}>
-                    <NextDeadlineBox />
                 </div>
             </div>
 
