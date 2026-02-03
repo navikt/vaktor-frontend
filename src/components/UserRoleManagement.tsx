@@ -18,13 +18,7 @@ import {
     Popover,
 } from '@navikt/ds-react'
 import { PlusIcon, TrashIcon, PersonIcon, PersonGroupIcon } from '@navikt/aksel-icons'
-import { User, Vaktlag, Roles } from '../types/types'
-
-interface GroupRole {
-    group_id: string
-    group_name: string
-    role: Roles
-}
+import { User, Vaktlag, Roles, GroupRole } from '../types/types'
 
 interface UserWithGroupRoles extends User {
     group_roles: GroupRole[]
@@ -73,11 +67,7 @@ const UserRoleManagement: React.FC = () => {
         setLoading(true)
         setError(null)
         try {
-            const [usersRes, groupsRes, rolesRes] = await Promise.all([
-                fetch('/api/users'),
-                fetch('/api/groups'),
-                fetch('/api/roles'),
-            ])
+            const [usersRes, groupsRes, rolesRes] = await Promise.all([fetch('/api/users'), fetch('/api/groups'), fetch('/api/roles')])
 
             if (!usersRes.ok) throw new Error('Kunne ikke hente brukere')
             if (!groupsRes.ok) throw new Error('Kunne ikke hente grupper')
@@ -102,10 +92,9 @@ const UserRoleManagement: React.FC = () => {
         setIsSubmitting(true)
         setError(null)
         try {
-            const res = await fetch(
-                `/api/groups/${selectedGroupForRole}/roles?user_id=${selectedUser.id}&role_title=${selectedRoleTitle}`,
-                { method: 'POST' }
-            )
+            const res = await fetch(`/api/groups/${selectedGroupForRole}/roles?user_id=${selectedUser.id}&role_title=${selectedRoleTitle}`, {
+                method: 'POST',
+            })
 
             if (!res.ok) {
                 const errorData = await res.json()
@@ -233,17 +222,13 @@ const UserRoleManagement: React.FC = () => {
                                             {user.roles
                                                 ?.filter((role) => globalRoles.includes(role.title))
                                                 .map((role) => (
-                                                    <Tag
-                                                        key={role.id}
-                                                        variant={getRoleTagVariant(role.title)}
-                                                        size="small"
-                                                    >
+                                                    <Tag key={role.id} variant={getRoleTagVariant(role.title)} size="small">
                                                         {role.title}
                                                     </Tag>
                                                 ))}
-                                            {(!user.roles ||
-                                                user.roles.filter((r) => globalRoles.includes(r.title)).length ===
-                                                    0) && <BodyShort size="small">Ingen</BodyShort>}
+                                            {(!user.roles || user.roles.filter((r) => globalRoles.includes(r.title)).length === 0) && (
+                                                <BodyShort size="small">Ingen</BodyShort>
+                                            )}
                                         </HStack>
                                     </Table.DataCell>
                                     <Table.DataCell>
@@ -259,9 +244,7 @@ const UserRoleManagement: React.FC = () => {
                                                         size="xsmall"
                                                         icon={<TrashIcon />}
                                                         ref={(el) => {
-                                                            deleteButtonRefs.current[
-                                                                `${user.id}-${gr.group_id}-${gr.role.title}`
-                                                            ] = el
+                                                            deleteButtonRefs.current[`${user.id}-${gr.group_id}-${gr.role.title}`] = el
                                                         }}
                                                         onClick={() =>
                                                             setDeletePopover({
@@ -278,11 +261,7 @@ const UserRoleManagement: React.FC = () => {
                                                             deletePopover?.roleTitle === gr.role.title
                                                         }
                                                         onClose={() => setDeletePopover(null)}
-                                                        anchorEl={
-                                                            deleteButtonRefs.current[
-                                                                `${user.id}-${gr.group_id}-${gr.role.title}`
-                                                            ]
-                                                        }
+                                                        anchorEl={deleteButtonRefs.current[`${user.id}-${gr.group_id}-${gr.role.title}`]}
                                                     >
                                                         <Popover.Content>
                                                             <VStack gap="2">
@@ -294,21 +273,11 @@ const UserRoleManagement: React.FC = () => {
                                                                         variant="danger"
                                                                         size="small"
                                                                         loading={isSubmitting}
-                                                                        onClick={() =>
-                                                                            handleRemoveRole(
-                                                                                user.id,
-                                                                                gr.group_id,
-                                                                                gr.role.title
-                                                                            )
-                                                                        }
+                                                                        onClick={() => handleRemoveRole(user.id, gr.group_id, gr.role.title)}
                                                                     >
                                                                         Fjern
                                                                     </Button>
-                                                                    <Button
-                                                                        variant="tertiary"
-                                                                        size="small"
-                                                                        onClick={() => setDeletePopover(null)}
-                                                                    >
+                                                                    <Button variant="tertiary" size="small" onClick={() => setDeletePopover(null)}>
                                                                         Avbryt
                                                                     </Button>
                                                                 </HStack>
@@ -392,11 +361,7 @@ const UserRoleManagement: React.FC = () => {
                                     {selectedUser.name} ({selectedUser.id})
                                 </BodyShort>
                             </Box>
-                            <Select
-                                label="Velg vaktlag"
-                                value={selectedGroupForRole}
-                                onChange={(e) => setSelectedGroupForRole(e.target.value)}
-                            >
+                            <Select label="Velg vaktlag" value={selectedGroupForRole} onChange={(e) => setSelectedGroupForRole(e.target.value)}>
                                 <option value="">Velg vaktlag...</option>
                                 {groups.map((group) => (
                                     <option key={group.id} value={group.id}>
@@ -404,11 +369,7 @@ const UserRoleManagement: React.FC = () => {
                                     </option>
                                 ))}
                             </Select>
-                            <Select
-                                label="Velg rolle"
-                                value={selectedRoleTitle}
-                                onChange={(e) => setSelectedRoleTitle(e.target.value)}
-                            >
+                            <Select label="Velg rolle" value={selectedRoleTitle} onChange={(e) => setSelectedRoleTitle(e.target.value)}>
                                 <option value="">Velg rolle...</option>
                                 {groupScopedRoles.map((role) => (
                                     <option key={role} value={role}>
@@ -420,11 +381,7 @@ const UserRoleManagement: React.FC = () => {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button
-                        onClick={handleAssignRole}
-                        loading={isSubmitting}
-                        disabled={!selectedGroupForRole || !selectedRoleTitle}
-                    >
+                    <Button onClick={handleAssignRole} loading={isSubmitting} disabled={!selectedGroupForRole || !selectedRoleTitle}>
                         Tildel rolle
                     </Button>
                     <Button
@@ -487,17 +444,7 @@ const GroupRolesView: React.FC<{
             {Object.entries(roleGroups).map(([roleTitle, members]) => (
                 <Box key={roleTitle} padding="4" background="surface-subtle" borderRadius="medium">
                     <HStack gap="2" align="center" style={{ marginBottom: '0.5rem' }}>
-                        <Tag
-                            variant={
-                                roleTitle === 'leveranseleder'
-                                    ? 'warning'
-                                    : roleTitle === 'vaktsjef'
-                                      ? 'success'
-                                      : 'info'
-                            }
-                        >
-                            {roleTitle}
-                        </Tag>
+                        <Tag variant={roleTitle === 'leveranseleder' ? 'warning' : roleTitle === 'vaktsjef' ? 'success' : 'info'}>{roleTitle}</Tag>
                         <BodyShort size="small">({members.length} medlemmer)</BodyShort>
                     </HStack>
                     {members.length > 0 ? (

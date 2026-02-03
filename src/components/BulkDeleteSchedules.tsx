@@ -77,10 +77,10 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
         setError('')
 
         try {
-            const response = await fetch(
-                `/api/bulk_delete?group_id=${groupId}&start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`,
-                { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
-            )
+            const response = await fetch(`/api/bulk_delete?group_id=${groupId}&start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+            })
 
             if (!response.ok) {
                 const errorData = await response.json()
@@ -109,14 +109,14 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
                 <Heading size="small" spacing>
                     Slett vakter i periode
                 </Heading>
-                <Detail spacing>
-                    Sletter ikke-godkjente vakter som starter mer enn 4 uker frem.
-                </Detail>
+                <Detail spacing>Sletter ikke-godkjente vakter som starter mer enn 4 uker frem.</Detail>
 
                 <VStack gap="4">
                     <HStack gap="4">
                         <div style={{ flex: 1 }}>
-                            <label className="navds-form-field__label navds-label" htmlFor="fromDate">Fra</label>
+                            <label className="navds-form-field__label navds-label" htmlFor="fromDate">
+                                Fra
+                            </label>
                             <input
                                 id="fromDate"
                                 type="date"
@@ -129,7 +129,9 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
                             />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label className="navds-form-field__label navds-label" htmlFor="toDate">Til</label>
+                            <label className="navds-form-field__label navds-label" htmlFor="toDate">
+                                Til
+                            </label>
                             <input
                                 id="toDate"
                                 type="date"
@@ -143,18 +145,20 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
                         </div>
                     </HStack>
 
-                    <Button
-                        variant="secondary"
-                        onClick={fetchPreview}
-                        loading={loading}
-                        disabled={disabled}
-                        icon={<TrashIcon />}
-                    >
+                    <Button variant="secondary" onClick={fetchPreview} loading={loading} disabled={disabled} icon={<TrashIcon />}>
                         Forhåndsvis sletting
                     </Button>
 
-                    {success && <Alert variant="success" size="small">{success}</Alert>}
-                    {error && !open && <Alert variant="error" size="small">{error}</Alert>}
+                    {success && (
+                        <Alert variant="success" size="small">
+                            {success}
+                        </Alert>
+                    )}
+                    {error && !open && (
+                        <Alert variant="error" size="small">
+                            {error}
+                        </Alert>
+                    )}
                 </VStack>
             </Box>
 
@@ -165,7 +169,9 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
                             <Alert variant={previewData.can_delete_count > 0 ? 'info' : 'warning'} size="small">
                                 <strong>{previewData.can_delete_count}</strong> vakter kan slettes
                                 {cannotDeleteTotal > 0 && (
-                                    <>, <strong>{cannotDeleteTotal}</strong> kan ikke slettes</>
+                                    <>
+                                        , <strong>{cannotDeleteTotal}</strong> kan ikke slettes
+                                    </>
                                 )}
                             </Alert>
 
@@ -182,23 +188,29 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
                                             {previewData.can_delete.slice(0, 20).map((p, i) => (
                                                 <Table.Row key={i}>
                                                     <Table.DataCell>{p.user_id}</Table.DataCell>
-                                                    <Table.DataCell>{p.start_date} – {p.end_date}</Table.DataCell>
+                                                    <Table.DataCell>
+                                                        {p.start_date} – {p.end_date}
+                                                    </Table.DataCell>
                                                 </Table.Row>
                                             ))}
                                         </Table.Body>
                                     </Table>
-                                    {previewData.can_delete.length > 20 && (
-                                        <Detail>+ {previewData.can_delete.length - 20} flere</Detail>
-                                    )}
+                                    {previewData.can_delete.length > 20 && <Detail>+ {previewData.can_delete.length - 20} flere</Detail>}
                                 </div>
                             )}
 
-                            {error && <Alert variant="error" size="small">{error}</Alert>}
+                            {error && (
+                                <Alert variant="error" size="small">
+                                    {error}
+                                </Alert>
+                            )}
                         </VStack>
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setOpen(false)}>Avbryt</Button>
+                    <Button variant="secondary" onClick={() => setOpen(false)}>
+                        Avbryt
+                    </Button>
                     {previewData && previewData.can_delete_count > 0 && (
                         <Button variant="danger" onClick={handleDelete} loading={deleting}>
                             Slett {previewData.can_delete_count} vakter
