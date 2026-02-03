@@ -11,9 +11,9 @@ const Home: NextPage = () => {
     const { user } = useAuth()
     moment.locale('nb')
 
-    const hasAccess = user?.roles?.some((role) =>
-        ['vakthaver', 'vaktsjef', 'personalleder', 'leveranseleder', 'admin'].includes(role.title.toLowerCase())
-    )
+    const hasAccess =
+        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title.toLowerCase())) ||
+        user?.group_roles?.some((role) => ['vakthaver', 'vaktsjef', 'personalleder', 'leveranseleder'].includes(role.title.toLowerCase()))
 
     if (hasAccess) {
         return (

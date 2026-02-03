@@ -10,7 +10,9 @@ const Home: NextPage = () => {
     moment.locale('nb')
 
     // Check if the roles array exists and includes any of the specified roles
-    const hasAccess = user?.roles?.some((role) => ['vakthaver', 'vaktsjef', 'admin'].includes(role.title.toLowerCase()))
+    const hasAccess =
+        user?.roles?.some((role) => ['admin'].includes(role.title.toLowerCase())) ||
+        user?.group_roles?.some((role) => ['vakthaver', 'vaktsjef', 'admin'].includes(role.title.toLowerCase()))
 
     if (hasAccess) {
         return (
