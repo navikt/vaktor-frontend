@@ -23,7 +23,7 @@ const Navbar: React.FC = () => {
     const greetings = ['Hei, ', today.getMonth() === 11 ? 'God jul, ' : ''].filter(Boolean)
 
     // Function to get a random greeting
-    const getGreeting = () => greetings[Math.floor(Math.random() * greetings.length)]
+    const [getGreeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)])
 
     // Function to generate a link button
     const LinkButton: React.FC<{ route: (typeof Routes)[keyof typeof Routes] }> = ({ route }) => (
@@ -60,7 +60,7 @@ const Navbar: React.FC = () => {
                 <div className="logo">
                     {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
                         <h3>
-                            {getGreeting()} {user.name}
+                            {getGreeting} {user.name}
                         </h3>
                     )}
                 </div>

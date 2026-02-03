@@ -57,8 +57,13 @@ const UserInfoDetails = (props: props) => {
                     <SuccessStroke
                         style={{ marginLeft: '20px' }}
                         onClick={() => {
-                            infoName == 'Kontaktinfo: ' ? (user.contact_info = userInfo) : (user.description = userInfo)
-                            UpdateUserInfo(user)
+                            const updatedUser = { ...user }
+                            if (infoName == 'Kontaktinfo: ') {
+                                updatedUser.contact_info = userInfo
+                            } else {
+                                updatedUser.description = userInfo
+                            }
+                            UpdateUserInfo(updatedUser)
                             setEdit(false)
                         }}
                     />

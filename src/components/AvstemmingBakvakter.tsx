@@ -98,7 +98,7 @@ const AvstemmingBakvakter = () => {
                     <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
                     {['personalleder', 'leveranseleder', 'okonomi'].includes(user.role) && (
                         <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
-                            {vakter.cost ? <MapCost cost={vakter.cost} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
+                            {vakter.cost ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
                         </Table.DataCell>
                     )}
                     <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
@@ -108,15 +108,18 @@ const AvstemmingBakvakter = () => {
             ))
 
     useEffect(() => {
-        setLoading(true)
-        fetch(`/api/get_all_bakvakter?type=${searchFilterType}`)
-            .then(async (scheduleRes) => scheduleRes.json())
-            .then((itemData) => {
+        const fetchData = async () => {
+            setLoading(true)
+            try {
+                const scheduleRes = await fetch(`/api/get_all_bakvakter?type=${searchFilterType}`)
+                const itemData = await scheduleRes.json()
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
-
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
+            } finally {
                 setLoading(false)
-            })
+            }
+        }
+        fetchData()
     }, [response, searchFilterType])
 
     if (loading === true) return <Loader></Loader>

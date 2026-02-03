@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Cost, Artskoder, Schedules } from '../../types/types'
+import { ReadMore } from '@navikt/ds-react'
 
 const mapCostStatus = (status: number) => {
     let statusText = ''
@@ -34,7 +35,7 @@ const mapCostStatus = (status: number) => {
     )
 }
 
-const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => {
+const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
     const [prevTotalCost, setPrevTotalCost] = useState<number | undefined>()
 
     const elements = useMemo(
@@ -113,13 +114,37 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
     )
 
     useEffect(() => {
-        if (props.vakt.cost.length > 0) {
-            const currentTotalCost = props.vakt.cost[0].total_cost // Use the total_cost from the first element
-            setPrevTotalCost(currentTotalCost)
+        const updatePrevCost = () => {
+            if (props.vakt.cost.length > 0) {
+                const currentTotalCost = props.vakt.cost[0].total_cost
+                setPrevTotalCost(currentTotalCost)
+            }
         }
+        updatePrevCost()
     }, [props.vakt.cost])
 
-    return <div>{props.vakt.cost.length !== 0 ? elements : 'ingen beregning foreligger'}</div>
+    const hasMultipleCosts = props.vakt.cost.length > 1
+
+    return (
+        <div>
+            {props.vakt.cost.length !== 0 ? (
+                <>
+                    {hasMultipleCosts && (
+                        <ReadMore
+                            header={`Vis ${props.vakt.cost.length - 1} tidligere beregning${props.vakt.cost.length - 1 > 1 ? 'er' : ''}`}
+                            size="small"
+                            style={{ marginBottom: '8px', fontSize: '0.85em' }}
+                        >
+                            {elements.slice(0, -1)}
+                        </ReadMore>
+                    )}
+                    {elements.slice(-1)}
+                </>
+            ) : (
+                'ingen beregning foreligger'
+            )}
+        </div>
+    )
 }
 
 export default MapCost

@@ -62,16 +62,17 @@ const Leveranseleder = () => {
     const [vaktsjef, setVaktsjef] = useState()
 
     useEffect(() => {
-        setLoading(true)
-        Promise.all([fetch('/api/groups')])
-            .then(async ([groupsRes]) => {
+        const fetchData = async () => {
+            setLoading(true)
+            try {
+                const [groupsRes] = await Promise.all([fetch('/api/groups')])
                 const groupsjson = await groupsRes.json()
-                return [groupsjson]
-            })
-            .then(([groupData]) => {
-                setgroupData(groupData)
+                setgroupData(groupsjson)
+            } finally {
                 setLoading(false)
-            })
+            }
+        }
+        fetchData()
     }, [response, vaktsjef])
 
     if (loading === true) return <Loader></Loader>

@@ -82,8 +82,13 @@ const ScheduleModal = (props: {
             setgroupData(groupData)
         }
         fetchGroupMembers()
-        setStartTimestamp(props.schedule.start_timestamp)
-        setEndTimestamp(props.schedule.end_timestamp)
+
+        // Sync timestamps from props
+        const syncTimestamps = () => {
+            setStartTimestamp(props.schedule.start_timestamp)
+            setEndTimestamp(props.schedule.end_timestamp)
+        }
+        syncTimestamps()
     }, [props.schedule])
 
     return (

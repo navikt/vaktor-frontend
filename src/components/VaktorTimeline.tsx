@@ -1,5 +1,5 @@
 import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, CustomMarker, CursorMarker } from 'react-calendar-timeline'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, JSX } from 'react'
 import { Moment } from 'moment'
 import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './SetColors'
 import { Information } from '@navikt/ds-icons'
@@ -8,9 +8,7 @@ import ItemDetailsModal from './ItemDetailsModal'
 import { BodyShort, Label, Loader, Search } from '@navikt/ds-react'
 import styled from 'styled-components'
 import moment from 'moment'
-import { Spring, animated, AnimatedProps } from 'react-spring'
 import { NavigationButtons } from './NavigationButtons'
-import { FluidValue } from '@react-spring/shared'
 import { Schedules, User, Vaktlag } from '../types/types'
 import Overview from './OverviewNoTimeline'
 import { useAuth } from '../context/AuthContext'
@@ -87,26 +85,28 @@ function VaktorTimeline() {
     }
 
     useEffect(() => {
-        setLoading(true)
-        let start = Math.floor(visibleTimeStart / 1000) - 7 * 24 * 60 * 60
-        let end = Math.floor(visibleTimeEnd / 1000)
+        const fetchData = async () => {
+            setLoading(true)
+            try {
+                let start = Math.floor(visibleTimeStart / 1000) - 7 * 24 * 60 * 60
+                let end = Math.floor(visibleTimeEnd / 1000)
 
-        Promise.all([
-            fetch('/api/groups'),
-            fetch(`/api/schedules_with_limit?start_timestamp=${start}&end_timestamp=${end}`),
-            //fetch(`/api/schedules`),
-        ])
+                const [groupRes, scheduleRes] = await Promise.all([
+                    fetch('/api/groups'),
+                    fetch(`/api/schedules_with_limit?start_timestamp=${start}&end_timestamp=${end}`),
+                    //fetch(`/api/schedules`),
+                ])
 
-            .then(async ([groupRes, scheduleRes]) => {
                 const groupjson = await groupRes.json()
                 const schedulejson = await scheduleRes.json()
-                return [groupjson, schedulejson]
-            })
-            .then(([groupData, itemData]) => {
-                setGroupData(groupData)
-                setItemData(itemData)
+
+                setGroupData(groupjson)
+                setItemData(schedulejson)
+            } finally {
                 setLoading(false)
-            })
+            }
+        }
+        fetchData()
     }, [visibleTimeStart])
 
     if (!groupData) return <p>No profile data</p>
@@ -292,11 +292,11 @@ function VaktorTimeline() {
   --  Returning timeline component -- 
   */
 
-    const verticalLineClassNamesForTime = (timeStart: Date, timeEnd: Date) => {
+    const verticalLineClassNamesForTime = (timeStart: number, timeEnd: number) => {
         const currentTimeStart = moment(timeStart)
         const currentTimeEnd = moment(timeEnd)
 
-        let classes = []
+        let classes: string[] = []
 
         // check for public holidays
         for (let holiday of holidays) {
@@ -381,15 +381,6 @@ function VaktorTimeline() {
         moment('26.12.2026', format), // Lørdag 26. desember: 2. juledag
     ]
 
-    const AnimatedTimeline = animated(({ animatedVisibleTimeStart, animatedVisibleTimeEnd, visibleTimeStart, visibleTimeEnd, ...props }) => (
-        <Timeline
-            visibleTimeStart={animatedVisibleTimeStart}
-            visibleTimeEnd={animatedVisibleTimeEnd}
-            verticalLineClassNamesForTime={verticalLineClassNamesForTime}
-            {...props}
-        />
-    ))
-
     return (
         <div>
             {itemData && itemData[0] && itemData[0].user_id === 'A123456' ? (
@@ -403,70 +394,55 @@ function VaktorTimeline() {
                         </div>
                     </form>
 
-                    <Spring
-                        to={{
-                            animatedVisibleTimeStart: visibleTimeStart,
-                            animatedVisibleTimeEnd: visibleTimeEnd,
-                        }}
+                    <Timeline
+                        groups={groups}
+                        items={items}
+                        traditionalZoom={true}
+                        sidebarContent="Vaktlag"
+                        itemHeightRatio={0.8}
+                        sidebarWidth={240}
+                        lineHeight={45}
+                        canMove={false}
+                        buffer={1}
+                        visibleTimeStart={visibleTimeStart}
+                        visibleTimeEnd={visibleTimeEnd}
+                        onTimeChange={handleTimeChange}
+                        verticalLineClassNamesForTime={verticalLineClassNamesForTime}
                     >
-                        {(
-                            value: JSX.IntrinsicAttributes &
-                                AnimatedProps<{ [x: string]: any }> & {
-                                    scrollTop?: number | FluidValue<number, any> | undefined
-                                    scrollLeft?: number | FluidValue<number, any> | undefined
-                                }
-                        ) => (
-                            <AnimatedTimeline
-                                groups={groups}
-                                items={items}
-                                traditionalZoom={true}
-                                sidebarContent="Vaktlag"
-                                itemHeightRatio={0.8}
-                                sidebarWidth={240}
-                                lineHeight={45}
-                                canMove={false}
-                                buffer={1}
-                                visibleTimeStart={visibleTimeStart}
-                                visibleTimeEnd={visibleTimeEnd}
-                                onTimeChange={() => handleTimeChange(visibleTimeStart, visibleTimeEnd)}
-                                {...value}
-                            >
-                                <TimelineHeaders className="sticky">
-                                    <NavigationButtons
-                                        timeStart={visibleTimeStart}
-                                        timeUnit={timeUnit}
-                                        setVisibleTimeStart={setVisibleTimeStart}
-                                        setVisibleTimeEnd={setVisibleTimeEnd}
-                                        setTimeUnit={setTimeUnit}
-                                    />
-                                    <SidebarHeader>
-                                        {({ getRootProps }) => {
-                                            return (
-                                                <div {...getRootProps()}>
-                                                    <SidebarHeaderText>Vaktlag:</SidebarHeaderText>
-                                                </div>
-                                            )
-                                        }}
-                                    </SidebarHeader>
-                                    <DateHeader unit="primaryHeader" />
-                                    <CustomMarker date={today}>
-                                        {/* custom renderer for this marker */}
-                                        {({ styles, date }) => {
-                                            const customStyles = {
-                                                ...styles,
-                                                backgroundColor: 'red',
-                                                width: '10px',
-                                                zindex: '100',
-                                            }
-                                            return <div style={customStyles} />
-                                        }}
-                                    </CustomMarker>
-                                    <CursorMarker />
-                                    <DateHeader />
-                                </TimelineHeaders>
-                            </AnimatedTimeline>
-                        )}
-                    </Spring>
+                        <TimelineHeaders className="sticky">
+                            <NavigationButtons
+                                timeStart={visibleTimeStart}
+                                timeUnit={timeUnit}
+                                setVisibleTimeStart={setVisibleTimeStart}
+                                setVisibleTimeEnd={setVisibleTimeEnd}
+                                setTimeUnit={setTimeUnit}
+                            />
+                            <SidebarHeader>
+                                {({ getRootProps }) => {
+                                    return (
+                                        <div {...getRootProps()}>
+                                            <SidebarHeaderText>Vaktlag:</SidebarHeaderText>
+                                        </div>
+                                    )
+                                }}
+                            </SidebarHeader>
+                            <DateHeader unit="primaryHeader" labelFormat="MMMM YYYY" />
+                            <CustomMarker date={today}>
+                                {/* custom renderer for this marker */}
+                                {({ styles, date }) => {
+                                    const customStyles = {
+                                        ...styles,
+                                        backgroundColor: 'red',
+                                        width: '10px',
+                                        zindex: '100',
+                                    }
+                                    return <div style={customStyles} />
+                                }}
+                            </CustomMarker>
+                            <CursorMarker />
+                            <DateHeader labelFormat="DD ddd" />
+                        </TimelineHeaders>
+                    </Timeline>
                     {grpModalOpen && (
                         <GroupDetailsModal
                             handleClose={() => setGrpModalOpen(false)}

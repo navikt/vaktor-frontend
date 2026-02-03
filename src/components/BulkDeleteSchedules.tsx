@@ -1,4 +1,4 @@
-import { Modal, Button, Table, Alert, Heading, BodyShort, Box, Detail, VStack, HStack } from '@navikt/ds-react'
+import { Modal, Button, Table, Alert, Heading, Box, Detail, VStack, HStack } from '@navikt/ds-react'
 import { TrashIcon } from '@navikt/aksel-icons'
 import { useState } from 'react'
 import { DateTime } from 'luxon'
@@ -105,14 +105,14 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
 
     return (
         <>
-            <Box padding="4" background="surface-subtle" borderRadius="medium" style={{ maxWidth: '400px' }}>
+            <Box style={{ maxWidth: '400px', padding: '1rem', background: '#f3f4f6', borderRadius: '8px' }}>
                 <Heading size="small" spacing>
                     Slett vakter i periode
                 </Heading>
                 <Detail spacing>Sletter ikke-godkjente vakter som starter mer enn 4 uker frem.</Detail>
 
-                <VStack gap="4">
-                    <HStack gap="4">
+                <VStack gap="space-4">
+                    <HStack gap="space-4">
                         <div style={{ flex: 1 }}>
                             <label className="navds-form-field__label navds-label" htmlFor="fromDate">
                                 Fra
@@ -165,7 +165,7 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
             <Modal open={open} onClose={() => setOpen(false)} header={{ heading: 'Bekreft sletting' }}>
                 <Modal.Body>
                     {previewData && (
-                        <VStack gap="4">
+                        <VStack gap="space-4">
                             <Alert variant={previewData.can_delete_count > 0 ? 'info' : 'warning'} size="small">
                                 <strong>{previewData.can_delete_count}</strong> vakter kan slettes
                                 {cannotDeleteTotal > 0 && (

@@ -231,7 +231,7 @@ const SchedulePreview = ({
                                 </StyledTable>
                             </TableContainer>
                             {previewData.periods.length > 100 && (
-                                <Box paddingBlock="2">
+                                <Box paddingBlock="space-2">
                                     <Detail>Viser 100 av {previewData.periods.length} perioder</Detail>
                                 </Box>
                             )}

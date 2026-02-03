@@ -32,7 +32,7 @@ const Layout = ({ children }: any) => {
             )}
             <Page style={{ flex: 1 }}>
                 <Header />
-                <Page.Block as="main" width="xl" gutters>
+                <Page.Block as="main" width="2xl" gutters>
                     {/* <Header imageURL="/assets/navblack.png" userID={user.id} userName={user.name} /> */}
                     <div className="content">
                         <div className="topHeader"></div>

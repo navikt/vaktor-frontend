@@ -190,7 +190,7 @@ const UserRoleManagement: React.FC = () => {
                 </Tabs.List>
 
                 <Tabs.Panel value="users" style={{ paddingTop: '1rem' }}>
-                    <HStack gap="4" style={{ marginBottom: '1rem' }}>
+                    <HStack gap="space-4" style={{ marginBottom: '1rem' }}>
                         <Search
                             label="Sok etter bruker"
                             hideLabel
@@ -218,7 +218,7 @@ const UserRoleManagement: React.FC = () => {
                                     <Table.DataCell>{user.id}</Table.DataCell>
                                     <Table.DataCell>{user.name}</Table.DataCell>
                                     <Table.DataCell>
-                                        <HStack gap="1" wrap>
+                                        <HStack gap="space-1" wrap>
                                             {user.roles
                                                 ?.filter((role) => globalRoles.includes(role.title))
                                                 .map((role) => (
@@ -232,9 +232,9 @@ const UserRoleManagement: React.FC = () => {
                                         </HStack>
                                     </Table.DataCell>
                                     <Table.DataCell>
-                                        <VStack gap="1">
+                                        <VStack gap="space-1">
                                             {user.group_roles?.map((gr, idx) => (
-                                                <HStack key={idx} gap="1" align="center">
+                                                <HStack key={idx} gap="space-1" align="center">
                                                     <Tag variant={getRoleTagVariant(gr.role.title)} size="small">
                                                         {gr.role.title}
                                                     </Tag>
@@ -264,11 +264,11 @@ const UserRoleManagement: React.FC = () => {
                                                         anchorEl={deleteButtonRefs.current[`${user.id}-${gr.group_id}-${gr.role.title}`]}
                                                     >
                                                         <Popover.Content>
-                                                            <VStack gap="2">
+                                                            <VStack gap="space-2">
                                                                 <BodyShort>
                                                                     Fjern {gr.role.title} fra {user.name}?
                                                                 </BodyShort>
-                                                                <HStack gap="2">
+                                                                <HStack gap="space-2">
                                                                     <Button
                                                                         variant="danger"
                                                                         size="small"
@@ -311,7 +311,7 @@ const UserRoleManagement: React.FC = () => {
                 </Tabs.Panel>
 
                 <Tabs.Panel value="groups" style={{ paddingTop: '1rem' }}>
-                    <HStack gap="4" style={{ marginBottom: '1rem' }}>
+                    <HStack gap="space-4" style={{ marginBottom: '1rem' }}>
                         <Select
                             label="Velg vaktlag"
                             hideLabel
@@ -331,7 +331,7 @@ const UserRoleManagement: React.FC = () => {
                     {selectedGroup && <GroupRolesView groupId={selectedGroup} groups={groups} onRefresh={fetchData} />}
 
                     {!selectedGroup && (
-                        <Box padding="6" background="surface-subtle" borderRadius="medium">
+                        <Box style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px' }}>
                             <BodyShort>Velg et vaktlag for å se roller</BodyShort>
                         </Box>
                     )}
@@ -354,7 +354,7 @@ const UserRoleManagement: React.FC = () => {
                 </Modal.Header>
                 <Modal.Body>
                     {selectedUser && (
-                        <VStack gap="4">
+                        <VStack gap="space-4">
                             <Box>
                                 <Label>Bruker</Label>
                                 <BodyShort>
@@ -438,17 +438,17 @@ const GroupRolesView: React.FC<{
     }
 
     return (
-        <VStack gap="4">
+        <VStack gap="space-4">
             <Heading size="small">{group?.name}</Heading>
 
             {Object.entries(roleGroups).map(([roleTitle, members]) => (
-                <Box key={roleTitle} padding="4" background="surface-subtle" borderRadius="medium">
-                    <HStack gap="2" align="center" style={{ marginBottom: '0.5rem' }}>
+                <Box key={roleTitle} style={{ background: '#f3f4f6', borderRadius: '8px', padding: '1rem' }}>
+                    <HStack gap="space-2" align="center" style={{ marginBottom: '0.5rem' }}>
                         <Tag variant={roleTitle === 'leveranseleder' ? 'warning' : roleTitle === 'vaktsjef' ? 'success' : 'info'}>{roleTitle}</Tag>
                         <BodyShort size="small">({members.length} medlemmer)</BodyShort>
                     </HStack>
                     {members.length > 0 ? (
-                        <VStack gap="1">
+                        <VStack gap="space-1">
                             {members.map((m) => (
                                 <BodyShort key={m.user_id}>
                                     {m.user_name} ({m.user_id})
