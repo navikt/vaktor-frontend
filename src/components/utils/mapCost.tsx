@@ -56,7 +56,27 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                             }}
                         >
                             {idx > 0 ? <hr style={{ margin: '12px 0' }}></hr> : <></>}
-                            {props.avstemming === true ? <div style={{ fontSize: '0.85em', color: '#666' }}>ID: {cost.id}</div> : false}
+                            {props.avstemming === true ? (
+                                <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '4px' }}>
+                                    <b>ID:</b>{' '}
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            border: '1px solid #ccc',
+                                            padding: '2px 5px',
+                                            cursor: 'pointer',
+                                            backgroundColor: '#f9f9f9',
+                                            fontSize: '0.9em',
+                                        }}
+                                        onClick={() => navigator.clipboard.writeText(cost.id)}
+                                        title="Click to copy"
+                                    >
+                                        {cost.id}
+                                    </span>
+                                </div>
+                            ) : (
+                                false
+                            )}
                             <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
                             <div
                                 style={{

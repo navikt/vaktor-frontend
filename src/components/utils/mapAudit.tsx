@@ -31,7 +31,7 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
                 <div>
                     <Button
                         size="small"
-                        style={{ display: 'flex', minWidth: '200px', backgroundColor: 'transparent', color: 'green' }}
+                        style={{ display: 'flex', minWidth: '120px', backgroundColor: 'transparent', color: 'green' }}
                         onClick={toggleExpanded}
                     >
                         {expanded ? (
