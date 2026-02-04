@@ -55,7 +55,7 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
                     style={{
                         height: '36px',
                         marginBottom: '5px',
-                        width: '100%',
+                        width: '150px',
                     }}
                     ref={buttonRef}
                     disabled={isDisabled || loading}
@@ -77,7 +77,6 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
                             style={{
                                 height: '36px',
                                 marginBottom: '5px',
-                                width: '100%',
                             }}
                             variant="danger"
                             disabled={loading}
@@ -97,7 +96,7 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
             style={{
                 height: '36px',
                 marginBottom: '5px',
-                width: '100%',
+                width: '150px',
             }}
             disabled={isDisabled || loading}
         >

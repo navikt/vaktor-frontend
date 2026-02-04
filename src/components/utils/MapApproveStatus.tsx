@@ -27,6 +27,8 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
                     key={idx}
                     style={{
                         color: 'red',
+                        fontSize: '0.75em',
+                        marginTop: '4px',
                     }}
                 >
                     {messages.error}
@@ -53,6 +55,8 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
                     key={idx}
                     style={{
                         color: 'red',
+                        fontSize: '0.75em',
+                        marginTop: '4px',
                     }}
                 >
                     {messages.error}

@@ -438,7 +438,7 @@ const AdminLeder = ({}) => {
                                 <span style={{ fontSize: '0.85em', color: '#999' }}>Ingen endringer</span>
                             )}
                         </Table.DataCell>
-                        <Table.DataCell style={{ minWidth: '140px', padding: '8px' }}>
+                        <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
                             <div>
                                 {vakter.user_id.toLowerCase() === user.id.toLowerCase() ? (
                                     <></>
@@ -465,8 +465,8 @@ const AdminLeder = ({}) => {
                                             style={{
                                                 backgroundColor: '#f96c6c',
                                                 height: '36px',
-                                                width: '100%',
                                                 marginBottom: '5px',
+                                                width: '150px',
                                             }}
                                             onClick={() => disprove_schedule(vakter.id, setResponse)}
                                         >
@@ -477,7 +477,7 @@ const AdminLeder = ({}) => {
                                 )}
                             </div>
                         </Table.DataCell>
-                        <Table.DataCell style={{ padding: '8px', minWidth: '220px' }}>
+                        <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
                             {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && vakter.cost.length !== 0 ? (
                                 <div
                                     style={{
@@ -487,7 +487,6 @@ const AdminLeder = ({}) => {
                                         border: '1px solid #e0e0e0',
                                     }}
                                 >
-                                    <div style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '0.85em' }}>Kostnad:</div>
                                     <MapCost vakt={vakter}></MapCost>
                                 </div>
                             ) : (
@@ -503,7 +502,6 @@ const AdminLeder = ({}) => {
                                     border: '1px solid #e0e0e0',
                                 }}
                             >
-                                <div style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '0.85em' }}>Audit:</div>
                                 {vakter.audits.length !== 0 ? (
                                     <MapAudit audits={vakter.audits} />
                                 ) : (

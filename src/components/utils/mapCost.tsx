@@ -51,26 +51,28 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                         <div
                             key={cost.id}
                             style={{
-                                marginBottom: '25px',
+                                marginBottom: '20px',
+                                fontSize: '0.9em',
                             }}
                         >
-                            {idx > 0 ? <hr></hr> : <></>}
-                            {props.avstemming === true ? <b>ID: {cost.id}</b> : false}
+                            {idx > 0 ? <hr style={{ margin: '12px 0' }}></hr> : <></>}
+                            {props.avstemming === true ? <div style={{ fontSize: '0.85em', color: '#666' }}>ID: {cost.id}</div> : false}
                             <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
                             <div
                                 style={{
-                                    marginTop: '5px',
-                                    display: 'flex',
-                                    gap: '20px',
+                                    marginTop: '6px',
                                 }}
                             >
                                 <div>
                                     {mapCostStatus(Number(cost.type_id))}
-                                    Total Sum: <b style={{ color: 'green' }}> {cost.total_cost}</b>
-                                    <br />
-                                    Koststed: <b>{cost.koststed}</b>
+                                    <div style={{ marginTop: '4px' }}>
+                                        Total: <b style={{ color: 'green' }}>{cost.total_cost}</b>
+                                    </div>
+                                    <div style={{ fontSize: '0.9em', color: '#666' }}>
+                                        Koststed: <b>{cost.koststed}</b>
+                                    </div>
                                     {prevTotalCost !== undefined && cost.type_id >= 1 && idx > 0 && (
-                                        <div style={{ color: diff < 0 ? 'red' : 'green' }}>
+                                        <div style={{ color: diff < 0 ? 'red' : 'green', fontSize: '0.9em', marginTop: '4px' }}>
                                             Diff: ({diff < 0 ? '-' : '+'}
                                             {Math.abs(diff).toFixed(2)})
                                         </div>
@@ -81,7 +83,7 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                 style={{
                                     display: 'flex',
                                     gap: '15px',
-                                    marginTop: '15px',
+                                    marginTop: '12px',
                                 }}
                             >
                                 <div>
@@ -90,7 +92,7 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                         .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
                                         .map((artskode, index) => (
                                             <div key={index}>
-                                                <b> {artskode.type}:</b> {artskode.sum}
+                                                <b>{artskode.type}:</b> {artskode.sum}
                                             </div>
                                         ))}
                                 </div>
@@ -100,7 +102,7 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                         .sort((a: Artskoder, b: Artskoder) => Number(a.type)! - Number(b.type)!)
                                         .map((artskode, index) => (
                                             <div key={index}>
-                                                <b> {artskode.type}: </b> {artskode.hours}
+                                                <b>{artskode.type}:</b> {artskode.hours}
                                             </div>
                                         ))}
                                 </div>
