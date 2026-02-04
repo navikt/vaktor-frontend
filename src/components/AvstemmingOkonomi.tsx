@@ -34,15 +34,7 @@ const AvstemmingOkonomi = () => {
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
         toDate: new Date('Aug 23 2027'),
-        //defaultSelected: new Date("Oct 2022")
-        defaultSelected: new Date(
-            new Date().getDate() - 10 > 0
-                ? moment().locale('en-GB').format('L')
-                : moment()
-                      .locale('en-GB')
-                      .month(moment().month() - 1)
-                      .format('L')
-        ),
+        defaultSelected: new Date().getDate() - 10 > 0 ? new Date() : new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
     })
 
     function getMonthTimestamps(currentMonth: Date) {
