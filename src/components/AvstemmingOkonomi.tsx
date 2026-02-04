@@ -103,6 +103,29 @@ const AvstemmingOkonomi = () => {
             })
     }
 
+    const getStatusColor = (approveLevel: number) => {
+        switch (approveLevel) {
+            case 1:
+                return '#66CBEC'
+            case 2:
+                return '#99DEAD'
+            case 3:
+                return '#99DEAD'
+            case 4:
+                return '#E18071'
+            case 5:
+                return '#E18071'
+            case 6:
+                return '#99DEAD'
+            case 7:
+                return '#99DEAD'
+            case 8:
+                return '#E18071'
+            default:
+                return '#FFFFFF'
+        }
+    }
+
     let rowCount = 0
 
     const mapVakter = (vaktliste: Schedules[]) => {
@@ -133,84 +156,128 @@ const AvstemmingOkonomi = () => {
         const groupedRows = Object.entries(groupedByKoststed).flatMap(([koststed, schedules], index) => [
             // This is the row for the group header
             <Table.Row key={`header-${koststed}`}>
-                <Table.DataCell colSpan={8}>
+                <Table.DataCell colSpan={6}>
                     <b>Koststed: {koststed}</b>
                 </Table.DataCell>
             </Table.Row>,
             // These are the individual rows for the schedules
             ...schedules.map((vakter, i) => (
                 <Table.Row key={`row-${vakter.id}-${i}`}>
-                    <Table.DataCell>{++rowCount}</Table.DataCell>
-                    <Table.DataCell scope="row">
-                        <b> {vakter.user.name}</b>
-                        <br />
-                        {vakter.user.id.toUpperCase()}
-                        <br />
-                        {vakter.group.name}
-                    </Table.DataCell>
-                    <Table.DataCell scope="row">{vakter.type === 'bakvakt' ? 'bistand' : vakter.type}</Table.DataCell>
-                    <Table.DataCell>
-                        <b>ID: {vakter.id} </b>
-                        <br />
-                        Uke {moment(vakter.start_timestamp * 1000).week()}{' '}
-                        {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
-                            ? ' - ' + moment(vakter.end_timestamp * 1000).week()
-                            : ''}
-                        <br />
-                        Start:{' '}
-                        {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                        })}
-                        <br />
-                        Slutt:{' '}
-                        {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                        })}
-                        <br />
-                        <div style={{ marginTop: '15px', marginBottom: '15px' }}>
-                            {vakter.vakter.length !== 0 ? 'Endringer:' : ''}
-                            {vakter.vakter.map((endringer, idx: number) => (
-                                <div key={idx}>
-                                    <b>ID: {endringer.id}</b>
-                                    <br />
-                                    <b> {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}:</b> {endringer.user.name}
-                                    <br />
-                                    Start:{' '}
-                                    {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
-                                    <br />
-                                    Slutt:{' '}
-                                    {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
-                                </div>
-                            ))}
-                            <br />
+                    <Table.DataCell style={{ padding: '6px', width: '40px' }}>{++rowCount}</Table.DataCell>
+                    <Table.DataCell scope="row" style={{ padding: '8px', width: '200px' }}>
+                        <div style={{ lineHeight: '1.4' }}>
+                            <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>{vakter.user.name}</div>
+                            <div style={{ fontSize: '0.8em', color: '#666' }}>{vakter.user.id.toUpperCase()}</div>
+                            <div style={{ fontSize: '0.8em', color: '#666' }}>{vakter.group.name}</div>
                         </div>
                     </Table.DataCell>
-                    <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
-                    <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
+                    <Table.DataCell scope="row" style={{ padding: '6px', width: '70px', fontSize: '0.85em' }}>
+                        {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
+                    </Table.DataCell>
+                    <Table.DataCell style={{ padding: '8px', width: '220px', backgroundColor: getStatusColor(vakter.approve_level) }}>
+                        <div style={{ lineHeight: '1.4' }}>
+                            <div style={{ marginBottom: '4px' }}>
+                                <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
+                            </div>
+                            <div style={{ fontSize: '0.8em', color: '#666', marginBottom: '2px' }}>
+                                <b>ID:</b>{' '}
+                                <span
+                                    style={{
+                                        display: 'inline-block',
+                                        border: '1px solid #ccc',
+                                        padding: '2px 5px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#f9f9f9',
+                                        fontSize: '0.85em',
+                                    }}
+                                    onClick={() => navigator.clipboard.writeText(vakter.id)}
+                                    title="Click to copy"
+                                >
+                                    {vakter.id}
+                                </span>
+                            </div>
+                            <div style={{ fontSize: '0.8em', marginBottom: '2px' }}>
+                                <b>Uke:</b> {moment(vakter.start_timestamp * 1000).week()}{' '}
+                                {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
+                                    ? ' - ' + moment(vakter.end_timestamp * 1000).week()
+                                    : ''}
+                            </div>
+                            <div style={{ fontSize: '0.8em' }}>
+                                <b>Start:</b>{' '}
+                                {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
+                            </div>
+                            <div style={{ fontSize: '0.8em', marginTop: '2px' }}>
+                                <b>Slutt:</b>{' '}
+                                {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
+                            </div>
+                            {vakter.vakter.length !== 0 && (
+                                <div style={{ marginTop: '6px', marginBottom: '6px' }}>
+                                    <b style={{ fontSize: '0.8em' }}>Endringer:</b>
+                                    {vakter.vakter.map((endringer, idx: number) => (
+                                        <div key={idx} style={{ marginTop: '4px', fontSize: '0.75em' }}>
+                                            <div>
+                                                <b>ID:</b>{' '}
+                                                <span
+                                                    style={{
+                                                        display: 'inline-block',
+                                                        border: '1px solid #ccc',
+                                                        padding: '1px 3px',
+                                                        cursor: 'pointer',
+                                                        backgroundColor: '#f9f9f9',
+                                                        fontSize: '0.9em',
+                                                    }}
+                                                    onClick={() => navigator.clipboard.writeText(endringer.id)}
+                                                    title="Click to copy"
+                                                >
+                                                    {endringer.id}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <b>{endringer.type === 'bakvakt' ? 'bistand' : endringer.type}:</b> {endringer.user.name}
+                                            </div>
+                                            <div>
+                                                <b>Start:</b>{' '}
+                                                {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
+                                            </div>
+                                            <div>
+                                                <b>Slutt:</b>{' '}
+                                                {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </Table.DataCell>
+                    <Table.DataCell scope="row" style={{ padding: '8px', width: '250px', maxWidth: '250px' }}>
                         {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
                     </Table.DataCell>
 
-                    <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
+                    <Table.DataCell scope="row" style={{ padding: '8px', width: '200px', maxWidth: '200px', overflow: 'hidden' }}>
                         {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
                     </Table.DataCell>
                 </Table.Row>
@@ -306,17 +373,7 @@ const AvstemmingOkonomi = () => {
     }, 0)
 
     return (
-        <div
-            style={{
-                minWidth: '900px',
-                maxWidth: '90vw',
-                backgroundColor: 'white',
-                marginBottom: '3vh',
-                display: 'grid',
-                alignContent: 'center',
-                margin: 'auto',
-            }}
-        >
+        <>
             <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end' }}>
                 <ExpansionCard aria-label="reberegning-av-vakter" size="small" style={{ justifyContent: 'center', width: '280px' }}>
                     <ExpansionCard.Header>
@@ -456,36 +513,41 @@ const AvstemmingOkonomi = () => {
                 <Table zebraStripes>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell>#</Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
+                            <Table.HeaderCell style={{ padding: '6px', width: '40px' }}>#</Table.HeaderCell>
+                            <Table.HeaderCell scope="col" style={{ padding: '8px', width: '200px' }}>
+                                Navn
+                            </Table.HeaderCell>
+                            <Table.HeaderCell scope="col" style={{ padding: '6px', width: '70px' }}>
+                                Type vakt
+                            </Table.HeaderCell>
                             <Table.HeaderCell
                                 scope="col"
                                 style={{
-                                    minWidth: '400px',
-                                    maxWidth: '400px',
+                                    padding: '8px',
+                                    width: '220px',
                                 }}
                             >
                                 Periode
                             </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Status</Table.HeaderCell>
                             <Table.HeaderCell
                                 scope="col"
                                 style={{
-                                    minWidth: '400px',
-                                    maxWidth: '400px',
+                                    padding: '8px',
+                                    width: '250px',
                                 }}
                             >
                                 Kost
                             </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
+                            <Table.HeaderCell scope="col" style={{ padding: '8px', width: '200px', maxWidth: '200px' }}>
+                                Audit
+                            </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
                         {loading ? <Loader /> : null}
                         {listeAvVakter.length === 0 && !loading ? (
                             <Table.Row>
-                                <Table.DataCell colSpan={7}>
+                                <Table.DataCell colSpan={6}>
                                     <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3>
                                 </Table.DataCell>
                             </Table.Row>
@@ -495,7 +557,7 @@ const AvstemmingOkonomi = () => {
                     </Table.Body>
                 </Table>
             </div>
-        </div>
+        </>
     )
 }
 
