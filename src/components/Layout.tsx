@@ -1,6 +1,5 @@
 import Navbar from './NavBar'
-//import { Footer } from '@navikt/status-components-react'
-import { Page } from '@navikt/ds-react'
+import { Page, VStack } from '@navikt/ds-react'
 import Header from './Header'
 import Head from 'next/head'
 import { useAuth } from '../context/AuthContext'
@@ -12,7 +11,7 @@ const Layout = ({ children }: any) => {
     const { user } = useAuth()
 
     return (
-        <div className="mainContainer">
+        <>
             {today.getMonth() === 11 ? (
                 <Head>
                     <title>Vaktor - Beredskapsvakt</title>
@@ -30,19 +29,19 @@ const Layout = ({ children }: any) => {
                     <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png" />
                 </Head>
             )}
-            <Page style={{ flex: 1 }}>
-                <Header />
-                <Page.Block as="main" width="2xl" gutters>
-                    {/* <Header imageURL="/assets/navblack.png" userID={user.id} userName={user.name} /> */}
-                    <div className="content">
-                        <div className="topHeader"></div>
-                        <Navbar />
-                        {children}
-                    </div>
-                </Page.Block>
-            </Page>
-            <Footer></Footer>
-        </div>
+            <VStack gap="space-0" style={{ minHeight: '100vh', backgroundColor: 'var(--ax-bg-default)' }}>
+                <Page style={{ flex: 1 }}>
+                    <Header />
+                    <Page.Block as="main" width="2xl" gutters>
+                        <VStack gap="space-8">
+                            <Navbar />
+                            {children}
+                        </VStack>
+                    </Page.Block>
+                </Page>
+                <Footer />
+            </VStack>
+        </>
     )
 }
 

@@ -2,9 +2,8 @@ html,
 body {
   padding: 0;
   margin: 0;
-  background-color: var(--navds-semantic-color-canvas-background);
-
-  font-family: "Source Sans Pro", sans-serif;
+  background-color: var(--ax-bg-default);
+  font-family: var(--ax-font-family);
 }
 
 a {
@@ -13,7 +12,7 @@ a {
 }
 
 a.link {
-  color: rgb(0, 0, 0);
+  color: var(--ax-text-neutral);
   text-decoration: none;
 }
 
@@ -27,34 +26,23 @@ a.link {
   z-index: 2000;
 }
 
-.mainContainer {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: var(--navds-semantic-color-canvas-background);
-}
-
-.content {
-  max-width: 85vw;
-  margin: 0 auto;
-  overflow: auto;
-  background-color: var(--navds-semantic-color-canvas-background);
-}
-
 nav {
-  margin: -5px 0px 50px 0px;
-  padding: 20px 2;
+  padding: var(--ax-space-16) var(--ax-space-8);
   display: flex;
   justify-content: flex-end;
-  align-items: flex-end;
-  border-bottom: 1px solid #ddd;
+  align-items: center;
+  border-bottom: 1px solid var(--ax-border-neutral-subtle);
   position: relative;
+  background-color: var(--ax-bg-raised);
+  border-radius: var(--ax-radius-8);
+  box-shadow: var(--ax-shadow-dialog);
+  gap: var(--ax-space-8);
 }
 
 nav .logo {
   margin-right: auto;
-  margin-bottom: -17px;
-  margin-left: 10px;
+  display: flex;
+  align-items: center;
 }
 
 .topHeader {

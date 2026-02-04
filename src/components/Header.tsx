@@ -1,4 +1,4 @@
-import { Alert, Button, Heading, Link, Page } from '@navikt/ds-react'
+import { Alert, Heading, Page, HStack, VStack } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
 import { User } from '../types/types'
 import * as Routes from '../types/routes'
@@ -13,17 +13,10 @@ const Header = () => {
     const { user } = useAuth()
     const today = new Date()
 
-    const LinkButton: React.FC<{ route: (typeof Routes)[keyof typeof Routes] }> = ({ route }) => (
-        <Link href={route.PATH}>
-            <Button variant="tertiary" style={{ marginLeft: '5px', marginRight: '5px', height: '35px' }}>
-                <a className="link">{route.NAME}</a>
-            </Button>
-        </Link>
-    )
     return (
-        <Page.Block width="2xl" gutters>
-            <Heading level="1" size="large">
-                <div style={{ margin: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Page.Block width="2xl" gutters style={{ paddingTop: 'var(--ax-space-24)', paddingBottom: 'var(--ax-space-24)' }}>
+            <VStack gap="6" align="center">
+                <HStack gap="4" align="center" justify="center">
                     <Image
                         src={today.getMonth() === 11 ? '/images/vaktor-santa.png' : '/images/vaktor-logo.png'}
                         alt="Vaktor logo"
@@ -32,16 +25,19 @@ const Header = () => {
                         onClick={() => {
                             window.location.href = Routes.RouterVaktor.PATH
                         }}
+                        style={{ cursor: 'pointer' }}
                     />
-                    <b>Vaktor </b> - beredskapsvakt i Nav
-                </div>
+                    <Heading level="1" size="large">
+                        <b>Vaktor</b> - beredskapsvakt i Nav
+                    </Heading>
+                </HStack>
                 {/* Alert if no roles */}
                 {!hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
-                    <Alert variant="info" size="small" style={{ maxWidth: '250px', minWidth: '250px' }}>
+                    <Alert variant="info" size="small">
                         Du har ingen rolle i vaktor
                     </Alert>
                 )}
-            </Heading>
+            </VStack>
         </Page.Block>
     )
 }
