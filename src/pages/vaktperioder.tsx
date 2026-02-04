@@ -17,10 +17,10 @@ const Home: NextPage = () => {
 
     if (hasAccess) {
         return (
-            <div className="Container">
+            <div className="Container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 <div className="AdminGuideContainer">
                     <GuidePanel className="AdminGuidePanel">
-                        <p>Her kan du generere nye vaktperioder for ditt vaktlag: </p>
+                        <p>Her kan du generere nye vaktperioder for ditt vaktlag.</p>
                     </GuidePanel>
                 </div>
                 <Vaktperioder />

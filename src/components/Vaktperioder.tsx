@@ -355,7 +355,7 @@ const Vaktperioder = () => {
     // IDs for DnD: use ressursnummer for uniqueness
     const activeIds = itemData
         .filter((user: User) => user.group_order_index !== 100)
-        .filter((user) => user.roles.some((role) => role.id !== '0d20adfe-2eae-446a-ae1c-3502d7ff33c4'))
+        .filter((user: User) => !user.roles.some((role) => role.id === '0d20adfe-2eae-446a-ae1c-3502d7ff33c4'))
         .sort((a, b) => a.group_order_index! - b.group_order_index!)
         .map((user) => user.ressursnummer)
 
@@ -363,18 +363,22 @@ const Vaktperioder = () => {
         const { active, over } = event
         if (!over || active.id === over.id) return
 
-        // Figure out if we're dragging within active or inactive
         const activeIndex = activeIds.indexOf(active.id)
         const overIndex = activeIds.indexOf(over.id)
+
         if (activeIndex !== -1 && overIndex !== -1) {
-            // Only reorder within active
-            const newActive = arrayMove(activeIds, activeIndex, overIndex)
-            // Map new order to group_order_index
-            const updated = [...itemData]
-            newActive.forEach((id, idx) => {
-                const u = updated.find((user) => user.ressursnummer === id)
-                if (u) u.group_order_index = idx + 1
+            // Reorder the ressursnummer array
+            const newActiveIds = arrayMove(activeIds, activeIndex, overIndex)
+
+            // Update itemData with new group_order_index values
+            const updated = itemData.map((user) => {
+                const newIndex = newActiveIds.indexOf(user.ressursnummer)
+                if (newIndex !== -1) {
+                    return { ...user, group_order_index: newIndex + 1 }
+                }
+                return user
             })
+
             setItemData(updated)
         }
     }
@@ -682,7 +686,10 @@ const Vaktperioder = () => {
                                                         }}
                                                     >
                                                         <b>Id:</b> Brukes for å bestemme hvilken rekkefølge vakthaverne skal gå vakt. Den som står
-                                                        øverst vil få første vakt når nye perioder genereres
+                                                        øverst vil få første vakt når nye perioder genereres.
+                                                        <br />
+                                                        <br />
+                                                        <b>Tips:</b> Du kan endre rekkefølgen ved å dra og slippe radene i tabellen.
                                                     </HelpText>
                                                 </div>
                                             </Table.HeaderCell>

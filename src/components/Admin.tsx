@@ -146,11 +146,24 @@ const Admin = () => {
                             <></>
                         )}
                         <b> {vakter.user.name}</b>
-
                         <br />
                         {vakter.user.id.toUpperCase()}
                         <br />
                         {vakter.group.name}
+                        <br />
+                        {vakter.user.roles && vakter.user.roles.length > 0 && (
+                            <>
+                                <span style={{ fontWeight: 'bold', fontSize: '0.9em' }}>
+                                    Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
+                                </span>
+                                <br />
+                            </>
+                        )}
+                        {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
+                            <span style={{ fontSize: '0.85em', color: '#666' }}>
+                                Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
+                            </span>
+                        )}
                     </Table.DataCell>
                     <Table.DataCell scope="row">{vakter.type === 'bakvakt' ? 'bistand' : vakter.type}</Table.DataCell>
                     <Table.DataCell>
