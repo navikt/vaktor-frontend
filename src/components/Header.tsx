@@ -15,8 +15,8 @@ const Header = () => {
 
     return (
         <Page.Block width="2xl" gutters style={{ paddingTop: 'var(--ax-space-24)', paddingBottom: 'var(--ax-space-24)' }}>
-            <VStack gap="6" align="center">
-                <HStack gap="4" align="center" justify="center">
+            <VStack gap="space-6" align="center">
+                <HStack gap="space-4" align="center" justify="center">
                     <Image
                         src={today.getMonth() === 11 ? '/images/vaktor-santa.png' : '/images/vaktor-logo.png'}
                         alt="Vaktor logo"

@@ -28,7 +28,6 @@ const DeleteButton = (props: { bakvakt: string; setResponse: Dispatch<any> }) =>
                 variant="danger"
                 size="small"
                 ref={(el) => {
-                    buttonRef.current = el
                     setAnchorEl(el)
                 }}
             >
