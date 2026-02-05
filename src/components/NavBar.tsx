@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Button, Dropdown } from '@navikt/ds-react'
+import { Button, Dropdown, BodyShort, HStack } from '@navikt/ds-react'
 import { MenuHamburgerIcon } from '@navikt/aksel-icons'
+import Image from 'next/image'
 
 import { useAuth } from '../context/AuthContext'
 import { User } from '../types/types'
@@ -58,11 +59,26 @@ const Navbar: React.FC = () => {
         <>
             <nav>
                 <div className="logo">
-                    {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
-                        <h3>
-                            {getGreeting} {user.name}
-                        </h3>
-                    )}
+                    <HStack gap="space-8" align="center">
+                        <Image
+                            src={today.getMonth() === 11 ? '/images/vaktor-santa.png' : '/images/vaktor-logo.png'}
+                            alt="Vaktor logo"
+                            width={60}
+                            height={60}
+                            onClick={() => {
+                                window.location.href = Routes.RouterVaktor.PATH
+                            }}
+                            style={{ cursor: 'pointer', padding: 'var(--ax-space-4)' }}
+                        />
+                        <div>
+                            <div style={{ fontWeight: 'bold', fontSize: '1.8rem', lineHeight: '1.2' }}>Vaktor</div>
+                            {hasAnyRole(user, ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
+                                <BodyShort size="small" style={{ color: 'var(--ax-text-neutral-subtle)' }}>
+                                    {getGreeting} {user.name}
+                                </BodyShort>
+                            )}
+                        </div>
+                    </HStack>
                 </div>
 
                 {/* Show first items directly */}
