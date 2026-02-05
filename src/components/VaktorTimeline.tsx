@@ -1,14 +1,13 @@
 import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, CustomMarker, CursorMarker } from 'react-calendar-timeline'
-import { useState, useEffect, JSX } from 'react'
+import { useState, useEffect, JSX, useRef } from 'react'
 import { Moment } from 'moment'
 import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './SetColors'
-import { Information } from '@navikt/ds-icons'
+import { Information, Left, Right } from '@navikt/ds-icons'
 import GroupDetailsModal from './GroupDetailsModal'
 import ItemDetailsModal from './ItemDetailsModal'
-import { BodyShort, Label, Loader, Search } from '@navikt/ds-react'
+import { BodyShort, Label, Loader, Search, DatePicker, useRangeDatepicker, Button, HStack, ToggleGroup } from '@navikt/ds-react'
 import styled from 'styled-components'
 import moment from 'moment'
-import { NavigationButtons } from './NavigationButtons'
 import { Schedules, User, Vaktlag } from '../types/types'
 import Overview from './OverviewNoTimeline'
 import { useAuth } from '../context/AuthContext'
@@ -16,28 +15,82 @@ import { useAuth } from '../context/AuthContext'
 let today = Date.now()
 
 const SidebarHeaderText = styled.div`
-    padding-top: 25px;
+    padding-top: var(--ax-space-24);
     margin: auto;
-    font-weight: bold;
+    font-weight: var(--ax-font-weight-bold);
     vertical-align: middle;
     text-align: center;
-    font-size: 20px;
+    font-size: var(--ax-font-size-heading-small);
+    font-family: var(--ax-font-family);
+    color: var(--ax-text-neutral);
 `
 
-export const SidebarText = styled.div`
-    display: inline-block;
+export const SidebarText = styled.div<{ $hasPartialCoverage?: boolean; $isTemporary?: boolean }>`
+    display: flex;
+    flex-direction: column;
     position: relative;
-    left: 6px;
+    left: ${(props) => (props.$hasPartialCoverage || props.$isTemporary ? '2px' : '6px')};
     opacity: 1 !important;
+    padding: ${(props) => (props.$hasPartialCoverage || props.$isTemporary ? '4px 6px 4px 4px' : '0')};
+    background-color: ${(props) => {
+        if (props.$hasPartialCoverage) return 'var(--ax-bg-warning-subtle)'
+        if (props.$isTemporary) return 'var(--ax-bg-info-subtle)'
+        return 'transparent'
+    }};
+    border-radius: ${(props) => (props.$hasPartialCoverage || props.$isTemporary ? 'var(--ax-radius-medium)' : '0')};
+    margin: 0;
+    width: fit-content;
+    max-width: 100%;
+`
+
+const PartialCoverageIndicator = styled.div`
+    font-size: 9px;
+    color: var(--ax-text-subtle);
+    margin-top: 2px;
+    line-height: 1.2;
+`
+
+const TemporaryIndicator = styled.div`
+    font-size: 9px;
+    color: var(--ax-text-subtle);
+    margin-top: 2px;
+    line-height: 1.2;
 `
 
 const SidebarIcon = styled.div`
     position: absolute;
     top: 4px;
-    left: 200px;
-    width: 250px;
+    right: 8px;
     opacity: 0.6;
 `
+
+const Timeframebtns = styled.div`
+    display: inline-flex;
+    gap: var(--ax-space-4);
+`
+
+const DateRangePicker = ({ onRangeSelected }: { onRangeSelected: (start: number, end: number) => void }) => {
+    const { datepickerProps, toInputProps, fromInputProps } = useRangeDatepicker({
+        fromDate: new Date('2022-10-01'),
+        toDate: new Date('2027-12-31'),
+        onRangeChange: (range) => {
+            if (range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
+                const startOfDay = moment(range.from).startOf('day').valueOf()
+                const endOfDay = moment(range.to).endOf('day').valueOf()
+                onRangeSelected(startOfDay, endOfDay)
+            }
+        },
+    })
+
+    return (
+        <DatePicker {...datepickerProps} strategy="fixed">
+            <HStack gap="space-2">
+                <DatePicker.Input {...fromInputProps} label="Fra" size="small" />
+                <DatePicker.Input {...toInputProps} label="Til" size="small" />
+            </HStack>
+        </DatePicker>
+    )
+}
 
 function VaktorTimeline() {
     const { user } = useAuth()
@@ -64,10 +117,68 @@ function VaktorTimeline() {
     const [itemScheduleId, setItemScheduleId] = useState('')
 
     const [searchFilter, setSearchFilter] = useState('')
+    const [vaktlagTypeFilter, setVaktlagTypeFilter] = useState<'alle' | 'midlertidig' | 'fast'>('alle')
 
     const [visibleTimeStart, setVisibleTimeStart] = useState(Math.floor(moment().startOf('isoWeek').valueOf()))
     const [visibleTimeEnd, setVisibleTimeEnd] = useState(Math.floor(moment().startOf('isoWeek').add(8, 'day').valueOf()))
     const [timeUnit, setTimeUnit] = useState('week')
+    const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+    const lastManualUpdate = useRef<number>(0)
+    const [datePickerKey, setDatePickerKey] = useState(0)
+
+    const handleRangeSelected = (start: number, end: number) => {
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current)
+        }
+        debounceTimer.current = setTimeout(() => {
+            lastManualUpdate.current = Date.now()
+            setVisibleTimeStart(start)
+            setVisibleTimeEnd(end)
+        }, 500)
+    }
+
+    const onPrevClick = () => {
+        if (timeUnit === 'week') {
+            let newVisibleTimeStart = moment(visibleTimeStart).add(-1, 'week').startOf('week').valueOf()
+            let newVisibleTimeEnd = moment(visibleTimeStart).add(-1, 'week').endOf('week').valueOf()
+            setVisibleTimeStart(newVisibleTimeStart)
+            setVisibleTimeEnd(newVisibleTimeEnd)
+        }
+        if (timeUnit === 'month') {
+            let newVisibleTimeStart = moment(visibleTimeStart).add(-1, 'month').startOf('month').valueOf()
+            let newVisibleTimeEnd = moment(visibleTimeStart).add(-1, 'month').endOf('month').valueOf()
+            setVisibleTimeStart(newVisibleTimeStart)
+            setVisibleTimeEnd(newVisibleTimeEnd)
+        }
+    }
+
+    const onNextClick = () => {
+        if (timeUnit === 'week') {
+            let newVisibleTimeStart = moment(visibleTimeStart).add(1, 'week').startOf('week').valueOf()
+            let newVisibleTimeEnd = moment(visibleTimeStart).add(1, 'week').endOf('week').valueOf()
+            setVisibleTimeStart(newVisibleTimeStart)
+            setVisibleTimeEnd(newVisibleTimeEnd)
+        }
+        if (timeUnit === 'month') {
+            let newVisibleTimeStart = moment(visibleTimeStart).add(1, 'month').startOf('month').valueOf()
+            let newVisibleTimeEnd = moment(visibleTimeStart).add(1, 'month').endOf('month').valueOf()
+            setVisibleTimeStart(newVisibleTimeStart)
+            setVisibleTimeEnd(newVisibleTimeEnd)
+        }
+    }
+
+    const handleTimeHeaderChange = (unit: string) => {
+        setTimeUnit(unit)
+
+        if (unit === 'week') {
+            setVisibleTimeStart(moment().startOf('week').valueOf())
+            setVisibleTimeEnd(moment().endOf('week').valueOf())
+        }
+        if (unit === 'month') {
+            setVisibleTimeStart(moment().startOf('month').valueOf())
+            setVisibleTimeEnd(moment().endOf('month').valueOf())
+        }
+    }
 
     const date = (timestamp: number) => {
         let formatDate = moment.unix(timestamp)
@@ -116,8 +227,25 @@ function VaktorTimeline() {
   */
 
     const groupDataList: any = groupData
-    const groupsSorted1 = [...groupDataList].sort((a, b) => (a.name < b.name ? 1 : -1))
-    const groupsSorted = [...groupsSorted1].sort((a, b) => (a.type === 'Døgnkontinuerlig (24/7)' ? -1 : 1))
+
+    // Sorter etter type: fast, delvis dekning, midlertidig
+    const groupsSorted = [...groupDataList].sort((a, b) => {
+        const getTypePriority = (type: string) => {
+            if (type === 'Midlertidlig') return 3
+            if (type.includes('Delvis dekning')) return 2
+            return 1 // Fast (inkluderer Døgnkontinuerlig (24/7) og Delvis dekning)
+        }
+
+        const priorityA = getTypePriority(a.type)
+        const priorityB = getTypePriority(b.type)
+
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB
+        }
+
+        // Innenfor samme gruppe, sorter alfabetisk
+        return a.name.localeCompare(b.name)
+    })
 
     const groups: any = []
     const groupColorList: any = []
@@ -135,6 +263,11 @@ function VaktorTimeline() {
 
     groupsSorted
         .filter((vaktlag: Vaktlag) => vaktlag.name.toLowerCase().includes(searchFilter.toLowerCase()))
+        .filter((vaktlag: Vaktlag) => {
+            if (vaktlagTypeFilter === 'midlertidig') return vaktlag.type === 'Midlertidlig'
+            if (vaktlagTypeFilter === 'fast') return vaktlag.type !== 'Midlertidlig'
+            return true
+        })
         .map((vaktlag: any, index: number) => {
             groupColorList.push({
                 group: vaktlag.id,
@@ -144,15 +277,25 @@ function VaktorTimeline() {
             let groupType = vaktlag.type
             let groupPhone = vaktlag.phone
 
+            const isPartialCoverage = groupType.includes('Delvis dekning')
+            const isTemporary = groupType === 'Midlertidlig'
+
             groups.push({
                 title: (
-                    <div className="groupsClickable" onClick={() => updateGrpModal(!grpModalOpen, groupName, groupType, groupPhone)}>
-                        <SidebarText>
+                    <div
+                        className="groupsClickable"
+                        onClick={() => updateGrpModal(!grpModalOpen, groupName, groupType, groupPhone)}
+                        title={isPartialCoverage ? groupType : undefined}
+                        style={{ position: 'relative', paddingRight: '24px' }}
+                    >
+                        <SidebarText $hasPartialCoverage={isPartialCoverage} $isTemporary={isTemporary}>
                             <Label>{groupTitle(groupName)}</Label>
-                            <SidebarIcon>
-                                <Information />
-                            </SidebarIcon>
+                            {isPartialCoverage && <PartialCoverageIndicator>{groupType.match(/\(([^)]+)\)/)?.[1] || ''}</PartialCoverageIndicator>}
+                            {isTemporary && <TemporaryIndicator>Midlertidig</TemporaryIndicator>}
                         </SidebarText>
+                        <SidebarIcon>
+                            <Information />
+                        </SidebarIcon>
                     </div>
                 ),
                 id: vaktlag.id,
@@ -387,12 +530,62 @@ function VaktorTimeline() {
                 <Overview groups={groupsSorted} />
             ) : (
                 <>
-                    <form style={{ width: '400px', marginBottom: '10px' }}>
-                        <div style={{ display: 'flex' }}>
-                            <Search label="Søk etter vaktlag" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
-                            {isLoading ? <Loader variant="neutral" size="2xlarge" title="venter..." /> : <></>}
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: '20px',
+                            marginTop: '32px',
+                            marginBottom: '24px',
+                            alignItems: 'flex-end',
+                            flexWrap: 'wrap',
+                        }}
+                    >
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+                            <form style={{ width: '200px', minWidth: '200px', maxWidth: '300px' }}>
+                                <Search
+                                    label="Søk etter vaktlag"
+                                    hideLabel={false}
+                                    variant="simple"
+                                    size="small"
+                                    onChange={(text) => setSearchFilter(text)}
+                                />
+                            </form>
+                            <ToggleGroup
+                                value={vaktlagTypeFilter}
+                                onChange={(val) => setVaktlagTypeFilter(val as 'alle' | 'midlertidig' | 'fast')}
+                                size="small"
+                                label="Vakttype"
+                            >
+                                <ToggleGroup.Item value="alle">Alle</ToggleGroup.Item>
+                                <ToggleGroup.Item value="fast">Faste</ToggleGroup.Item>
+                                <ToggleGroup.Item value="midlertidig">Midlertidige</ToggleGroup.Item>
+                            </ToggleGroup>
+                            {isLoading && <Loader variant="neutral" size="2xlarge" title="venter..." />}
                         </div>
-                    </form>
+
+                        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                            <DateRangePicker key={datePickerKey} onRangeSelected={handleRangeSelected} />
+
+                            <Button size="small" variant="secondary" onClick={() => setDatePickerKey((prev) => prev + 1)}>
+                                Nullstill
+                            </Button>
+
+                            <Timeframebtns>
+                                <Button size="small" variant="secondary" onClick={() => handleTimeHeaderChange('week')}>
+                                    Uke
+                                </Button>
+                                <Button size="small" variant="secondary" onClick={() => handleTimeHeaderChange('month')}>
+                                    Måned
+                                </Button>
+                            </Timeframebtns>
+
+                            <HStack gap="space-2">
+                                <Button size="small" variant="secondary" onClick={() => onPrevClick()} icon={<Left />} />
+                                <Button size="small" variant="secondary" onClick={() => onNextClick()} icon={<Right />} />
+                            </HStack>
+                        </div>
+                    </div>
 
                     <Timeline
                         groups={groups}
@@ -410,13 +603,6 @@ function VaktorTimeline() {
                         verticalLineClassNamesForTime={verticalLineClassNamesForTime}
                     >
                         <TimelineHeaders className="sticky">
-                            <NavigationButtons
-                                timeStart={visibleTimeStart}
-                                timeUnit={timeUnit}
-                                setVisibleTimeStart={setVisibleTimeStart}
-                                setVisibleTimeEnd={setVisibleTimeEnd}
-                                setTimeUnit={setTimeUnit}
-                            />
                             <SidebarHeader>
                                 {({ getRootProps }) => {
                                     return (
@@ -426,7 +612,7 @@ function VaktorTimeline() {
                                     )
                                 }}
                             </SidebarHeader>
-                            <DateHeader unit="primaryHeader" labelFormat="MMMM YYYY" />
+                            <DateHeader unit="primaryHeader" />
                             <CustomMarker date={today}>
                                 {/* custom renderer for this marker */}
                                 {({ styles, date }) => {
@@ -440,7 +626,7 @@ function VaktorTimeline() {
                                 }}
                             </CustomMarker>
                             <CursorMarker />
-                            <DateHeader labelFormat="DD ddd" />
+                            <DateHeader unit="day" />
                         </TimelineHeaders>
                     </Timeline>
                     {grpModalOpen && (
