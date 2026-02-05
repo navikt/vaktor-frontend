@@ -12,14 +12,64 @@ $list-item-padding: var(--ax-space-4);
 $weekend: var(--ax-bg-info-soft);
 
 .groupsClickable {
-  width: 100%;
+    display: block;
+    height: 100%;
+    width: 100%;
+    pointer-events: auto;
+    transition: background-color 0.2s ease;
+    position: relative;
+    padding: var(--ax-space-4);
+    margin: calc(var(--ax-space-4) * -1);
+    cursor: pointer;
+
+    * {
+        pointer-events: none;
+        cursor: pointer;
+    }
 }
 
 .groupsClickable:hover {
-  background-color: var(--ax-bg-neutral-moderate-hover);
-  width: 100%;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+    background-color: var(--a-surface-action-subtle-hover, rgba(0, 103, 197, 0.1)) !important;
+}
+
+
+.sidebar-header-text {
+    padding-top: var(--ax-space-24);
+    margin: auto;
+    font-weight: var(--ax-font-weight-bold);
+    vertical-align: middle;
+    text-align: center;
+    font-size: var(--ax-font-size-heading-small);
+    font-family: var(--ax-font-family);
+    color: var(--ax-text-neutral);
+}
+
+.sidebar-text {
+    display: flex;
+    flex-direction: column;
+    opacity: 1 !important;
+    margin: 0;
+}
+
+.coverage-indicator {
+    font-size: 9px;
+    color: var(--ax-text-subtle);
+    margin-top: 2px;
+    line-height: 1.2;
+}
+
+.sidebar-icon {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.timeframe-btns {
+    display: inline-flex;
+    gap: var(--ax-space-4);
 }
 
 .sticky {
@@ -100,9 +150,13 @@ $weekend: var(--ax-bg-info-soft);
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-
+      position: relative;
       margin: 0;
       border-bottom: $border-width solid $border-color-headers;
+      cursor: pointer;
+      min-height: 45px;
+      display: flex;
+      align-items: center;
 
       &.rct-sidebar-row-odd {
         background: $header-color;

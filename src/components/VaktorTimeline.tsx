@@ -1,73 +1,17 @@
 import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, CustomMarker, CursorMarker } from 'react-calendar-timeline'
-import { useState, useEffect, JSX, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Moment } from 'moment'
 import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './SetColors'
 import { Information, Left, Right } from '@navikt/ds-icons'
 import GroupDetailsModal from './GroupDetailsModal'
 import ItemDetailsModal from './ItemDetailsModal'
 import { BodyShort, Label, Loader, Search, DatePicker, useRangeDatepicker, Button, HStack, ToggleGroup } from '@navikt/ds-react'
-import styled from 'styled-components'
 import moment from 'moment'
 import { Schedules, User, Vaktlag } from '../types/types'
 import Overview from './OverviewNoTimeline'
 import { useAuth } from '../context/AuthContext'
 
 let today = Date.now()
-
-const SidebarHeaderText = styled.div`
-    padding-top: var(--ax-space-24);
-    margin: auto;
-    font-weight: var(--ax-font-weight-bold);
-    vertical-align: middle;
-    text-align: center;
-    font-size: var(--ax-font-size-heading-small);
-    font-family: var(--ax-font-family);
-    color: var(--ax-text-neutral);
-`
-
-export const SidebarText = styled.div<{ $hasPartialCoverage?: boolean; $isTemporary?: boolean }>`
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    left: ${(props) => (props.$hasPartialCoverage || props.$isTemporary ? '2px' : '6px')};
-    opacity: 1 !important;
-    padding: ${(props) => (props.$hasPartialCoverage || props.$isTemporary ? '4px 6px 4px 4px' : '0')};
-    background-color: ${(props) => {
-        if (props.$hasPartialCoverage) return 'var(--ax-bg-warning-subtle)'
-        if (props.$isTemporary) return 'var(--ax-bg-info-subtle)'
-        return 'transparent'
-    }};
-    border-radius: ${(props) => (props.$hasPartialCoverage || props.$isTemporary ? 'var(--ax-radius-medium)' : '0')};
-    margin: 0;
-    width: fit-content;
-    max-width: 100%;
-`
-
-const PartialCoverageIndicator = styled.div`
-    font-size: 9px;
-    color: var(--ax-text-subtle);
-    margin-top: 2px;
-    line-height: 1.2;
-`
-
-const TemporaryIndicator = styled.div`
-    font-size: 9px;
-    color: var(--ax-text-subtle);
-    margin-top: 2px;
-    line-height: 1.2;
-`
-
-const SidebarIcon = styled.div`
-    position: absolute;
-    top: 4px;
-    right: 8px;
-    opacity: 0.6;
-`
-
-const Timeframebtns = styled.div`
-    display: inline-flex;
-    gap: var(--ax-space-4);
-`
 
 const DateRangePicker = ({ onRangeSelected }: { onRangeSelected: (start: number, end: number) => void }) => {
     const { datepickerProps, toInputProps, fromInputProps } = useRangeDatepicker({
@@ -284,22 +228,25 @@ function VaktorTimeline() {
                 title: (
                     <div
                         className="groupsClickable"
-                        onClick={() => updateGrpModal(!grpModalOpen, groupName, groupType, groupPhone)}
+                        onMouseDown={(e) => {
+                            e.stopPropagation()
+                            updateGrpModal(!grpModalOpen, groupName, groupType, groupPhone)
+                        }}
                         title={isPartialCoverage ? groupType : undefined}
-                        style={{ position: 'relative', paddingRight: '24px' }}
                     >
-                        <SidebarText $hasPartialCoverage={isPartialCoverage} $isTemporary={isTemporary}>
+                        <div className="sidebar-text">
                             <Label>{groupTitle(groupName)}</Label>
-                            {isPartialCoverage && <PartialCoverageIndicator>{groupType.match(/\(([^)]+)\)/)?.[1] || ''}</PartialCoverageIndicator>}
-                            {isTemporary && <TemporaryIndicator>Midlertidig</TemporaryIndicator>}
-                        </SidebarText>
-                        <SidebarIcon>
+                            {isPartialCoverage && <div className="coverage-indicator">{groupType.match(/\(([^)]+)\)/)?.[1] || ''}</div>}
+                            {isTemporary && <div className="coverage-indicator">Midlertidig</div>}
+                        </div>
+                        <div className="sidebar-icon">
                             <Information />
-                        </SidebarIcon>
+                        </div>
                     </div>
                 ),
                 id: vaktlag.id,
                 stackItems: vaktlag.type === 'Midlertidlig',
+                className: isPartialCoverage ? 'partial-coverage' : isTemporary ? 'temporary' : '',
             })
         })
 
@@ -571,14 +518,14 @@ function VaktorTimeline() {
                                 Nullstill
                             </Button>
 
-                            <Timeframebtns>
+                            <div className="timeframe-btns">
                                 <Button size="small" variant="secondary" onClick={() => handleTimeHeaderChange('week')}>
                                     Uke
                                 </Button>
                                 <Button size="small" variant="secondary" onClick={() => handleTimeHeaderChange('month')}>
                                     Måned
                                 </Button>
-                            </Timeframebtns>
+                            </div>
 
                             <HStack gap="space-2">
                                 <Button size="small" variant="secondary" onClick={() => onPrevClick()} icon={<Left />} />
@@ -607,7 +554,7 @@ function VaktorTimeline() {
                                 {({ getRootProps }) => {
                                     return (
                                         <div {...getRootProps()}>
-                                            <SidebarHeaderText>Vaktlag:</SidebarHeaderText>
+                                            <div className="sidebar-header-text">Vaktlag:</div>
                                         </div>
                                     )
                                 }}
