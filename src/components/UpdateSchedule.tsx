@@ -1,4 +1,4 @@
-import { Button, Table, useMonthpicker, MonthPicker, Search, Select, ReadMore, Loader, Tabs } from '@navikt/ds-react'
+import { Button, Table, useMonthpicker, MonthPicker, Search, Select, Loader, Tabs, Timeline, TimelinePeriodProps } from '@navikt/ds-react'
 import { useEffect, useState } from 'react'
 import { Schedules, Vaktlag } from '../types/types'
 import moment from 'moment'
@@ -6,9 +6,14 @@ import ScheduleModal from './ScheduleModal'
 import ScheduleChanges from './ScheduleChanges'
 import BulkDeleteSchedules from './BulkDeleteSchedules'
 import { useAuth } from '../context/AuthContext'
-import { CalendarIcon } from '@navikt/aksel-icons'
+import { CalendarIcon, Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
 
-const UpdateSchedule = () => {
+interface UpdateScheduleProps {
+    selectedVaktlag: string
+    setSelectedVaktlag: (id: string) => void
+}
+
+const UpdateSchedule = ({ selectedVaktlag, setSelectedVaktlag }: UpdateScheduleProps) => {
     const { user } = useAuth()
     const [loading, setLoading] = useState(false)
     const [scheduleData, setScheduleData] = useState<Schedules[]>([])
@@ -17,7 +22,6 @@ const UpdateSchedule = () => {
     const [response, setResponse] = useState()
     const [Vakt, addVakt] = useState()
     const [searchFilter, setSearchFilter] = useState('')
-    const [selectedVaktlag, setSelctedVaktlag] = useState(user.groups[0].id)
     const [activeTab, setActiveTab] = useState('vakter')
 
     const fromDate = moment('Oct 01 2022', 'MMM DD YYYY').toDate()
@@ -29,6 +33,138 @@ const UpdateSchedule = () => {
         toDate,
         defaultSelected,
     })
+
+    const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
+        if (!schedules || schedules.length === 0) {
+            return null
+        }
+
+        const vakter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'ordinær vakt')
+            .map((schedule) => ({
+                start: new Date(Number(schedule.start_timestamp) * 1000),
+                end: new Date(Number(schedule.end_timestamp) * 1000),
+                status: 'success',
+                icon: <WaitingRoomIcon aria-hidden />,
+                statusLabel: 'Vakt',
+                children: (
+                    <div>
+                        <b>{schedule.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        const vaktbistand: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bistand')
+            .map((change) => ({
+                start: new Date(change.start_timestamp * 1000),
+                end: new Date(change.end_timestamp * 1000),
+                status: 'info',
+                icon: <FirstAidKitIcon aria-hidden />,
+                statusLabel: 'Bistand',
+                children: (
+                    <div>
+                        <b>{change.user.name}</b> <br />
+                        Start:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        const vaktbytter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bytte')
+            .map((change) => ({
+                start: new Date(Number(change.start_timestamp) * 1000),
+                end: new Date(Number(change.end_timestamp) * 1000),
+                status: 'warning',
+                icon: <RecycleIcon aria-hidden />,
+                statusLabel: 'Bytte',
+                children: (
+                    <div>
+                        <b>{change.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        return (
+            <div className="min-w-[800px]">
+                <Timeline>
+                    <Timeline.Row label="Vakter" icon={<Buildings3Icon aria-hidden />}>
+                        {vakter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bistand" icon={<FirstAidKitIcon aria-hidden />}>
+                        {vaktbistand.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bytter" icon={<RecycleIcon aria-hidden />}>
+                        {vaktbytter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                </Timeline>
+            </div>
+        )
+    }
 
     function getMonthTimestamps(currentMonth: Date) {
         const year = currentMonth.getFullYear()
@@ -156,67 +292,61 @@ const UpdateSchedule = () => {
             )}
             <div
                 style={{
-                    marginTop: '2vh',
                     marginBottom: '3vh',
                 }}
             >
-                <div style={{ marginBottom: '2vh' }}>
-                    <Select label="Velg vaktlag" onChange={(e) => setSelctedVaktlag(e.target.value)} style={{ maxWidth: '300px' }}>
-                        {user.groups.map((group: Vaktlag) => (
-                            <option key={group.id} value={group.id}>
-                                {group.name}
-                            </option>
-                        ))}
-                    </Select>
-                </div>
-
                 <Tabs value={activeTab} onChange={setActiveTab}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <Tabs.List>
-                            <Tabs.Tab value="vakter" label="Vakter" />
-                            <Tabs.Tab value="administrer" label="Administrer" />
-                        </Tabs.List>
-                        <ReadMore header="Last ned vakter til kalender">
-                            <div style={{ display: 'grid', gap: '10px', marginTop: '1vh' }}>
-                                <Button
-                                    size="small"
-                                    icon={<CalendarIcon title="a11y-title" fontSize="1.5rem" />}
-                                    onClick={() => {
-                                        group_calendar(selectedVaktlag)
-                                    }}
-                                >
-                                    .iCal for Vaktlaget
-                                </Button>
-                                <Button
-                                    size="small"
-                                    icon={<CalendarIcon title="a11y-title" fontSize="1.5rem" />}
-                                    onClick={() => {
-                                        my_calendar()
-                                    }}
-                                >
-                                    .iCal for mine vakter
-                                </Button>
-                            </div>
-                        </ReadMore>
-                    </div>
+                    <Tabs.List>
+                        <Tabs.Tab value="vakter" label="Vakter" />
+                        <Tabs.Tab value="administrer" label="Administrer" />
+                    </Tabs.List>
                     <Tabs.Panel value="vakter" style={{ marginTop: '2vh' }}>
-                        <div className="min-h-96" style={{ display: 'flex', gap: '30px', marginBottom: '2vh' }}>
+                        <div style={{ display: 'flex', gap: '20px', marginBottom: '2vh', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                            <Select
+                                label="Velg vaktlag"
+                                value={selectedVaktlag}
+                                onChange={(e) => setSelectedVaktlag(e.target.value)}
+                                style={{ minWidth: '200px', maxWidth: '300px' }}
+                                size="small"
+                            >
+                                {user.groups.map((group: Vaktlag) => (
+                                    <option key={group.id} value={group.id}>
+                                        {group.name}
+                                    </option>
+                                ))}
+                            </Select>
+
                             <MonthPicker {...monthpickerProps}>
-                                <div className="grid gap-4">
-                                    <MonthPicker.Input {...inputProps} label="Velg måned" />
-                                </div>
+                                <MonthPicker.Input {...inputProps} label="Velg måned" size="small" />
                             </MonthPicker>
 
-                            <form style={{ width: '300px' }}>
+                            <form style={{ minWidth: '200px', maxWidth: '300px' }}>
                                 <Search
                                     label="Søk etter person"
                                     hideLabel={false}
                                     variant="simple"
+                                    size="small"
                                     onChange={(text) => setSearchFilter(text)}
                                     onClick={(e) => false}
                                 />
                             </form>
                         </div>
+
+                        <div style={{ marginBottom: '3vh' }}>
+                            {selectedMonth && (
+                                <TimeLine
+                                    schedules={scheduleData.filter(
+                                        (schedule: Schedules) =>
+                                            schedule.start_timestamp !== null &&
+                                            schedule.user.name.toLowerCase().includes(searchFilter.toLowerCase()) &&
+                                            new Date(schedule.start_timestamp * 1000).getMonth() === selectedMonth.getMonth() &&
+                                            new Date(schedule.start_timestamp * 1000).getFullYear() === selectedMonth.getFullYear() &&
+                                            selectedVaktlag == schedule.group_id
+                                    )}
+                                />
+                            )}
+                        </div>
+
                         <Table
                             style={{
                                 minWidth: '1150px',

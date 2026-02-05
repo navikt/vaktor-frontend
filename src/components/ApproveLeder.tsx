@@ -86,7 +86,7 @@ const AdminLeder = ({}) => {
                 children: (
                     <div>
                         <b>{change.user.name}</b> <br />
-                        Slutt:{' '}
+                        Start:{' '}
                         {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
@@ -95,7 +95,7 @@ const AdminLeder = ({}) => {
                             minute: '2-digit',
                         })}
                         <br />
-                        Start:{' '}
+                        Slutt:{' '}
                         {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
                             day: '2-digit',
                             month: '2-digit',
