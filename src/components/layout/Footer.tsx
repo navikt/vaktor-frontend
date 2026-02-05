@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { EnvelopeClosedIcon, PhoneIcon } from '@navikt/aksel-icons'
 import { BodyShort, Label } from '@navikt/ds-react'
 import styled from 'styled-components'

@@ -3,8 +3,8 @@ import moment from 'moment'
 import 'moment/locale/nb'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
-import DineVakter from '../components/ApproveSchema'
-import NextDeadlineBox from '../components/NextDeadline'
+import DineVakter from '../components/DineVakter'
+import NextDeadlineBox from '../components/utils/NextDeadlineBox'
 
 const Home: NextPage = () => {
     const { user } = useAuth()

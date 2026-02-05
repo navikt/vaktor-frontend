@@ -1,10 +1,10 @@
 import type { NextPage } from 'next'
 import moment from 'moment'
 import 'moment/locale/nb'
-import AdminLeder from '../components/ApproveLeder'
+import AdminLeder from '../components/Ledergodkjenning'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
-import NextDeadlineBox from '../components/NextDeadline'
+import NextDeadlineBox from '../components/utils/NextDeadlineBox'
 
 const Home: NextPage = () => {
     const { user } = useAuth()

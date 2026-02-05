@@ -1,7 +1,7 @@
 import Timeline, { TimelineHeaders, SidebarHeader, DateHeader, CustomMarker, CursorMarker } from 'react-calendar-timeline'
 import { useState, useEffect, useRef } from 'react'
 import { Moment } from 'moment'
-import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './SetColors'
+import { colorPicker, setGrpColor, setBorderColor, setTextColor, setInterruptionColor } from './utils/SetColors'
 import { Information, Left, Right } from '@navikt/ds-icons'
 import GroupDetailsModal from './GroupDetailsModal'
 import ItemDetailsModal from './ItemDetailsModal'

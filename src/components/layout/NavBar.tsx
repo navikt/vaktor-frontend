@@ -4,9 +4,9 @@ import { Button, Dropdown, BodyShort, HStack } from '@navikt/ds-react'
 import { MenuHamburgerIcon } from '@navikt/aksel-icons'
 import Image from 'next/image'
 
-import { useAuth } from '../context/AuthContext'
-import { User } from '../types/types'
-import * as Routes from '../types/routes'
+import { useAuth } from '../../context/AuthContext'
+import { User } from '../../types/types'
+import * as Routes from '../../types/routes'
 
 // A function to check if the user has any of the specified roles
 const hasAnyRole = (user: User, roleTitles: string[]): boolean => {

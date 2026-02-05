@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import moment from 'moment'
 import 'moment/locale/nb'
-import AdminLeder from '../components/AssignLeader'
+import AdminLeder from '../components/LeveranselederAdmin'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
 

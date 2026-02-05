@@ -2,7 +2,7 @@ import { Textarea } from '@navikt/ds-react'
 import { Edit, SuccessStroke } from '@navikt/ds-icons'
 import '@navikt/ds-css'
 import { useState } from 'react'
-import { User } from '../types/types'
+import { User } from '../../types/types'
 
 const UpdateUserInfo = async (user: User) => {
     var fetchOptions = {

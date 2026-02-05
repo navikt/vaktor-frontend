@@ -2,7 +2,7 @@ import Navbar from './NavBar'
 import { Page, VStack } from '@navikt/ds-react'
 import Header from './Header'
 import Head from 'next/head'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import Footer from './Footer'
 
 const today = new Date()

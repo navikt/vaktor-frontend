@@ -1,5 +1,5 @@
 import { Dispatch } from 'react'
-import { Schedules } from '../types/types'
+import { Schedules } from '../../types/types'
 import { Loader } from '@navikt/ds-react'
 import DeleteButton from './DeleteButton'
 

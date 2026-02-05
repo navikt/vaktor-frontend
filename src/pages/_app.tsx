@@ -6,7 +6,7 @@ import '../styles/UpdateSchedule.css'
 
 import '@navikt/ds-css'
 import type { AppProps } from 'next/app'
-import Layout from '../components/Layout'
+import Layout from '../components/layout/Layout'
 import { AuthProvider } from '../context/AuthContext'
 
 function MyApp({ Component, pageProps }: AppProps) {

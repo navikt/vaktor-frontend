@@ -3,7 +3,7 @@ import { Telephone, Dialog, InformationColored, Clock, CoApplicant } from '@navi
 import '@navikt/ds-css'
 import styled from 'styled-components'
 import { useEffect, useState } from 'react'
-import UserInfoDetails from './userInfoDetails'
+import UserInfoDetails from './utils/UserInfoDetails'
 
 export const InformationLine = styled.div<{ leftPosition?: number }>`
     display: block;

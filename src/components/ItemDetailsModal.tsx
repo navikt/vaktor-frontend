@@ -3,7 +3,7 @@ import { InformationColored, People, CoApplicant, Calender, Telephone, Notes, Di
 import '@navikt/ds-css'
 import { useEffect } from 'react'
 import { User } from '../types/types'
-import UserInfoDetails from './userInfoDetails'
+import UserInfoDetails from './utils/UserInfoDetails'
 import { useAuth } from '../context/AuthContext'
 
 const iconStyle = {
