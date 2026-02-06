@@ -1,4 +1,16 @@
-import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Checkbox, CheckboxGroup } from '@navikt/ds-react'
+import {
+    Table,
+    Loader,
+    MonthPicker,
+    useMonthpicker,
+    Search,
+    Select,
+    Button,
+    Checkbox,
+    CheckboxGroup,
+    Timeline,
+    TimelinePeriodProps,
+} from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -11,6 +23,7 @@ import MapApproveStatus from './utils/MapApproveStatus'
 import VarsleModal from './VarsleModal'
 import ErrorModal from './utils/ErrorModal'
 import AuditModal from './AuditModal'
+import { FirstAidKitIcon, RecycleIcon, Buildings3Icon, WaitingRoomIcon } from '@navikt/aksel-icons'
 
 const Admin = () => {
     const { user } = useAuth()
@@ -42,18 +55,167 @@ const Admin = () => {
         setErrorMessage(message)
     }
 
+    const getStatusColor = (approveLevel: number) => {
+        switch (approveLevel) {
+            case 1:
+                return '#66CBEC'
+            case 2:
+                return '#99DEAD'
+            case 3:
+                return '#99DEAD'
+            case 4:
+                return '#E18071'
+            case 5:
+                return '#E18071'
+            case 6:
+                return '#99DEAD'
+            case 7:
+                return '#99DEAD'
+            case 8:
+                return '#E18071'
+            default:
+                return '#FFFFFF'
+        }
+    }
+
+    const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
+        const vakter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'ordinær vakt')
+            .map((schedule) => ({
+                start: new Date(Number(schedule.start_timestamp) * 1000),
+                end: new Date(Number(schedule.end_timestamp) * 1000),
+                status: 'success',
+                icon: <WaitingRoomIcon aria-hidden />,
+                statusLabel: 'Vakt',
+                children: (
+                    <div>
+                        <b>{schedule.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        const vaktbistand: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bistand')
+            .map((change) => ({
+                start: new Date(change.start_timestamp * 1000),
+                end: new Date(change.end_timestamp * 1000),
+                status: 'info',
+                icon: <FirstAidKitIcon aria-hidden />,
+                statusLabel: 'Bistand',
+                children: (
+                    <div>
+                        <b>{change.user.name}</b> <br />
+                        Start:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        const vaktbytter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bytte')
+            .map((change) => ({
+                start: new Date(Number(change.start_timestamp) * 1000),
+                end: new Date(Number(change.end_timestamp) * 1000),
+                status: 'warning',
+                icon: <RecycleIcon aria-hidden />,
+                statusLabel: 'Bytte',
+                children: (
+                    <div>
+                        <b>{change.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        return (
+            <div
+                className="min-w-[800px]"
+                style={{
+                    /* @ts-ignore */
+                    '--ac-timeline-bar-border-radius': '0px',
+                }}
+            >
+                <Timeline>
+                    <Timeline.Row label="Vakter" icon={<Buildings3Icon aria-hidden />}>
+                        {vakter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bistand" icon={<FirstAidKitIcon aria-hidden />}>
+                        {vaktbistand.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bytter" icon={<RecycleIcon aria-hidden />}>
+                        {vaktbytter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                </Timeline>
+            </div>
+        )
+    }
+
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
         toDate: new Date('Aug 23 2027'),
-        //defaultSelected: new Date("Oct 2022")
-        defaultSelected: new Date(
-            new Date().getDate() - 10 > 0
-                ? moment().locale('en-GB').format('L')
-                : moment()
-                      .locale('en-GB')
-                      .month(moment().month() - 1)
-                      .format('L')
-        ),
+        defaultSelected: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     })
 
     function getMonthTimestamps(currentMonth: Date) {
@@ -126,117 +288,99 @@ const Admin = () => {
             })
     }
 
-    const mapVakter = (vaktliste: Schedules[]) =>
-        vaktliste
-            .sort((a: Schedules, b: Schedules) =>
-                a.start_timestamp !== b.start_timestamp ? a.start_timestamp - b.start_timestamp : a.user.name.localeCompare(b.user.name)
-            )
-            .map((vakter: Schedules, i: number) => (
-                //approve_level = 2;
+    const mapVakter = (vaktliste: Schedules[]) => {
+        // Group schedules by group name
+        const groupedByGroupName = vaktliste.reduce(
+            (acc, current) => {
+                const groupName = current.group.name
+                if (!acc[groupName]) {
+                    acc[groupName] = []
+                }
+                acc[groupName].push(current)
+                return acc
+            },
+            {} as Record<string, Schedules[]>
+        )
 
-                <Table.Row key={i}>
-                    <Table.DataCell>{i + 1}</Table.DataCell>
-                    <Table.DataCell scope="row">
-                        {vakter.user.ekstern === true ? (
-                            <>
-                                <b style={{ color: 'red' }}>EKSTERN</b>
-                                <br />
-                            </>
-                        ) : (
-                            <></>
-                        )}
-                        <b> {vakter.user.name}</b>
-                        <br />
-                        {vakter.user.id.toUpperCase()}
-                        <br />
-                        {vakter.group.name}
-                        <br />
-                        {vakter.user.roles && vakter.user.roles.length > 0 && (
-                            <>
-                                <span style={{ fontWeight: 'bold', fontSize: '0.9em' }}>
-                                    Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
-                                </span>
-                                <br />
-                            </>
-                        )}
-                        {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
-                            <span style={{ fontSize: '0.85em', color: '#666' }}>
-                                Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
-                            </span>
-                        )}
-                    </Table.DataCell>
-                    <Table.DataCell scope="row">{vakter.type === 'bakvakt' ? 'bistand' : vakter.type}</Table.DataCell>
-                    <Table.DataCell>
-                        <b>ID: {vakter.id} </b>
-                        <br />
-                        Uke {moment(vakter.start_timestamp * 1000).week()}{' '}
-                        {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
-                            ? ' - ' + moment(vakter.end_timestamp * 1000).week()
-                            : ''}
-                        <br />
-                        Start:{' '}
-                        {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                        })}
-                        <br />
-                        Slutt:{' '}
-                        {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                        })}
-                        <br />
-                        <div style={{ textAlign: 'center', display: 'grid', justifyContent: 'left', gap: '5px' }}>
-                            <Button
-                                size="small"
-                                style={{
-                                    height: '25px',
-                                    minWidth: '170px',
-                                    maxWidth: '2000px',
-                                }}
-                                onClick={() => {
-                                    setSchedule(vakter)
-                                    setIsOpen(true)
-                                }}
-                                disabled={vakter.approve_level > 0}
-                            >
-                                Gjør endringer
-                            </Button>
+        // Sort each group by start_timestamp
+        Object.keys(groupedByGroupName).forEach((groupNameKey) => {
+            groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
+        })
 
-                            <DeleteVaktButton
-                                vakt={vakter}
-                                loading={loading}
-                                setLoading={setLoading}
-                                setResponse={setResponse}
-                                onError={showErrorModal}
-                                delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
-                            ></DeleteVaktButton>
-                        </div>
-                        <div style={{ marginTop: '15px', marginBottom: '15px' }}>
-                            {vakter.vakter.length !== 0 ? 'Endringer:' : ''}
-                            {vakter.vakter.map((endringer, idx: number) => (
-                                <div key={idx}>
-                                    <b>ID: {endringer.id}</b>
-                                    <br />
-                                    <b> {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}:</b> {endringer.user.name}
-                                    <br />
-                                    Start:{' '}
-                                    {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
-                                    <br />
-                                    Slutt:{' '}
-                                    {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+        // Convert the grouped and sorted schedules into an array of JSX elements
+        let rowCount = 0
+        const groupedRows = Object.entries(groupedByGroupName).flatMap(([groupName, schedules]) => [
+            // This is the row for the group header
+            <Table.Row key={`header-${groupName}`}>
+                <Table.DataCell colSpan={7}>
+                    <b>{groupName}</b>
+                    <TimeLine schedules={schedules} />
+                </Table.DataCell>
+            </Table.Row>,
+            // These are the individual rows for the schedules
+            ...schedules.map((vakter: Schedules, i: number) => {
+                rowCount++
+                return (
+                    //approve_level = 2;
+
+                    <Table.Row key={`row-${vakter.id}-${i}`}>
+                        <Table.DataCell>{rowCount}</Table.DataCell>
+                        <Table.DataCell
+                            scope="row"
+                            style={{
+                                padding: '12px',
+                                backgroundColor:
+                                    vakter.type === 'bistand' || vakter.type === 'bakvakt'
+                                        ? '#e6f4f9'
+                                        : vakter.type === 'bytte'
+                                          ? '#fff4cc'
+                                          : 'transparent',
+                            }}
+                        >
+                            {vakter.user.ekstern === true && <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '4px' }}>EKSTERN</div>}
+                            <div style={{ lineHeight: '1.5' }}>
+                                <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                                    {vakter.type === 'bakvakt' || vakter.type === 'bistand' ? (
+                                        <FirstAidKitIcon aria-hidden style={{ marginRight: '8px' }} />
+                                    ) : vakter.type === 'bytte' ? (
+                                        <RecycleIcon aria-hidden style={{ marginRight: '8px' }} />
+                                    ) : null}
+                                    {vakter.user.name}
+                                </div>
+                                <div style={{ fontSize: '0.85em', color: '#666' }}>{vakter.user.id.toUpperCase()}</div>
+                                <div style={{ fontSize: '0.85em', color: '#666' }}>{vakter.group.name}</div>
+                                {vakter.user.roles && vakter.user.roles.length > 0 && (
+                                    <div style={{ fontSize: '0.85em', color: '#666', marginTop: '4px' }}>
+                                        Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
+                                    </div>
+                                )}
+                                {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
+                                    <div style={{ fontSize: '0.85em', color: '#666' }}>
+                                        Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
+                                    </div>
+                                )}
+                                <div style={{ fontSize: '0.85em', color: '#888', marginTop: '4px', fontStyle: 'italic' }}>
+                                    {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
+                                </div>
+                            </div>
+                        </Table.DataCell>
+                        <Table.DataCell style={{ minWidth: '200px', padding: '12px', backgroundColor: getStatusColor(vakter.approve_level) }}>
+                            <div style={{ lineHeight: '1.6' }}>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
+                                </div>
+                                <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '4px' }}>
+                                    <b>ID:</b> {vakter.id}
+                                </div>
+                                <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>
+                                    <b>Uke:</b> {moment(vakter.start_timestamp * 1000).week()}
+                                    {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
+                                        ? ' - ' + moment(vakter.end_timestamp * 1000).week()
+                                        : ''}
+                                </div>
+                                <div style={{ fontSize: '0.85em' }}>
+                                    <b>Start:</b>{' '}
+                                    {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
                                         day: '2-digit',
                                         month: '2-digit',
                                         year: 'numeric',
@@ -244,31 +388,149 @@ const Admin = () => {
                                         minute: '2-digit',
                                     })}
                                 </div>
-                            ))}
-                            <br />
-                        </div>
-                    </Table.DataCell>
-                    <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
-                    <Table.DataCell scope="row" style={{ maxWidth: '200px', minWidth: '150px' }}>
-                        {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
-                    </Table.DataCell>
-                    <Table.DataCell scope="row" style={{ maxWidth: '250px', minWidth: '200px' }}>
-                        {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
-                        {/* need to add new audits*/}
-                        <br />
-                        <Button
-                            size="small"
-                            onClick={() => {
-                                setSchedule(vakter)
-                                setIsAuditOpen(true)
-                            }}
-                        >
-                            {' '}
-                            Legg til audit
-                        </Button>
-                    </Table.DataCell>
-                </Table.Row>
-            ))
+                                <div style={{ fontSize: '0.85em', marginTop: '4px' }}>
+                                    <b>Slutt:</b>{' '}
+                                    {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
+                                </div>
+                            </div>
+                        </Table.DataCell>
+                        <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
+                            {vakter.vakter.length > 0 ? (
+                                <div style={{ lineHeight: '1.5' }}>
+                                    {vakter.vakter.map((endringer, idx: number) => {
+                                        const endringBgColor =
+                                            endringer.type === 'bistand' || endringer.type === 'bakvakt'
+                                                ? '#e6f4f9'
+                                                : endringer.type === 'bytte'
+                                                  ? '#fff4cc'
+                                                  : 'transparent'
+                                        return (
+                                            <div
+                                                key={idx}
+                                                style={{
+                                                    marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
+                                                    paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
+                                                    borderBottom: idx < vakter.vakter.length - 1 ? '1px solid #e0e0e0' : 'none',
+                                                    backgroundColor: endringBgColor,
+                                                    padding: endringBgColor !== 'transparent' ? '8px' : '0',
+                                                    borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
+                                                }}
+                                            >
+                                                <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '2px' }}>
+                                                    <b>ID:</b> {endringer.id}
+                                                </div>
+                                                <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>
+                                                    {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}
+                                                </div>
+                                                <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
+                                                <div style={{ fontSize: '0.8em', color: '#666' }}>
+                                                    {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </div>
+                                                <div style={{ fontSize: '0.8em', color: '#666' }}>
+                                                    {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '0.85em', color: '#999' }}>Ingen endringer</span>
+                            )}
+                        </Table.DataCell>
+                        <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
+                            <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                                <Button
+                                    size="xsmall"
+                                    style={{
+                                        height: '36px',
+                                        width: '150px',
+                                        marginBottom: '5px',
+                                    }}
+                                    onClick={() => {
+                                        setSchedule(vakter)
+                                        setIsOpen(true)
+                                    }}
+                                    disabled={vakter.approve_level > 0}
+                                >
+                                    Gjør endringer
+                                </Button>
+
+                                <DeleteVaktButton
+                                    vakt={vakter}
+                                    loading={loading}
+                                    setLoading={setLoading}
+                                    setResponse={setResponse}
+                                    onError={showErrorModal}
+                                    delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
+                                ></DeleteVaktButton>
+                            </div>
+                        </Table.DataCell>
+                        <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
+                            {vakter.cost.length !== 0 ? (
+                                <div
+                                    style={{
+                                        padding: '8px',
+                                        backgroundColor: '#f8f9fa',
+                                        borderRadius: '4px',
+                                        border: '1px solid #e0e0e0',
+                                    }}
+                                >
+                                    <MapCost vakt={vakter} avstemming={true}></MapCost>
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '0.85em', color: '#999' }}>Ingen beregning foreligger</span>
+                            )}
+                        </Table.DataCell>
+                        <Table.DataCell style={{ padding: '8px', minWidth: '200px' }}>
+                            <div
+                                style={{
+                                    padding: '8px',
+                                    backgroundColor: '#f8f9fa',
+                                    borderRadius: '4px',
+                                    border: '1px solid #e0e0e0',
+                                }}
+                            >
+                                {vakter.audits.length !== 0 ? (
+                                    <MapAudit audits={vakter.audits} />
+                                ) : (
+                                    <span style={{ fontSize: '0.8em', color: '#999' }}>Ingen hendelser</span>
+                                )}
+                            </div>
+                            <Button
+                                size="small"
+                                onClick={() => {
+                                    setSchedule(vakter)
+                                    setIsAuditOpen(true)
+                                }}
+                                style={{ marginTop: '8px' }}
+                            >
+                                Legg til audit
+                            </Button>
+                        </Table.DataCell>
+                    </Table.Row>
+                )
+            }),
+        ])
+        return groupedRows
+    }
 
     useEffect(() => {
         setLoading(true)
@@ -336,17 +598,7 @@ const Admin = () => {
     let listeAvVakter = mapVakter(filteredVakter)
 
     return (
-        <div
-            style={{
-                minWidth: '900px',
-                maxWidth: '90vw',
-                backgroundColor: 'white',
-                marginBottom: '3vh',
-                display: 'grid',
-                alignContent: 'center',
-                margin: 'auto',
-            }}
-        >
+        <>
             <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />
             {varsleModalOpen && (
                 <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={selectedMonth || new Date()} />
@@ -425,42 +677,32 @@ const Admin = () => {
                     </Button>
                 </div>
             </div>
-            <div>
-                <Table zebraStripes>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>#</Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Type vakt</Table.HeaderCell>
-                            <Table.HeaderCell
-                                scope="col"
-                                style={{
-                                    minWidth: '400px',
-                                    maxWidth: '400px',
-                                }}
-                            >
-                                Periode
-                            </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-                            <Table.HeaderCell
-                                scope="col"
-                                style={{
-                                    minWidth: '400px',
-                                    maxWidth: '400px',
-                                }}
-                            >
-                                Kost
-                            </Table.HeaderCell>
-                            <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {loading ? <Loader /> : ''}
-                        {listeAvVakter.length === 0 ? <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3> : listeAvVakter}
-                    </Table.Body>
-                </Table>
-            </div>
-        </div>
+
+            <Table
+                style={{
+                    width: '100%',
+                    backgroundColor: 'white',
+                    marginBottom: '3vh',
+                    marginTop: '2vh',
+                }}
+            >
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell>#</Table.HeaderCell>
+                        <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                        <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+                        <Table.HeaderCell scope="col">Endringer</Table.HeaderCell>
+                        <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
+                        <Table.HeaderCell scope="col">Kost</Table.HeaderCell>
+                        <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {loading ? <Loader /> : ''}
+                    {listeAvVakter.length === 0 ? <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3> : listeAvVakter}
+                </Table.Body>
+            </Table>
+        </>
     )
 }
 
