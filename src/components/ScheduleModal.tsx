@@ -18,6 +18,8 @@ import {
 import { Schedules, User } from '../types/types'
 import ScheduleChanges from './utils/ScheduleChanges'
 import moment from 'moment'
+import { hasAnyRole } from '../utils/roles'
+
 const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
     await fetch(
         `/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
@@ -34,12 +36,6 @@ const mapGroupOptions = (members: User[]) => {
             {user.name}
         </option>
     ))
-}
-
-const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
-    const hasGlobalRole = user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
-    const hasGroupRole = user.group_roles?.some((gr) => roleTitles.includes(gr.role?.title)) ?? false
-    return hasGlobalRole || hasGroupRole
 }
 
 const ScheduleModal = (props: {

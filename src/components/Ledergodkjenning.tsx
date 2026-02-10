@@ -2,7 +2,7 @@ import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, Hel
 import moment from 'moment'
 import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Schedules, User } from '../types/types'
+import { Schedules } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
 
 import MapCost from './utils/mapCost'
@@ -10,12 +10,7 @@ import MapAudit from './utils/mapAudit'
 import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
 import { Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
-
-const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
-    const hasGlobalRole = user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
-    const hasGroupRole = user.group_roles?.some((gr) => roleTitles.includes(gr.role?.title)) ?? false
-    return hasGlobalRole || hasGroupRole
-}
+import { hasAnyRole } from '../utils/roles'
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()

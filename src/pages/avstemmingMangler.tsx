@@ -4,13 +4,13 @@ import 'moment/locale/nb'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
 import AvstemmingMangler from '../components/AvstemmingMangler'
+import { hasAnyRole } from '../utils/roles'
 
 const Home: NextPage = () => {
     const { user } = useAuth()
     moment.locale('nb')
 
-    // Check if the roles array exists and includes any of the specified roles
-    const hasAccess = user?.roles?.some((role) => ['okonomi', 'admin'].includes(role.title.toLowerCase()))
+    const hasAccess = hasAnyRole(user, ['okonomi', 'admin'])
 
     if (hasAccess) {
         return (

@@ -1,13 +1,6 @@
 import { Alert, Page, VStack } from '@navikt/ds-react'
 import { useAuth } from '../../context/AuthContext'
-import { User } from '../../types/types'
-
-// A function to check if the user has any of the specified roles (global or group-specific)
-const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
-    const hasGlobalRole = user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
-    const hasGroupRole = user.group_roles?.some((gr) => roleTitles.includes(gr.role?.title)) ?? false
-    return hasGlobalRole || hasGroupRole
-}
+import { hasAnyRole } from '../../utils/roles'
 
 const Header = () => {
     const { user } = useAuth()
