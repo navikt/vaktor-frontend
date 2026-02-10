@@ -37,7 +37,9 @@ const mapGroupOptions = (members: User[]) => {
 }
 
 const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
-    return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
+    const hasGlobalRole = user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
+    const hasGroupRole = user.group_roles?.some((gr) => roleTitles.includes(gr.role?.title)) ?? false
+    return hasGlobalRole || hasGroupRole
 }
 
 const ScheduleModal = (props: {
