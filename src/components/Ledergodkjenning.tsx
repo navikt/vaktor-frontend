@@ -302,10 +302,10 @@ const AdminLeder = ({}) => {
 
     const getBistandBytteColor = (vaktType: string) => {
         if (vaktType === 'bistand') {
-            return isDarkMode ? '#1a3845' : '#e6f4f9'
+            return isDarkMode ? '#2d5f7a' : '#e6f4f9'
         }
         if (vaktType === 'bytte') {
-            return isDarkMode ? '#3d3820' : '#fff4cc'
+            return isDarkMode ? '#8b5e2f' : '#fff4cc'
         }
         return 'transparent'
     }
@@ -523,7 +523,7 @@ const AdminLeder = ({}) => {
                                 )}
                             </Table.DataCell>
                         )}
-        
+
                         <Table.DataCell style={{ padding: '8px' }}>
                             <div
                                 style={{
@@ -612,7 +612,7 @@ const AdminLeder = ({}) => {
         <>
             <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />
 
-            <div className="min-h-96" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '20px', alignItems: 'flex-start' }}>
                 <MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
                         <MonthPicker.Input {...inputProps} label="Velg måned" />

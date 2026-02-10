@@ -2,6 +2,7 @@ import { Button, Table, Loader } from '@navikt/ds-react'
 import { useEffect, useState, Dispatch } from 'react'
 import { Vaktlag, User } from '../types/types'
 import GroupOptions from './GroupOptions'
+import { useTheme } from '../context/ThemeContext'
 
 let today = Date.now() / 1000
 //let today = 1668470400  // 15. November 2022 00:00:00
@@ -22,27 +23,44 @@ const remove_leader = async (group_id: string, setResponse: Dispatch<any>) => {
         })
 }
 
-const mapLeaders = (leaders: User[]) =>
-    leaders.map((leader, index) => {
+const mapLeaders = (leaders: User[], isDarkMode: boolean) => {
+    const getTextColor = (level: 'primary' | 'secondary' | 'subtle') => {
+        if (!isDarkMode) {
+            return level === 'primary' ? '#000' : level === 'secondary' ? '#666' : '#999'
+        }
+        return level === 'primary' ? '#fff' : level === 'secondary' ? '#b0b0b0' : '#808080'
+    }
+
+    return leaders.map((leader, index) => {
         const globalRoles = leader.roles?.filter((r) => r.title) || []
         const groupRoles = leader.group_roles || []
 
         return (
             <div key={index} style={{ marginBottom: '6px', fontSize: '0.9em', lineHeight: '1.4' }}>
                 <span style={{ fontWeight: '500' }}>{leader.name}</span>
-                <span style={{ color: '#666', marginLeft: '4px' }}>({leader.id.toUpperCase()})</span>
+                <span style={{ color: getTextColor('secondary'), marginLeft: '4px' }}>({leader.id.toUpperCase()})</span>
                 {globalRoles.length > 0 && (
-                    <div style={{ fontSize: '0.85em', color: '#444' }}>{globalRoles.map((role) => role.title).join(', ')}</div>
+                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{globalRoles.map((role) => role.title).join(', ')}</div>
                 )}
                 {groupRoles.length > 0 && (
-                    <div style={{ fontSize: '0.8em', color: '#666' }}>{groupRoles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}</div>
+                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
+                        {groupRoles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
+                    </div>
                 )}
             </div>
         )
     })
+}
 
-const mapMembers = (members: User[]) => {
+const mapMembers = (members: User[], isDarkMode: boolean) => {
     const rolePriority = ['vaktsjef', 'vakthaver']
+
+    const getTextColor = (level: 'primary' | 'secondary' | 'subtle') => {
+        if (!isDarkMode) {
+            return level === 'primary' ? '#000' : level === 'secondary' ? '#666' : '#999'
+        }
+        return level === 'primary' ? '#fff' : level === 'secondary' ? '#b0b0b0' : '#808080'
+    }
 
     return members
         .filter((member) => !member.roles.some((role) => role.title === 'leveranseleder'))
@@ -61,12 +79,12 @@ const mapMembers = (members: User[]) => {
             return (
                 <div key={index} style={{ marginBottom: '6px', fontSize: '0.9em', lineHeight: '1.4' }}>
                     <span style={{ fontWeight: '500' }}>{member.name}</span>
-                    <span style={{ color: '#666', marginLeft: '4px' }}>({member.id.toUpperCase()})</span>
+                    <span style={{ color: getTextColor('secondary'), marginLeft: '4px' }}>({member.id.toUpperCase()})</span>
                     {globalRoles.length > 0 && (
-                        <div style={{ fontSize: '0.85em', color: '#444' }}>{globalRoles.map((role) => role.title).join(', ')}</div>
+                        <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{globalRoles.map((role) => role.title).join(', ')}</div>
                     )}
                     {groupRoles.length > 0 && (
-                        <div style={{ fontSize: '0.8em', color: '#666' }}>
+                        <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
                             {groupRoles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
                         </div>
                     )}
@@ -76,10 +94,19 @@ const mapMembers = (members: User[]) => {
 }
 
 const Leveranseleder = () => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [groupData, setgroupData] = useState<Vaktlag[]>([])
     const [response, setResponse] = useState()
     const [loading, setLoading] = useState(false)
     const [vaktsjef, setVaktsjef] = useState()
+
+    const getTextColor = (level: 'primary' | 'secondary' | 'subtle') => {
+        if (!isDarkMode) {
+            return level === 'primary' ? '#000' : level === 'secondary' ? '#666' : '#999'
+        }
+        return level === 'primary' ? '#fff' : level === 'secondary' ? '#b0b0b0' : '#808080'
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -101,7 +128,7 @@ const Leveranseleder = () => {
         <Table
             style={{
                 minWidth: '900px',
-                backgroundColor: 'white',
+                backgroundColor: isDarkMode ? '#1a1a1a' : 'white',
                 marginBottom: '3vh',
             }}
         >
@@ -132,10 +159,10 @@ const Leveranseleder = () => {
                                             textOverflow: 'ellipsis',
                                             whiteSpace: 'nowrap',
                                             maxWidth: '100%',
-                                            border: '1px solid #ccc',
+                                            border: isDarkMode ? '1px solid #444' : '1px solid #ccc',
                                             padding: '2px 5px',
                                             cursor: 'pointer',
-                                            backgroundColor: '#f9f9f9',
+                                            backgroundColor: isDarkMode ? '#2a2a2a' : '#f9f9f9',
                                         }}
                                         onClick={() => navigator.clipboard.writeText(vaktlag.id)}
                                         title="Click to copy"
@@ -164,29 +191,45 @@ const Leveranseleder = () => {
                                             <>
                                                 {leveranseledere.length > 0 && (
                                                     <div style={{ marginBottom: '12px' }}>
-                                                        <div style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#666', marginBottom: '4px' }}>
+                                                        <div
+                                                            style={{
+                                                                fontSize: '0.85em',
+                                                                fontWeight: 'bold',
+                                                                color: getTextColor('secondary'),
+                                                                marginBottom: '4px',
+                                                            }}
+                                                        >
                                                             Leveranseledere:
                                                         </div>
-                                                        {mapLeaders(leveranseledere)}
+                                                        {mapLeaders(leveranseledere, isDarkMode)}
                                                     </div>
                                                 )}
                                                 {vaktsjefer.length > 0 && (
                                                     <div>
-                                                        <div style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#666', marginBottom: '4px' }}>
+                                                        <div
+                                                            style={{
+                                                                fontSize: '0.85em',
+                                                                fontWeight: 'bold',
+                                                                color: getTextColor('secondary'),
+                                                                marginBottom: '4px',
+                                                            }}
+                                                        >
                                                             Vaktsjefer:
                                                         </div>
-                                                        {mapLeaders(vaktsjefer)}
+                                                        {mapLeaders(vaktsjefer, isDarkMode)}
                                                     </div>
                                                 )}
                                                 {leveranseledere.length === 0 && vaktsjefer.length === 0 && (
-                                                    <div style={{ fontSize: '0.85em', color: '#999', fontStyle: 'italic' }}>Ingen ledere tildelt</div>
+                                                    <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), fontStyle: 'italic' }}>
+                                                        Ingen ledere tildelt
+                                                    </div>
                                                 )}
                                             </>
                                         )
                                     })()}
                                 </Table.DataCell>
 
-                                <Table.DataCell>{mapMembers(vaktlag.members)}</Table.DataCell>
+                                <Table.DataCell>{mapMembers(vaktlag.members, isDarkMode)}</Table.DataCell>
 
                                 {/* <Table.DataCell style={{ maxWidth: '150px' }}>
                                 <div>

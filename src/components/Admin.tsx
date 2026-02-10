@@ -14,6 +14,7 @@ import {
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { Schedules } from '../types/types'
 import MapCost from './utils/mapCost'
 import MapAudit from './utils/mapAudit'
@@ -27,6 +28,8 @@ import { FirstAidKitIcon, RecycleIcon, Buildings3Icon, WaitingRoomIcon } from '@
 
 const Admin = () => {
     const { user } = useAuth()
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [loading, setLoading] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
@@ -56,26 +59,51 @@ const Admin = () => {
     }
 
     const getStatusColor = (approveLevel: number) => {
-        switch (approveLevel) {
-            case 1:
-                return '#66CBEC'
-            case 2:
-                return '#99DEAD'
-            case 3:
-                return '#99DEAD'
-            case 4:
-                return '#E18071'
-            case 5:
-                return '#E18071'
-            case 6:
-                return '#99DEAD'
-            case 7:
-                return '#99DEAD'
-            case 8:
-                return '#E18071'
-            default:
-                return '#FFFFFF'
+        const lightColors = {
+            0: '#FFFFFF',
+            1: '#66CBEC',
+            2: '#FFB366',
+            3: '#99DEAD',
+            4: '#E18071',
+            5: '#E18071',
+            6: '#FFB366',
+            7: '#99DEAD',
+            8: '#E18071',
+            default: '#FFFFFF',
         }
+
+        const darkColors = {
+            0: '#333333',
+            1: '#2d5f7a',
+            2: '#6b4a2a',
+            3: '#3d5a47',
+            4: '#6b3a35',
+            5: '#6b3a35',
+            6: '#6b4a2a',
+            7: '#3d5a47',
+            8: '#6b3a35',
+            default: '#333333',
+        }
+
+        const colors = isDarkMode ? darkColors : lightColors
+        return colors[approveLevel as keyof typeof colors] || colors.default
+    }
+
+    const getBistandBytteColor = (vaktType: string) => {
+        if (vaktType === 'bistand' || vaktType === 'bakvakt') {
+            return isDarkMode ? '#1a3845' : '#e6f4f9'
+        }
+        if (vaktType === 'bytte') {
+            return isDarkMode ? '#3d3820' : '#fff4cc'
+        }
+        return 'transparent'
+    }
+
+    const getTextColor = (level: 'primary' | 'secondary' | 'subtle') => {
+        if (!isDarkMode) {
+            return level === 'primary' ? '#000' : level === 'secondary' ? '#666' : '#999'
+        }
+        return level === 'primary' ? '#e0e0e0' : level === 'secondary' ? '#b0b0b0' : '#888'
     }
 
     const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
@@ -329,12 +357,7 @@ const Admin = () => {
                             scope="row"
                             style={{
                                 padding: '12px',
-                                backgroundColor:
-                                    vakter.type === 'bistand' || vakter.type === 'bakvakt'
-                                        ? '#e6f4f9'
-                                        : vakter.type === 'bytte'
-                                          ? '#fff4cc'
-                                          : 'transparent',
+                                backgroundColor: getBistandBytteColor(vakter.type),
                             }}
                         >
                             {vakter.user.ekstern === true && <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '4px' }}>EKSTERN</div>}
@@ -347,19 +370,19 @@ const Admin = () => {
                                     ) : null}
                                     {vakter.user.name}
                                 </div>
-                                <div style={{ fontSize: '0.85em', color: '#666' }}>{vakter.user.id.toUpperCase()}</div>
-                                <div style={{ fontSize: '0.85em', color: '#666' }}>{vakter.group.name}</div>
+                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.user.id.toUpperCase()}</div>
+                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.group.name}</div>
                                 {vakter.user.roles && vakter.user.roles.length > 0 && (
-                                    <div style={{ fontSize: '0.85em', color: '#666', marginTop: '4px' }}>
+                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginTop: '4px' }}>
                                         Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
                                     </div>
                                 )}
                                 {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
-                                    <div style={{ fontSize: '0.85em', color: '#666' }}>
+                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>
                                         Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
                                     </div>
                                 )}
-                                <div style={{ fontSize: '0.85em', color: '#888', marginTop: '4px', fontStyle: 'italic' }}>
+                                <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
                                     {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
                                 </div>
                             </div>
@@ -369,7 +392,7 @@ const Admin = () => {
                                 <div style={{ marginBottom: '8px' }}>
                                     <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
                                 </div>
-                                <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '4px' }}>
+                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '4px' }}>
                                     <b>ID:</b> {vakter.id}
                                 </div>
                                 <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>
@@ -404,32 +427,33 @@ const Admin = () => {
                             {vakter.vakter.length > 0 ? (
                                 <div style={{ lineHeight: '1.5' }}>
                                     {vakter.vakter.map((endringer, idx: number) => {
-                                        const endringBgColor =
-                                            endringer.type === 'bistand' || endringer.type === 'bakvakt'
-                                                ? '#e6f4f9'
-                                                : endringer.type === 'bytte'
-                                                  ? '#fff4cc'
-                                                  : 'transparent'
+                                        const endringType = endringer.type === 'bakvakt' ? 'bistand' : endringer.type
+                                        const endringBgColor = getBistandBytteColor(endringType)
                                         return (
                                             <div
                                                 key={idx}
                                                 style={{
                                                     marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
                                                     paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                    borderBottom: idx < vakter.vakter.length - 1 ? '1px solid #e0e0e0' : 'none',
+                                                    borderBottom:
+                                                        idx < vakter.vakter.length - 1
+                                                            ? isDarkMode
+                                                                ? '1px solid #444'
+                                                                : '1px solid #e0e0e0'
+                                                            : 'none',
                                                     backgroundColor: endringBgColor,
                                                     padding: endringBgColor !== 'transparent' ? '8px' : '0',
                                                     borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
                                                 }}
                                             >
-                                                <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '2px' }}>
+                                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '2px' }}>
                                                     <b>ID:</b> {endringer.id}
                                                 </div>
                                                 <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>
                                                     {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}
                                                 </div>
                                                 <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
-                                                <div style={{ fontSize: '0.8em', color: '#666' }}>
+                                                <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
                                                     {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
                                                         day: '2-digit',
                                                         month: '2-digit',
@@ -438,7 +462,7 @@ const Admin = () => {
                                                         minute: '2-digit',
                                                     })}
                                                 </div>
-                                                <div style={{ fontSize: '0.8em', color: '#666' }}>
+                                                <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
                                                     {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
                                                         day: '2-digit',
                                                         month: '2-digit',
@@ -452,7 +476,7 @@ const Admin = () => {
                                     })}
                                 </div>
                             ) : (
-                                <span style={{ fontSize: '0.85em', color: '#999' }}>Ingen endringer</span>
+                                <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
                             )}
                         </Table.DataCell>
                         <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
@@ -488,30 +512,30 @@ const Admin = () => {
                                 <div
                                     style={{
                                         padding: '8px',
-                                        backgroundColor: '#f8f9fa',
+                                        backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
                                         borderRadius: '4px',
-                                        border: '1px solid #e0e0e0',
+                                        border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
                                     }}
                                 >
                                     <MapCost vakt={vakter} avstemming={true}></MapCost>
                                 </div>
                             ) : (
-                                <span style={{ fontSize: '0.85em', color: '#999' }}>Ingen beregning foreligger</span>
+                                <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen beregning foreligger</span>
                             )}
                         </Table.DataCell>
                         <Table.DataCell style={{ padding: '8px', minWidth: '200px' }}>
                             <div
                                 style={{
                                     padding: '8px',
-                                    backgroundColor: '#f8f9fa',
+                                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
                                     borderRadius: '4px',
-                                    border: '1px solid #e0e0e0',
+                                    border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
                                 }}
                             >
                                 {vakter.audits.length !== 0 ? (
                                     <MapAudit audits={vakter.audits} />
                                 ) : (
-                                    <span style={{ fontSize: '0.8em', color: '#999' }}>Ingen hendelser</span>
+                                    <span style={{ fontSize: '0.8em', color: getTextColor('subtle') }}>Ingen hendelser</span>
                                 )}
                             </div>
                             <Button
@@ -622,16 +646,16 @@ const Admin = () => {
                 <></>
             )}
 
-            <div className="min-h-96" style={{ display: 'flex' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
                 <MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
                         <MonthPicker.Input {...inputProps} label="Velg måned" />
                     </div>
                 </MonthPicker>
-                <form style={{ width: '300px', marginLeft: '30px' }}>
+                <form style={{ width: '300px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px' }}>
                     <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
                         <option value="">Alle</option>
                         {groupNames.map((groupName) => (
@@ -641,7 +665,7 @@ const Admin = () => {
                         ))}
                     </Select>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px' }}>
                     <Select label="Velg Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
                         <option value="">Alle</option>
                         {distinctFilenames.map((filename) => (
@@ -652,7 +676,7 @@ const Admin = () => {
                     </Select>
                 </div>
 
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px' }}>
                     <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
                         <option value={9}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
@@ -666,12 +690,12 @@ const Admin = () => {
                         <option value={8}>Overført til lønn etter rekjøring</option>
                     </Select>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px' }}>
+                <div style={{ width: '200px' }}>
                     <CheckboxGroup legend="Eksterne" onChange={(val: string[]) => setFilterExternal(val.includes('true'))}>
                         <Checkbox value="true">Skjul Eksterne</Checkbox>
                     </CheckboxGroup>
                 </div>
-                <div style={{ width: '200px', marginLeft: '30px', marginTop: '30px' }}>
+                <div style={{ width: '200px', display: 'flex', alignItems: 'flex-end' }}>
                     <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
                         Send påminnelse
                     </Button>
@@ -681,7 +705,7 @@ const Admin = () => {
             <Table
                 style={{
                     width: '100%',
-                    backgroundColor: 'white',
+                    backgroundColor: isDarkMode ? '#1a1a1a' : 'white',
                     marginBottom: '3vh',
                     marginTop: '2vh',
                 }}

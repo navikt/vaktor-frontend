@@ -1,10 +1,9 @@
-import { Button, Table, useMonthpicker, MonthPicker, Search, Select, Loader, Tabs, Timeline, TimelinePeriodProps } from '@navikt/ds-react'
+import { Button, Table, useMonthpicker, MonthPicker, Search, Select, Loader, Timeline, TimelinePeriodProps } from '@navikt/ds-react'
 import { useEffect, useState } from 'react'
 import { Schedules, Vaktlag } from '../types/types'
 import moment from 'moment'
 import ScheduleModal from './ScheduleModal'
 import ScheduleChanges from './utils/ScheduleChanges'
-import BulkDeleteSchedules from './BulkDeleteSchedules'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { CalendarIcon, Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
@@ -25,7 +24,6 @@ const UpdateSchedule = ({ selectedVaktlag, setSelectedVaktlag }: UpdateScheduleP
     const [response, setResponse] = useState()
     const [Vakt, addVakt] = useState()
     const [searchFilter, setSearchFilter] = useState('')
-    const [activeTab, setActiveTab] = useState('vakter')
 
     const fromDate = moment('Oct 01 2022', 'MMM DD YYYY').toDate()
     const toDate = moment('2027', 'YYYY').endOf('year').toDate() // December 31, 2027
@@ -298,199 +296,181 @@ const UpdateSchedule = ({ selectedVaktlag, setSelectedVaktlag }: UpdateScheduleP
                     marginBottom: '3vh',
                 }}
             >
-                <Tabs value={activeTab} onChange={setActiveTab}>
-                    <Tabs.List>
-                        <Tabs.Tab value="vakter" label="Vakter" />
-                        <Tabs.Tab value="administrer" label="Administrer" />
-                    </Tabs.List>
-                    <Tabs.Panel value="vakter" style={{ marginTop: '2vh' }}>
-                        <div style={{ display: 'flex', gap: '20px', marginBottom: '2vh', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                            <Select
-                                label="Velg vaktlag"
-                                value={selectedVaktlag}
-                                onChange={(e) => setSelectedVaktlag(e.target.value)}
-                                style={{ minWidth: '200px', maxWidth: '300px' }}
-                                size="small"
-                            >
-                                {user.groups.map((group: Vaktlag) => (
-                                    <option key={group.id} value={group.id}>
-                                        {group.name}
-                                    </option>
-                                ))}
-                            </Select>
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '2vh', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <Select
+                        label="Velg vaktlag"
+                        value={selectedVaktlag}
+                        onChange={(e) => setSelectedVaktlag(e.target.value)}
+                        style={{ minWidth: '200px', maxWidth: '300px' }}
+                        size="small"
+                    >
+                        {user.groups.map((group: Vaktlag) => (
+                            <option key={group.id} value={group.id}>
+                                {group.name}
+                            </option>
+                        ))}
+                    </Select>
 
-                            <MonthPicker {...monthpickerProps}>
-                                <MonthPicker.Input {...inputProps} label="Velg måned" size="small" />
-                            </MonthPicker>
+                    <MonthPicker {...monthpickerProps}>
+                        <MonthPicker.Input {...inputProps} label="Velg måned" size="small" />
+                    </MonthPicker>
 
-                            <form style={{ minWidth: '200px', maxWidth: '300px' }}>
-                                <Search
-                                    label="Søk etter person"
-                                    hideLabel={false}
-                                    variant="simple"
-                                    size="small"
-                                    onChange={(text) => setSearchFilter(text)}
-                                    onClick={(e) => false}
-                                />
-                            </form>
-                        </div>
+                    <form style={{ minWidth: '200px', maxWidth: '300px' }}>
+                        <Search
+                            label="Søk etter person"
+                            hideLabel={false}
+                            variant="simple"
+                            size="small"
+                            onChange={(text) => setSearchFilter(text)}
+                            onClick={(e) => false}
+                        />
+                    </form>
+                </div>
 
-                        <div style={{ marginBottom: '3vh' }}>
-                            {selectedMonth && (
-                                <TimeLine
-                                    schedules={scheduleData.filter(
-                                        (schedule: Schedules) =>
-                                            schedule.start_timestamp !== null &&
-                                            schedule.user.name.toLowerCase().includes(searchFilter.toLowerCase()) &&
-                                            new Date(schedule.start_timestamp * 1000).getMonth() === selectedMonth.getMonth() &&
-                                            new Date(schedule.start_timestamp * 1000).getFullYear() === selectedMonth.getFullYear() &&
-                                            selectedVaktlag == schedule.group_id
-                                    )}
-                                />
+                <div style={{ marginBottom: '3vh' }}>
+                    {selectedMonth && (
+                        <TimeLine
+                            schedules={scheduleData.filter(
+                                (schedule: Schedules) =>
+                                    schedule.start_timestamp !== null &&
+                                    schedule.user.name.toLowerCase().includes(searchFilter.toLowerCase()) &&
+                                    new Date(schedule.start_timestamp * 1000).getMonth() === selectedMonth.getMonth() &&
+                                    new Date(schedule.start_timestamp * 1000).getFullYear() === selectedMonth.getFullYear() &&
+                                    selectedVaktlag == schedule.group_id
                             )}
-                        </div>
+                        />
+                    )}
+                </div>
 
-                        <Table
-                            style={{
-                                minWidth: '1150px',
-                                maxWidth: '1200px',
-                                backgroundColor: isDarkMode ? '#1a1a1a' : 'white',
-                                marginBottom: '3vh',
-                            }}
-                        >
-                            <Table.Header>
-                                <Table.Row>
-                                    <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-                                    <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
-                                    <Table.HeaderCell scope="col">Vaktbistand</Table.HeaderCell>
-                                    <Table.HeaderCell scope="col">Vaktbytter</Table.HeaderCell>
-                                </Table.Row>
-                            </Table.Header>
-                            <Table.Body>
-                                {scheduleData
-                                    .filter(
-                                        (schedule: Schedules) =>
-                                            schedule.start_timestamp !== null &&
-                                            schedule.type === 'ordinær vakt' &&
-                                            schedule.user.name.toLowerCase().includes(searchFilter.toLowerCase()) &&
-                                            new Date(schedule.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-                                            new Date(schedule.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
-                                            selectedVaktlag == schedule.group_id
-                                    )
-                                    .map((schedule: Schedules, i) => {
-                                        //approve_level = 0;
-                                        return (
-                                            <Table.Row key={i}>
-                                                <Table.HeaderCell
-                                                    scope="row"
-                                                    style={{
-                                                        minWidth: '210px',
-                                                        maxWidth: '210px',
-                                                    }}
-                                                >
-                                                    {schedule.user.name}
-                                                    <br />
-                                                    {schedule.type}
-                                                </Table.HeaderCell>
+                <Table
+                    style={{
+                        minWidth: '1150px',
+                        maxWidth: '1200px',
+                        backgroundColor: isDarkMode ? '#1a1a1a' : 'white',
+                        marginBottom: '3vh',
+                    }}
+                >
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Vaktbistand</Table.HeaderCell>
+                            <Table.HeaderCell scope="col">Vaktbytter</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {scheduleData
+                            .filter(
+                                (schedule: Schedules) =>
+                                    schedule.start_timestamp !== null &&
+                                    schedule.type === 'ordinær vakt' &&
+                                    schedule.user.name.toLowerCase().includes(searchFilter.toLowerCase()) &&
+                                    new Date(schedule.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+                                    new Date(schedule.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear() &&
+                                    selectedVaktlag == schedule.group_id
+                            )
+                            .map((schedule: Schedules, i) => {
+                                //approve_level = 0;
+                                return (
+                                    <Table.Row key={i}>
+                                        <Table.HeaderCell
+                                            scope="row"
+                                            style={{
+                                                minWidth: '210px',
+                                                maxWidth: '210px',
+                                            }}
+                                        >
+                                            {schedule.user.name}
+                                            <br />
+                                            {schedule.type}
+                                        </Table.HeaderCell>
 
-                                                <Table.DataCell>
-                                                    Uke: {moment(schedule.start_timestamp * 1000).week()}{' '}
-                                                    {moment(schedule.start_timestamp * 1000).week() < moment(schedule.end_timestamp * 1000).week()
-                                                        ? ' - ' + moment(schedule.end_timestamp * 1000).week()
-                                                        : ''}
-                                                    <br />
-                                                    Fra:{' '}
-                                                    {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                    <br />
-                                                    Til:{' '}
-                                                    {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                    <br />
-                                                    {loading ? (
-                                                        <div>
-                                                            <Loader />
-                                                        </div>
-                                                    ) : (
-                                                        <Button
-                                                            style={{
-                                                                height: '30px',
-                                                                marginTop: '10px',
-                                                                marginBottom: '5px',
-                                                                minWidth: '170px',
-                                                                maxWidth: '190px',
-                                                            }}
-                                                            onClick={() => {
-                                                                setSchedule(schedule)
-                                                                setIsOpen(true)
-                                                            }}
-                                                            disabled={schedule.approve_level > 0}
-                                                        >
-                                                            Legg til endringer
-                                                        </Button>
-                                                    )}
-                                                </Table.DataCell>
-                                                <Table.DataCell
+                                        <Table.DataCell>
+                                            Uke: {moment(schedule.start_timestamp * 1000).week()}{' '}
+                                            {moment(schedule.start_timestamp * 1000).week() < moment(schedule.end_timestamp * 1000).week()
+                                                ? ' - ' + moment(schedule.end_timestamp * 1000).week()
+                                                : ''}
+                                            <br />
+                                            Fra:{' '}
+                                            {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
+                                            <br />
+                                            Til:{' '}
+                                            {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
+                                            <br />
+                                            {loading ? (
+                                                <div>
+                                                    <Loader />
+                                                </div>
+                                            ) : (
+                                                <Button
                                                     style={{
-                                                        minWidth: '210px',
-                                                        maxWidth: '210px',
+                                                        height: '30px',
+                                                        marginTop: '10px',
+                                                        marginBottom: '5px',
+                                                        minWidth: '170px',
+                                                        maxWidth: '190px',
                                                     }}
-                                                >
-                                                    <div>
-                                                        <ScheduleChanges
-                                                            periods={schedule.vakter.filter((vakt) => vakt.type == 'bistand')}
-                                                            setResponse={setResponse}
-                                                            loading={loading}
-                                                            modalView={false}
-                                                        ></ScheduleChanges>
-                                                        <ScheduleChanges
-                                                            periods={schedule.vakter.filter((vakt) => vakt.type == 'bakvakt')}
-                                                            setResponse={setResponse}
-                                                            loading={loading}
-                                                            modalView={false}
-                                                        ></ScheduleChanges>
-                                                    </div>
-                                                </Table.DataCell>
-                                                <Table.DataCell
-                                                    style={{
-                                                        minWidth: '210px',
-                                                        maxWidth: '210px',
+                                                    onClick={() => {
+                                                        setSchedule(schedule)
+                                                        setIsOpen(true)
                                                     }}
+                                                    disabled={schedule.approve_level > 0}
                                                 >
-                                                    <ScheduleChanges
-                                                        periods={schedule.vakter.filter((vakt) => vakt.type == 'bytte')}
-                                                        setResponse={setResponse}
-                                                        loading={loading}
-                                                        modalView={false}
-                                                    ></ScheduleChanges>
-                                                </Table.DataCell>
-                                            </Table.Row>
-                                        )
-                                    })}
-                            </Table.Body>
-                        </Table>
-                    </Tabs.Panel>
-                    <Tabs.Panel value="administrer" style={{ marginTop: '2vh' }}>
-                        <div style={{ maxWidth: '800px' }}>
-                            <BulkDeleteSchedules
-                                groupId={selectedVaktlag}
-                                onDeleted={() => {
-                                    setResponse(undefined)
-                                }}
-                            />
-                        </div>
-                    </Tabs.Panel>
-                </Tabs>
+                                                    Legg til endringer
+                                                </Button>
+                                            )}
+                                        </Table.DataCell>
+                                        <Table.DataCell
+                                            style={{
+                                                minWidth: '210px',
+                                                maxWidth: '210px',
+                                            }}
+                                        >
+                                            <div>
+                                                <ScheduleChanges
+                                                    periods={schedule.vakter.filter((vakt) => vakt.type == 'bistand')}
+                                                    setResponse={setResponse}
+                                                    loading={loading}
+                                                    modalView={false}
+                                                ></ScheduleChanges>
+                                                <ScheduleChanges
+                                                    periods={schedule.vakter.filter((vakt) => vakt.type == 'bakvakt')}
+                                                    setResponse={setResponse}
+                                                    loading={loading}
+                                                    modalView={false}
+                                                ></ScheduleChanges>
+                                            </div>
+                                        </Table.DataCell>
+                                        <Table.DataCell
+                                            style={{
+                                                minWidth: '210px',
+                                                maxWidth: '210px',
+                                            }}
+                                        >
+                                            <ScheduleChanges
+                                                periods={schedule.vakter.filter((vakt) => vakt.type == 'bytte')}
+                                                setResponse={setResponse}
+                                                loading={loading}
+                                                modalView={false}
+                                            ></ScheduleChanges>
+                                        </Table.DataCell>
+                                    </Table.Row>
+                                )
+                            })}
+                    </Table.Body>
+                </Table>
             </div>
         </>
     )
