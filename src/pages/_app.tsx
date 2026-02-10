@@ -8,14 +8,17 @@ import '@navikt/ds-css'
 import type { AppProps } from 'next/app'
 import Layout from '../components/layout/Layout'
 import { AuthProvider } from '../context/AuthContext'
+import { ThemeProvider } from '../context/ThemeContext'
 
 function MyApp({ Component, pageProps }: AppProps) {
     return (
-        <AuthProvider>
-            <Layout>
-                <Component {...pageProps} />
-            </Layout>
-        </AuthProvider>
+        <ThemeProvider>
+            <AuthProvider>
+                <Layout>
+                    <Component {...pageProps} />
+                </Layout>
+            </AuthProvider>
+        </ThemeProvider>
     )
 }
 

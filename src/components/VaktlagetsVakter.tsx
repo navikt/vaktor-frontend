@@ -6,6 +6,7 @@ import ScheduleModal from './ScheduleModal'
 import ScheduleChanges from './utils/ScheduleChanges'
 import BulkDeleteSchedules from './BulkDeleteSchedules'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { CalendarIcon, Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
 
 interface UpdateScheduleProps {
@@ -15,6 +16,8 @@ interface UpdateScheduleProps {
 
 const UpdateSchedule = ({ selectedVaktlag, setSelectedVaktlag }: UpdateScheduleProps) => {
     const { user } = useAuth()
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [loading, setLoading] = useState(false)
     const [scheduleData, setScheduleData] = useState<Schedules[]>([])
     const [selectedSchedule, setSchedule] = useState<Schedules>()
@@ -351,7 +354,7 @@ const UpdateSchedule = ({ selectedVaktlag, setSelectedVaktlag }: UpdateScheduleP
                             style={{
                                 minWidth: '1150px',
                                 maxWidth: '1200px',
-                                backgroundColor: 'white',
+                                backgroundColor: isDarkMode ? '#1a1a1a' : 'white',
                                 marginBottom: '3vh',
                             }}
                         >

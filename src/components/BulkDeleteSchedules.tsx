@@ -1,7 +1,8 @@
-import { Modal, Button, Table, Alert, Heading, Box, Detail, VStack, HStack } from '@navikt/ds-react'
+import { Modal, Button, Table, Alert, Heading, Box, Detail, VStack, HStack, DatePicker, useDatepicker } from '@navikt/ds-react'
 import { TrashIcon } from '@navikt/aksel-icons'
 import { useState } from 'react'
 import { DateTime } from 'luxon'
+import { useTheme } from '../context/ThemeContext'
 
 interface DeletePeriod {
     id: string
@@ -36,6 +37,8 @@ interface BulkDeleteSchedulesProps {
 }
 
 const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDeleteSchedulesProps) => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [open, setOpen] = useState(false)
     const [previewData, setPreviewData] = useState<DeletePreviewData | null>(null)
     const [loading, setLoading] = useState(false)
@@ -43,8 +46,21 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
-    const [startTimestamp, setStartTimestamp] = useState(() => Math.floor(Date.now() / 1000))
-    const [endTimestamp, setEndTimestamp] = useState(() => Math.floor(DateTime.now().plus({ years: 1 }).toMillis() / 1000))
+    const [startDate, setStartDate] = useState<Date | undefined>(new Date())
+    const [endDate, setEndDate] = useState<Date | undefined>(DateTime.now().plus({ years: 1 }).toJSDate())
+
+    const startTimestamp = startDate ? Math.floor(startDate.getTime() / 1000) : Math.floor(Date.now() / 1000)
+    const endTimestamp = endDate ? Math.floor(endDate.getTime() / 1000) : Math.floor(DateTime.now().plus({ years: 1 }).toMillis() / 1000)
+
+    const { datepickerProps: startDatepickerProps, inputProps: startInputProps } = useDatepicker({
+        onDateChange: setStartDate,
+        defaultSelected: startDate,
+    })
+
+    const { datepickerProps: endDatepickerProps, inputProps: endInputProps } = useDatepicker({
+        onDateChange: setEndDate,
+        defaultSelected: endDate,
+    })
 
     const fetchPreview = async () => {
         setLoading(true)
@@ -105,7 +121,15 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
 
     return (
         <>
-            <Box style={{ maxWidth: '400px', padding: '1rem', background: '#f3f4f6', borderRadius: '8px' }}>
+            <Box
+                style={{
+                    maxWidth: '400px',
+                    padding: '1rem',
+                    background: isDarkMode ? '#2a2a2a' : '#f3f4f6',
+                    borderRadius: '8px',
+                    border: isDarkMode ? '1px solid #444' : 'none',
+                }}
+            >
                 <Heading size="small" spacing>
                     Slett vakter i periode
                 </Heading>
@@ -114,34 +138,14 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
                 <VStack gap="space-4">
                     <HStack gap="space-4">
                         <div style={{ flex: 1 }}>
-                            <label className="navds-form-field__label navds-label" htmlFor="fromDate">
-                                Fra
-                            </label>
-                            <input
-                                id="fromDate"
-                                type="date"
-                                className="navds-text-field__input"
-                                value={DateTime.fromSeconds(startTimestamp).toISODate() || ''}
-                                onChange={(e) => {
-                                    const date = DateTime.fromISO(e.target.value)
-                                    if (date.isValid) setStartTimestamp(Math.floor(date.toSeconds()))
-                                }}
-                            />
+                            <DatePicker {...startDatepickerProps}>
+                                <DatePicker.Input {...startInputProps} label="Fra" />
+                            </DatePicker>
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label className="navds-form-field__label navds-label" htmlFor="toDate">
-                                Til
-                            </label>
-                            <input
-                                id="toDate"
-                                type="date"
-                                className="navds-text-field__input"
-                                value={DateTime.fromSeconds(endTimestamp).toISODate() || ''}
-                                onChange={(e) => {
-                                    const date = DateTime.fromISO(e.target.value)
-                                    if (date.isValid) setEndTimestamp(Math.floor(date.toSeconds()))
-                                }}
-                            />
+                            <DatePicker {...endDatepickerProps}>
+                                <DatePicker.Input {...endInputProps} label="Til" />
+                            </DatePicker>
                         </div>
                     </HStack>
 

@@ -2,10 +2,12 @@ import { Button, ReadMore } from '@navikt/ds-react'
 import { DateTime } from 'luxon'
 import { Audit } from '../../types/types'
 import { useState } from 'react'
-
+import { useTheme } from '../../context/ThemeContext'
 import { ChevronDownIcon, ChevronUpIcon } from '@navikt/aksel-icons'
 
 const MapAudit = ({ audits }: { audits: Audit[] }) => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [expanded, setExpanded] = useState(false)
 
     const toggleExpanded = () => {
@@ -26,14 +28,10 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
     }
 
     return (
-        <div style={{ fontSize: '0.85em' }}>
+        <div className="text-sm">
             {hiddenAudits.length > 0 && (
                 <div>
-                    <Button
-                        size="small"
-                        style={{ display: 'flex', minWidth: '120px', backgroundColor: 'transparent', color: 'green' }}
-                        onClick={toggleExpanded}
-                    >
+                    <Button size="small" variant="tertiary" className="flex min-w-[120px]" onClick={toggleExpanded}>
                         {expanded ? (
                             <div>
                                 <ChevronUpIcon /> View Less
@@ -59,13 +57,9 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
                             <ReadMore
                                 header={`${date} - ${time}`}
                                 size="small"
-                                style={
-                                    audit.action.includes('Avgodkjent')
-                                        ? { color: 'red', fontSize: '0.85em' }
-                                        : { color: 'green', fontSize: '0.85em' }
-                                }
+                                className={`text-sm ${audit.action.includes('Avgodkjent') ? (isDarkMode ? 'text-red-400' : 'text-red-600') : isDarkMode ? 'text-green-400' : 'text-green-600'}`}
                             >
-                                <span style={{ fontSize: '0.9em' }}>
+                                <span className="text-sm">
                                     {audit.action} - {audit.user.name}
                                 </span>
                             </ReadMore>
@@ -84,11 +78,9 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
                         <ReadMore
                             header={`${date} - ${time}`}
                             size="small"
-                            style={
-                                audit.action.includes('Avgodkjent') ? { color: 'red', fontSize: '0.85em' } : { color: 'green', fontSize: '0.85em' }
-                            }
+                            className={`text-sm ${audit.action.includes('Avgodkjent') ? (isDarkMode ? 'text-red-400' : 'text-red-600') : isDarkMode ? 'text-green-400' : 'text-green-600'}`}
                         >
-                            <span style={{ fontSize: '0.9em' }}>
+                            <span className="text-sm">
                                 {audit.action} - {audit.user.name}
                             </span>
                         </ReadMore>

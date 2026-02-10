@@ -10,6 +10,7 @@ import moment from 'moment'
 import { Schedules, User, Vaktlag } from '../types/types'
 import Overview from './OverviewNoTimeline'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 let today = Date.now()
 
@@ -38,6 +39,7 @@ const DateRangePicker = ({ onRangeSelected }: { onRangeSelected: (start: number,
 
 function VaktorTimeline() {
     const { user } = useAuth()
+    const { theme } = useTheme() // Force re-render when theme changes
     const [groupData, setGroupData] = useState(null)
     //const [itemData, setItemData] = useState(null)
     const [itemData, setItemData] = useState<Array<any> | null>(null)
@@ -215,7 +217,7 @@ function VaktorTimeline() {
         .map((vaktlag: any, index: number) => {
             groupColorList.push({
                 group: vaktlag.id,
-                color: colorPicker(index),
+                color: colorPicker(index, theme === 'dark'),
             })
             let groupName = vaktlag.name
             let groupType = vaktlag.type
@@ -288,15 +290,20 @@ function VaktorTimeline() {
         .filter((vakt: Schedules) => vakt.type === 'ordinær vakt')
         .map((itemObj: Schedules) => {
             let itemColor = setGrpColor(groupColorList, itemObj.group_id)
-            let borderColor = setBorderColor(itemColor)
-            let textColor = setTextColor(itemColor)
+            let borderColor = setBorderColor(itemColor, theme === 'dark')
+            let textColor = setTextColor(itemColor, theme === 'dark')
             let itemStart = date(itemObj.start_timestamp)
             let itemEnd = date(itemObj.end_timestamp)
+            const tooltipText = `${itemObj.user.name} - ${itemObj.group.name}\n${formattedDate(itemStart)} - ${formattedDate(itemEnd)}`
             items.push({
                 id: itemObj.id,
                 start_time: itemStart,
                 end_time: itemEnd,
-                title: <BodyShort>{itemTitle(itemObj.user.name)}</BodyShort>,
+                title: (
+                    <span style={{ display: 'block', width: '100%', height: '100%' }} title={tooltipText}>
+                        <BodyShort>{itemTitle(itemObj.user.name)}</BodyShort>
+                    </span>
+                ),
                 group: itemObj.group_id,
                 itemProps: {
                     onMouseDown: () => {
@@ -333,17 +340,22 @@ function VaktorTimeline() {
                 let itemInterruptions = itemObj.vakter.filter((vakt: Schedules) => ['bytte', 'bistand'].includes(vakt.type))
 
                 itemInterruptions.map((interruptionObj: Schedules) => {
-                    let interruptionColor = setInterruptionColor(groupColorList, interruptionObj.group_id)
-                    let textColor = setTextColor(interruptionColor)
-                    let borderColor = setBorderColor(interruptionColor)
+                    let interruptionColor = setInterruptionColor(groupColorList, interruptionObj.group_id, theme === 'dark')
+                    let textColor = setTextColor(interruptionColor, theme === 'dark')
+                    let borderColor = setBorderColor(interruptionColor, theme === 'dark')
                     let interruptionStart = date(interruptionObj.start_timestamp)
                     let interruptionEnd = date(interruptionObj.end_timestamp)
+                    const interruptionTooltip = `${interruptionObj.user.id === 'A123456' ? interruptionObj.group.phone : interruptionObj.user.name} - ${interruptionObj.group.name}\n${formattedDate(interruptionStart)} - ${formattedDate(interruptionEnd)}\n(${interruptionObj.type})`
 
                     items.push({
                         id: interruptionObj.id,
                         start_time: interruptionStart,
                         end_time: interruptionEnd,
-                        title: <BodyShort>{interruptionObj.user.name}</BodyShort>,
+                        title: (
+                            <span style={{ display: 'block', width: '100%', height: '100%' }} title={interruptionTooltip}>
+                                <BodyShort>{interruptionObj.user.name}</BodyShort>
+                            </span>
+                        ),
                         group: interruptionObj.group_id,
                         itemProps: {
                             //fjernet til innholdet i interruptions er likt som schedule
