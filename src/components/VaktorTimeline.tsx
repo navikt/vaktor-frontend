@@ -147,9 +147,8 @@ function VaktorTimeline() {
                 let end = Math.floor(visibleTimeEnd / 1000)
 
                 const [groupRes, scheduleRes] = await Promise.all([
-                    fetch('/api/groups'),
+                    fetch('/api/groups_simple'),
                     fetch(`/api/schedules_with_limit?start_timestamp=${start}&end_timestamp=${end}`),
-                    //fetch(`/api/schedules`),
                 ])
 
                 const groupjson = await groupRes.json()
