@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Cost, Artskoder, Schedules } from '../../types/types'
+import { ReadMore } from '@navikt/ds-react'
 
 const mapCostStatus = (status: number) => {
     let statusText = ''
@@ -34,7 +35,7 @@ const mapCostStatus = (status: number) => {
     )
 }
 
-const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => {
+const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
     const [prevTotalCost, setPrevTotalCost] = useState<number | undefined>()
 
     const elements = useMemo(
@@ -50,26 +51,48 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                         <div
                             key={cost.id}
                             style={{
-                                marginBottom: '25px',
+                                marginBottom: '20px',
+                                fontSize: '0.9em',
                             }}
                         >
-                            {idx > 0 ? <hr></hr> : <></>}
-                            {props.avstemming === true ? <b>ID: {cost.id}</b> : false}
+                            {idx > 0 ? <hr style={{ margin: '12px 0' }}></hr> : <></>}
+                            {props.avstemming === true ? (
+                                <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '4px' }}>
+                                    <b>ID:</b>{' '}
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            border: '1px solid #ccc',
+                                            padding: '2px 5px',
+                                            cursor: 'pointer',
+                                            backgroundColor: '#f9f9f9',
+                                            fontSize: '0.9em',
+                                        }}
+                                        onClick={() => navigator.clipboard.writeText(cost.id)}
+                                        title="Click to copy"
+                                    >
+                                        {cost.id}
+                                    </span>
+                                </div>
+                            ) : (
+                                false
+                            )}
                             <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
                             <div
                                 style={{
-                                    marginTop: '5px',
-                                    display: 'flex',
-                                    gap: '20px',
+                                    marginTop: '6px',
                                 }}
                             >
                                 <div>
                                     {mapCostStatus(Number(cost.type_id))}
-                                    Total Sum: <b style={{ color: 'green' }}> {cost.total_cost}</b>
-                                    <br />
-                                    Koststed: <b>{cost.koststed}</b>
+                                    <div style={{ marginTop: '4px' }}>
+                                        Total: <b style={{ color: 'green' }}>{cost.total_cost}</b>
+                                    </div>
+                                    <div style={{ fontSize: '0.9em', color: '#666' }}>
+                                        Koststed: <b>{cost.koststed}</b>
+                                    </div>
                                     {prevTotalCost !== undefined && cost.type_id >= 1 && idx > 0 && (
-                                        <div style={{ color: diff < 0 ? 'red' : 'green' }}>
+                                        <div style={{ color: diff < 0 ? 'red' : 'green', fontSize: '0.9em', marginTop: '4px' }}>
                                             Diff: ({diff < 0 ? '-' : '+'}
                                             {Math.abs(diff).toFixed(2)})
                                         </div>
@@ -80,7 +103,7 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                                 style={{
                                     display: 'flex',
                                     gap: '15px',
-                                    marginTop: '15px',
+                                    marginTop: '12px',
                                 }}
                             >
                                 <div>
@@ -89,7 +112,7 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                                         .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
                                         .map((artskode, index) => (
                                             <div key={index}>
-                                                <b> {artskode.type}:</b> {artskode.sum}
+                                                <b>{artskode.type}:</b> {artskode.sum}
                                             </div>
                                         ))}
                                 </div>
@@ -99,7 +122,7 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
                                         .sort((a: Artskoder, b: Artskoder) => Number(a.type)! - Number(b.type)!)
                                         .map((artskode, index) => (
                                             <div key={index}>
-                                                <b> {artskode.type}: </b> {artskode.hours}
+                                                <b>{artskode.type}:</b> {artskode.hours}
                                             </div>
                                         ))}
                                 </div>
@@ -113,13 +136,37 @@ const MapCost: Function = (props: { vakt: Schedules; avstemming?: boolean }) => 
     )
 
     useEffect(() => {
-        if (props.vakt.cost.length > 0) {
-            const currentTotalCost = props.vakt.cost[0].total_cost // Use the total_cost from the first element
-            setPrevTotalCost(currentTotalCost)
+        const updatePrevCost = () => {
+            if (props.vakt.cost.length > 0) {
+                const currentTotalCost = props.vakt.cost[0].total_cost
+                setPrevTotalCost(currentTotalCost)
+            }
         }
+        updatePrevCost()
     }, [props.vakt.cost])
 
-    return <div>{props.vakt.cost.length !== 0 ? elements : 'ingen beregning foreligger'}</div>
+    const hasMultipleCosts = props.vakt.cost.length > 1
+
+    return (
+        <div>
+            {props.vakt.cost.length !== 0 ? (
+                <>
+                    {hasMultipleCosts && (
+                        <ReadMore
+                            header={`Vis ${props.vakt.cost.length - 1} tidligere beregning${props.vakt.cost.length - 1 > 1 ? 'er' : ''}`}
+                            size="small"
+                            style={{ marginBottom: '8px', fontSize: '0.85em' }}
+                        >
+                            {elements.slice(0, -1)}
+                        </ReadMore>
+                    )}
+                    {elements.slice(-1)}
+                </>
+            ) : (
+                'ingen beregning foreligger'
+            )}
+        </div>
+    )
 }
 
 export default MapCost

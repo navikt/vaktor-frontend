@@ -78,7 +78,15 @@ export interface User {
     contact_info: string
     is_admin: boolean
     roles: Roles[]
+    group_roles: GroupRole[]
     bdm_koststeder: string
+}
+
+export interface GroupRole {
+    group_id: string
+    group_name: string
+    title: string
+    role: Roles
 }
 
 export interface Roles {

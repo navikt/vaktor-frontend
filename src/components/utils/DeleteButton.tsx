@@ -9,9 +9,10 @@ const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>) 
         })
 }
 
-const DeleteButton: Function = (props: { bakvakt: string; setResponse: Dispatch<any> }) => {
+const DeleteButton = (props: { bakvakt: string; setResponse: Dispatch<any> }) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
+    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
 
     return (
         <>
@@ -26,11 +27,13 @@ const DeleteButton: Function = (props: { bakvakt: string; setResponse: Dispatch<
                 }}
                 variant="danger"
                 size="small"
-                ref={buttonRef}
+                ref={(el) => {
+                    setAnchorEl(el)
+                }}
             >
                 Slett endring
             </Button>
-            <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
+            <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={anchorEl}>
                 <Popover.Content
                     style={{
                         backgroundColor: 'rgba(241, 241, 241, 1)',
@@ -45,7 +48,7 @@ const DeleteButton: Function = (props: { bakvakt: string; setResponse: Dispatch<
                         size="small"
                         variant="danger"
                         onClick={() => {
-                            delete_schedule(props.bakvakt, props.setResponse), setOpenState(false)
+                            ;(delete_schedule(props.bakvakt, props.setResponse), setOpenState(false))
                         }}
                     >
                         Slett!

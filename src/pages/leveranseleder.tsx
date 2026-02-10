@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import moment from 'moment'
 import 'moment/locale/nb'
-import AdminLeder from '../components/AssignLeader'
+import AdminLeder from '../components/LeveranselederAdmin'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -10,7 +10,9 @@ const Home: NextPage = () => {
 
     moment.locale('nb')
 
-    const hasAccess = user?.roles?.some((role) => ['leveranseleder', 'admin'].includes(role.title.toLowerCase()))
+    const hasAccess =
+        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title.toLowerCase())) ||
+        user?.group_roles?.some((role) => ['leveranseleder'].includes(role.title.toLowerCase()))
 
     if (hasAccess) {
         return (

@@ -23,17 +23,23 @@ const remove_leader = async (group_id: string, setResponse: Dispatch<any>) => {
 }
 
 const mapLeaders = (leaders: User[]) =>
-    leaders.map((leader, index) => (
-        <div key={index}>
-            <span
-                style={{
-                    fontWeight: leader.roles.some((role) => role.title === 'leveranseleder') ? 'bold' : 'normal',
-                }}
-            >
-                {leader.id.charAt(0).toUpperCase() + leader.id.slice(1)} - {leader.name} - {leader.roles.map((role) => role.title).join(', ')}
-            </span>
-        </div>
-    ))
+    leaders.map((leader, index) => {
+        const globalRoles = leader.roles?.filter((r) => r.title) || []
+        const groupRoles = leader.group_roles || []
+
+        return (
+            <div key={index} style={{ marginBottom: '6px', fontSize: '0.9em', lineHeight: '1.4' }}>
+                <span style={{ fontWeight: '500' }}>{leader.name}</span>
+                <span style={{ color: '#666', marginLeft: '4px' }}>({leader.id.toUpperCase()})</span>
+                {globalRoles.length > 0 && (
+                    <div style={{ fontSize: '0.85em', color: '#444' }}>{globalRoles.map((role) => role.title).join(', ')}</div>
+                )}
+                {groupRoles.length > 0 && (
+                    <div style={{ fontSize: '0.8em', color: '#666' }}>{groupRoles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}</div>
+                )}
+            </div>
+        )
+    })
 
 const mapMembers = (members: User[]) => {
     const rolePriority = ['vaktsjef', 'vakthaver']
@@ -48,11 +54,25 @@ const mapMembers = (members: User[]) => {
 
             return a.id.localeCompare(b.id)
         })
-        .map((member, index) => (
-            <div key={index}>
-                {member.id.charAt(0).toUpperCase() + member.id.slice(1)} - {member.name} - {member.roles.map((role) => role.title).join(', ')}
-            </div>
-        ))
+        .map((member, index) => {
+            const globalRoles = member.roles?.filter((r) => r.title) || []
+            const groupRoles = member.group_roles || []
+
+            return (
+                <div key={index} style={{ marginBottom: '6px', fontSize: '0.9em', lineHeight: '1.4' }}>
+                    <span style={{ fontWeight: '500' }}>{member.name}</span>
+                    <span style={{ color: '#666', marginLeft: '4px' }}>({member.id.toUpperCase()})</span>
+                    {globalRoles.length > 0 && (
+                        <div style={{ fontSize: '0.85em', color: '#444' }}>{globalRoles.map((role) => role.title).join(', ')}</div>
+                    )}
+                    {groupRoles.length > 0 && (
+                        <div style={{ fontSize: '0.8em', color: '#666' }}>
+                            {groupRoles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
+                        </div>
+                    )}
+                </div>
+            )
+        })
 }
 
 const Leveranseleder = () => {
@@ -62,16 +82,17 @@ const Leveranseleder = () => {
     const [vaktsjef, setVaktsjef] = useState()
 
     useEffect(() => {
-        setLoading(true)
-        Promise.all([fetch('/api/groups')])
-            .then(async ([groupsRes]) => {
+        const fetchData = async () => {
+            setLoading(true)
+            try {
+                const [groupsRes] = await Promise.all([fetch('/api/groups')])
                 const groupsjson = await groupsRes.json()
-                return [groupsjson]
-            })
-            .then(([groupData]) => {
-                setgroupData(groupData)
+                setgroupData(groupsjson)
+            } finally {
                 setLoading(false)
-            })
+            }
+        }
+        fetchData()
     }, [response, vaktsjef])
 
     if (loading === true) return <Loader></Loader>
@@ -86,7 +107,7 @@ const Leveranseleder = () => {
         >
             <Table.Header>
                 <Table.Row>
-                    <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
+                    <Table.HeaderCell scope="col">Gruppe</Table.HeaderCell>
                     <Table.HeaderCell scope="col">Leder(e)</Table.HeaderCell>
                     <Table.HeaderCell scope="col">Medlemmer</Table.HeaderCell>
                     {/* <Table.HeaderCell scope="col">Sett leveranseleder</Table.HeaderCell> */}
@@ -99,7 +120,7 @@ const Leveranseleder = () => {
                     .map((vaktlag: Vaktlag, i) => {
                         return (
                             <Table.Row key={i}>
-                                <Table.HeaderCell scope="row" style={{ maxWidth: '150px' }}>
+                                <Table.HeaderCell scope="row" style={{ minWidth: '200px' }}>
                                     {vaktlag.name}
                                     <br />
                                     <span
@@ -128,14 +149,41 @@ const Leveranseleder = () => {
                                 </Table.HeaderCell>
 
                                 <Table.DataCell>
-                                    {mapLeaders(vaktlag.members.filter((user: User) => user.roles.some((role) => role.title === 'leveranseleder')))}
-                                    {mapLeaders(
-                                        vaktlag.members.filter(
-                                            (user: User) =>
-                                                user.roles.some((role) => role.title === 'vaktsjef') &&
-                                                !user.roles.some((role) => role.title === 'leveranseleder')
+                                    {(() => {
+                                        // Leveranseledere fra group_roles for dette vaktlaget
+                                        const leveranseledere = vaktlag.members.filter((user: User) =>
+                                            user.group_roles?.some((gr) => gr.group_id === vaktlag.id && gr.role.title === 'leveranseleder')
                                         )
-                                    )}
+
+                                        // Vaktsjefer fra group_roles for dette vaktlaget
+                                        const vaktsjefer = vaktlag.members.filter((user: User) =>
+                                            user.group_roles?.some((gr) => gr.group_id === vaktlag.id && gr.role.title === 'vaktsjef')
+                                        )
+
+                                        return (
+                                            <>
+                                                {leveranseledere.length > 0 && (
+                                                    <div style={{ marginBottom: '12px' }}>
+                                                        <div style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#666', marginBottom: '4px' }}>
+                                                            Leveranseledere:
+                                                        </div>
+                                                        {mapLeaders(leveranseledere)}
+                                                    </div>
+                                                )}
+                                                {vaktsjefer.length > 0 && (
+                                                    <div>
+                                                        <div style={{ fontSize: '0.85em', fontWeight: 'bold', color: '#666', marginBottom: '4px' }}>
+                                                            Vaktsjefer:
+                                                        </div>
+                                                        {mapLeaders(vaktsjefer)}
+                                                    </div>
+                                                )}
+                                                {leveranseledere.length === 0 && vaktsjefer.length === 0 && (
+                                                    <div style={{ fontSize: '0.85em', color: '#999', fontStyle: 'italic' }}>Ingen ledere tildelt</div>
+                                                )}
+                                            </>
+                                        )
+                                    })()}
                                 </Table.DataCell>
 
                                 <Table.DataCell>{mapMembers(vaktlag.members)}</Table.DataCell>
@@ -178,7 +226,7 @@ const Leveranseleder = () => {
                                     </Button>
                                 </div>
                             </Table.DataCell> */}
-                                <Table.DataCell style={{ maxWidth: '200px', margin: '50px' }}>
+                                <Table.DataCell style={{ minWidth: '220px' }}>
                                     <GroupOptions
                                         user_list={vaktlag.members.filter(
                                             (user: User) => !user.roles.some((role) => role.title === 'leveranseleder')

@@ -42,11 +42,9 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule,
                         setOpenState(true)
                     }}
                     style={{
-                        height: '30px',
-                        marginBottom: '5px',
-                        minWidth: '210px',
+                        height: '36px',
+                        width: '150px',
                     }}
-                    size="small"
                     ref={buttonRef}
                     disabled={isDisabled || loading}
                     variant="danger"
@@ -87,10 +85,9 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule,
         <Button
             onClick={handleApproveClick}
             style={{
-                height: '25px',
-                minWidth: '200px',
+                height: '36px',
+                width: '150px',
             }}
-            size="small"
             disabled={isDisabled || loading}
         >
             {loading ? <Loader /> : 'Slett vakt!'}

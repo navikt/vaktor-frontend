@@ -27,6 +27,8 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
                     key={idx}
                     style={{
                         color: 'red',
+                        fontSize: '0.75em',
+                        marginTop: '4px',
                     }}
                 >
                     {messages.error}
@@ -53,6 +55,8 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
                     key={idx}
                     style={{
                         color: 'red',
+                        fontSize: '0.75em',
+                        marginTop: '4px',
                     }}
                 >
                     {messages.error}
@@ -74,16 +78,23 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
     }
 
     return (
-        <Table.DataCell
+        <div
             style={{
                 backgroundColor: statusColor,
-                maxWidth: '150',
-                minWidth: '150',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                width: '100%',
+                minHeight: '40px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                border: '2px solid rgba(0, 0, 0, 0.1)',
             }}
         >
-            {statusText}
+            <div style={{ fontSize: '0.75em', fontWeight: '600', marginBottom: '2px', textTransform: 'uppercase', opacity: 0.8 }}>Status</div>
+            <div style={{ fontWeight: '700', fontSize: '0.85em' }}>{statusText}</div>
             {errorText}
-        </Table.DataCell>
+        </div>
     )
 }
 

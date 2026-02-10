@@ -8,6 +8,7 @@ type props = {
 
 function DatePickeroo({ index, handleChildProps }: props) {
     const numWeeksInMs = 6.048e8 * 4 // 4 weeks in ms
+    const [now] = useState(() => Date.now())
     // const [startTimestamp, setStartTimestamp] = useState<number>(
     //     // new Date("Jan 01 2023").setHours(12) / 1000
     // )
@@ -18,9 +19,9 @@ function DatePickeroo({ index, handleChildProps }: props) {
     }
 
     const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
-        fromDate: new Date(Date.now()), //+ numWeeksInMs),
+        fromDate: new Date(now), //+ numWeeksInMs),
         toDate: new Date('Feb 01 2027'),
-        defaultMonth: new Date(Date.now() + numWeeksInMs),
+        defaultMonth: new Date(now + numWeeksInMs),
         onRangeChange: (val) => {
             if (val && val.from && val.to) {
                 // setStartTimestamp(val.from.setHours(12) / 1000)

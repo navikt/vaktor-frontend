@@ -26,12 +26,12 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
     }
 
     return (
-        <div>
+        <div style={{ fontSize: '0.85em' }}>
             {hiddenAudits.length > 0 && (
                 <div>
                     <Button
                         size="small"
-                        style={{ display: 'flex', minWidth: '200px', backgroundColor: 'transparent', color: 'green' }}
+                        style={{ display: 'flex', minWidth: '120px', backgroundColor: 'transparent', color: 'green' }}
                         onClick={toggleExpanded}
                     >
                         {expanded ? (
@@ -59,9 +59,15 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
                             <ReadMore
                                 header={`${date} - ${time}`}
                                 size="small"
-                                style={audit.action.includes('Avgodkjent') ? { color: 'red' } : { color: 'green' }}
+                                style={
+                                    audit.action.includes('Avgodkjent')
+                                        ? { color: 'red', fontSize: '0.85em' }
+                                        : { color: 'green', fontSize: '0.85em' }
+                                }
                             >
-                                {audit.action} - {audit.user.name}
+                                <span style={{ fontSize: '0.9em' }}>
+                                    {audit.action} - {audit.user.name}
+                                </span>
                             </ReadMore>
                         </div>
                     )
@@ -78,9 +84,13 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
                         <ReadMore
                             header={`${date} - ${time}`}
                             size="small"
-                            style={audit.action.includes('Avgodkjent') ? { color: 'red' } : { color: 'green' }}
+                            style={
+                                audit.action.includes('Avgodkjent') ? { color: 'red', fontSize: '0.85em' } : { color: 'green', fontSize: '0.85em' }
+                            }
                         >
-                            {audit.action} - {audit.user.name}
+                            <span style={{ fontSize: '0.9em' }}>
+                                {audit.action} - {audit.user.name}
+                            </span>
                         </ReadMore>
                     </div>
                 )

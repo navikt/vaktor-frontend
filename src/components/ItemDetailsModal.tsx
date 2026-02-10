@@ -3,7 +3,7 @@ import { InformationColored, People, CoApplicant, Calender, Telephone, Notes, Di
 import '@navikt/ds-css'
 import { useEffect } from 'react'
 import { User } from '../types/types'
-import UserInfoDetails from './userInfoDetails'
+import UserInfoDetails from './utils/UserInfoDetails'
 import { useAuth } from '../context/AuthContext'
 
 const iconStyle = {
@@ -17,8 +17,6 @@ const iconStyle = {
 const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
     return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
 }
-
-
 
 const ItemDetailsModal = (props: {
     handleClose: Function
@@ -84,8 +82,7 @@ const ItemDetailsModal = (props: {
                         infoText={`${props.startTime} - ${props.endTime}`}
                         icon={<Calender style={iconStyle} />}
                     />
-                    {hasAnyRole(user, ["admin"]) ? <Button onClick={handleSplitSchedule}>Split vakt</Button> : <></>}
-
+                    {hasAnyRole(user, ['admin']) ? <Button onClick={handleSplitSchedule}>Split vakt</Button> : <></>}
                 </Modal.Body>
             </Modal>
         </>

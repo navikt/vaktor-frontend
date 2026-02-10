@@ -3,9 +3,9 @@ import { Telephone, Dialog, InformationColored, Clock, CoApplicant } from '@navi
 import '@navikt/ds-css'
 import styled from 'styled-components'
 import { useEffect, useState } from 'react'
-import UserInfoDetails from './userInfoDetails'
+import UserInfoDetails from './utils/UserInfoDetails'
 
-export const InformationLine = styled.div.attrs((props: { leftPosition?: number }) => props)`
+export const InformationLine = styled.div<{ leftPosition?: number }>`
     display: block;
     padding-left: ${(props) => props.leftPosition}px;
 `
@@ -22,7 +22,7 @@ export const InfoHeadWrapper = styled.div`
     left: 40px;
 `
 
-export const IconWrapper = styled.div.attrs((props: { topPosition: number; leftPosition?: number }) => props)`
+export const IconWrapper = styled.div<{ topPosition: number; leftPosition?: number }>`
     display: inline-block;
     position: absolute;
     top: ${(props) => props.topPosition}px;
@@ -35,7 +35,7 @@ export const InfoTextWrapper = styled.div`
     left: 20px;
 `
 
-export const Spacer = styled.div.attrs((props: { height: number }) => props)`
+export const Spacer = styled.div<{ height: number }>`
     height: ${(props) => props.height}px;
 `
 const iconStyle = {

@@ -154,10 +154,11 @@ const AvstemmingOkonomiAlle = () => {
             ))
 
     useEffect(() => {
-        setLoading(true)
-        fetch('/api/all_schedules')
-            .then(async (scheduleRes) => scheduleRes.json())
-            .then((itemData) => {
+        const fetchData = async () => {
+            setLoading(true)
+            try {
+                const scheduleRes = await fetch('/api/all_schedules')
+                const itemData = await scheduleRes.json()
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
@@ -190,8 +191,11 @@ const AvstemmingOkonomiAlle = () => {
                 })
 
                 setDistinctFilenames(sortedFilenames)
+            } finally {
                 setLoading(false)
-            })
+            }
+        }
+        fetchData()
     }, [response])
 
     //if (loading === true) return <Loader></Loader>

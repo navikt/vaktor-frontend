@@ -16,7 +16,7 @@ import {
 } from '@navikt/ds-react'
 
 import { Schedules, User } from '../types/types'
-import ScheduleChanges from './ScheduleChanges'
+import ScheduleChanges from './utils/ScheduleChanges'
 import moment from 'moment'
 const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
     await fetch(
@@ -82,8 +82,13 @@ const ScheduleModal = (props: {
             setgroupData(groupData)
         }
         fetchGroupMembers()
-        setStartTimestamp(props.schedule.start_timestamp)
-        setEndTimestamp(props.schedule.end_timestamp)
+
+        // Sync timestamps from props
+        const syncTimestamps = () => {
+            setStartTimestamp(props.schedule.start_timestamp)
+            setEndTimestamp(props.schedule.end_timestamp)
+        }
+        syncTimestamps()
     }, [props.schedule])
 
     return (

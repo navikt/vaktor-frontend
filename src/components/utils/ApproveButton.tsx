@@ -43,7 +43,7 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
     const isDisabled =
         vakt.end_timestamp > Date.now() / 1000 || vakt.approve_level === 2 || (vakt.approve_level === 3 && !haskoststed) || vakt.approve_level >= 4
 
-    const message = vakt.approve_level !== 3 ? 'Godkjenn' : 'Godkjenn for utbetaling'
+    const message = vakt.approve_level !== 3 ? 'Godkjenn' : 'Til utbetaling'
 
     if (vakt.approve_level === 0) {
         return (
@@ -53,11 +53,10 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
                         setOpenState(true)
                     }}
                     style={{
-                        height: '30px',
+                        height: '36px',
                         marginBottom: '5px',
-                        minWidth: '210px',
+                        width: '150px',
                     }}
-                    size="small"
                     ref={buttonRef}
                     disabled={isDisabled || loading}
                 >
@@ -76,11 +75,9 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
                         Er du sikker på at du vil godkjenne denne perioden på vegne av vakthaver?
                         <Button
                             style={{
-                                height: '30px',
+                                height: '36px',
                                 marginBottom: '5px',
-                                minWidth: '210px',
                             }}
-                            size="small"
                             variant="danger"
                             disabled={loading}
                             onClick={handleApproveClick}
@@ -97,11 +94,10 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
         <Button
             onClick={handleApproveClick}
             style={{
-                height: '30px',
+                height: '36px',
                 marginBottom: '5px',
-                minWidth: '210px',
+                width: '150px',
             }}
-            size="small"
             disabled={isDisabled || loading}
         >
             {loading ? <Loader /> : message}

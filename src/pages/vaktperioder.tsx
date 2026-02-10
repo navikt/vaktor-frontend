@@ -11,14 +11,16 @@ const Home: NextPage = () => {
 
     moment.locale('nb')
 
-    const hasAccess = user?.roles?.some((role) => ['vaktsjef', 'leveranseleder'].includes(role.title.toLowerCase()))
+    const hasAccess =
+        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title.toLowerCase())) ||
+        user?.group_roles?.some((role) => ['vaktsjef', 'leveranseleder'].includes(role.title.toLowerCase()))
 
     if (hasAccess) {
         return (
-            <div className="Container">
+            <div className="Container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 <div className="AdminGuideContainer">
                     <GuidePanel className="AdminGuidePanel">
-                        <p>Her kan du generere nye vaktperioder for ditt vaktlag: </p>
+                        <p>Her kan du generere nye vaktperioder for ditt vaktlag.</p>
                     </GuidePanel>
                 </div>
                 <Vaktperioder />
