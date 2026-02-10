@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { Button, Dropdown, BodyShort, HStack } from '@navikt/ds-react'
-import { MenuHamburgerIcon } from '@navikt/aksel-icons'
+import { MenuHamburgerIcon, MoonIcon, SunIcon } from '@navikt/aksel-icons'
 import Image from 'next/image'
 
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
+import { User } from '../../types/types'
 import * as Routes from '../../types/routes'
 import { hasAnyRole } from '../../utils/roles'
 
@@ -15,6 +17,7 @@ type NavRoute = {
 
 const Navbar: React.FC = () => {
     const { user } = useAuth()
+    const { theme, toggleTheme } = useTheme()
     const today = new Date()
     const greetings = ['Hei, ', today.getMonth() === 11 ? 'God jul, ' : ''].filter(Boolean)
 
@@ -103,6 +106,14 @@ const Navbar: React.FC = () => {
                         </Dropdown.Menu>
                     </Dropdown>
                 )}
+
+                <Button
+                    onClick={toggleTheme}
+                    variant="tertiary"
+                    icon={theme === 'dark' ? <SunIcon aria-hidden /> : <MoonIcon aria-hidden />}
+                    aria-label={theme === 'dark' ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
+                    style={{ marginLeft: '5px', marginRight: '5px', height: '35px' }}
+                />
             </nav>
         </>
     )

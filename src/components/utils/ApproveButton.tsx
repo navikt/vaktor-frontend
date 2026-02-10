@@ -1,6 +1,7 @@
 import { Button, Loader, Popover } from '@navikt/ds-react'
 import { Dispatch, useRef, useState } from 'react'
 import { Schedules, User, Cost } from '../../types/types'
+import { useTheme } from '../../context/ThemeContext'
 
 interface Props {
     vakt: Schedules
@@ -13,6 +14,8 @@ interface Props {
 }
 
 const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedule, loading, setLoading, onError }) => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
@@ -65,7 +68,7 @@ const ApproveButton: React.FC<Props> = ({ vakt, user, setResponse, confirmSchedu
                 <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
                     <Popover.Content
                         style={{
-                            backgroundColor: 'rgba(241, 241, 241, 1)',
+                            backgroundColor: isDarkMode ? '#2a2a2a' : 'rgba(241, 241, 241, 1)',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '10px',

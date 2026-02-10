@@ -9,7 +9,21 @@ $sidebar-color: var(--ax-bg-default);
 $sidebar-background-color: var(--ax-bg-accent-strong);
 $list-item-padding: var(--ax-space-4);
 
-$weekend: rgba(255, 200, 200, 0.3);
+// Weekend color that works in both light and dark mode
+.react-calendar-timeline {
+  .holiday {
+    background-color: var(--ax-danger-100);
+  }
+
+  .rct-vertical-lines {
+    .rct-vl {
+      &.rct-day-6,
+      &.rct-day-0 {
+        background: var(--ax-danger-100);
+      }
+    }
+  }
+}
 
 .groupsClickable {
     display: block;
@@ -87,10 +101,6 @@ $weekend: rgba(255, 200, 200, 0.3);
     position: sticky;
     top: 0;
     z-index: 50;
-  }
-
-  .holiday{
-    background-color: rgba(255, 0, 0, 0.20);
   }
 
   .rct-outer {
@@ -176,10 +186,6 @@ $weekend: rgba(255, 200, 200, 0.3);
       z-index: 30;
       &.rct-vl-first {
         border-left-width: 2px;
-      }
-      &.rct-day-6,
-      &.rct-day-0 {
-        background: $weekend;
       }
     }
   }

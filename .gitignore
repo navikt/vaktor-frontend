@@ -39,3 +39,6 @@ next-env.d.ts
 
 # Sentry Auth Token
 .sentryclirc
+
+# Personal notes
+TODO.md

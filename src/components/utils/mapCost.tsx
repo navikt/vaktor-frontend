@@ -1,41 +1,45 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Cost, Artskoder, Schedules } from '../../types/types'
 import { ReadMore } from '@navikt/ds-react'
+import { useTheme } from '../../context/ThemeContext'
 
-const mapCostStatus = (status: number) => {
+const mapCostStatus = (status: number, isDarkMode: boolean) => {
     let statusText = ''
-    let statusColor = ''
+    let colorClass = ''
+
     switch (status) {
         case 1:
             statusText = 'Ordinær kjøring'
-            statusColor = '#66CBEC'
+            colorClass = isDarkMode ? 'text-blue-300' : 'text-blue-600'
             break
         case 2:
             statusText = 'Lønnsendring'
-            statusColor = '#99DEAD'
+            colorClass = isDarkMode ? 'text-green-300' : 'text-green-600'
             break
         case 3:
             statusText = 'Feilutregning/feil i vaktor'
-            statusColor = '#99DEAD'
+            colorClass = isDarkMode ? 'text-yellow-300' : 'text-yellow-700'
             break
         case 4:
             statusText = 'Sekundærkjøring'
-            statusColor = '#E18071'
+            colorClass = isDarkMode ? 'text-red-300' : 'text-red-600'
             break
         default:
             statusText = 'Ukjent status'
-            statusColor = '#FFFFFF'
+            colorClass = 'text-text-subtle'
             break
     }
 
     return (
-        <div>
+        <div className={colorClass}>
             <b>{statusText}</b>
         </div>
     )
 }
 
 const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [prevTotalCost, setPrevTotalCost] = useState<number | undefined>()
 
     const elements = useMemo(
@@ -48,26 +52,13 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                     const prevTotalCost = prevCost ? prevCost.total_cost : undefined
                     const diff = prevTotalCost !== undefined ? currentTotalCost - prevTotalCost : 0
                     const element = (
-                        <div
-                            key={cost.id}
-                            style={{
-                                marginBottom: '20px',
-                                fontSize: '0.9em',
-                            }}
-                        >
-                            {idx > 0 ? <hr style={{ margin: '12px 0' }}></hr> : <></>}
+                        <div key={cost.id} className="mb-5 text-sm">
+                            {idx > 0 ? <hr className="my-3" /> : null}
                             {props.avstemming === true ? (
-                                <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '4px' }}>
+                                <div className="text-sm text-text-subtle mb-1">
                                     <b>ID:</b>{' '}
                                     <span
-                                        style={{
-                                            display: 'inline-block',
-                                            border: '1px solid #ccc',
-                                            padding: '2px 5px',
-                                            cursor: 'pointer',
-                                            backgroundColor: '#f9f9f9',
-                                            fontSize: '0.9em',
-                                        }}
+                                        className="inline-block border border-border-default px-1.5 py-0.5 cursor-pointer bg-surface-subtle text-sm"
                                         onClick={() => navigator.clipboard.writeText(cost.id)}
                                         title="Click to copy"
                                     >
@@ -78,34 +69,25 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                 false
                             )}
                             <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
-                            <div
-                                style={{
-                                    marginTop: '6px',
-                                }}
-                            >
+                            <div className="mt-1.5">
                                 <div>
-                                    {mapCostStatus(Number(cost.type_id))}
-                                    <div style={{ marginTop: '4px' }}>
-                                        Total: <b style={{ color: 'green' }}>{cost.total_cost}</b>
+                                    {mapCostStatus(Number(cost.type_id), isDarkMode)}
+                                    <div className="mt-1">
+                                        Total: <b className={isDarkMode ? 'text-green-400' : 'text-green-700'}>{cost.total_cost}</b>
                                     </div>
-                                    <div style={{ fontSize: '0.9em', color: '#666' }}>
+                                    <div className="text-sm text-text-subtle">
                                         Koststed: <b>{cost.koststed}</b>
                                     </div>
                                     {prevTotalCost !== undefined && cost.type_id >= 1 && idx > 0 && (
-                                        <div style={{ color: diff < 0 ? 'red' : 'green', fontSize: '0.9em', marginTop: '4px' }}>
-                                            Diff: ({diff < 0 ? '-' : '+'}
-                                            {Math.abs(diff).toFixed(2)})
+                                        <div
+                                            className={`text-sm mt-1 ${diff < 0 ? (isDarkMode ? 'text-red-400' : 'text-red-600') : isDarkMode ? 'text-green-400' : 'text-green-700'}`}
+                                        >
+                                            Diff: ({diff < 0 ? '-' : '+'}&#39;{Math.abs(diff).toFixed(2)})
                                         </div>
                                     )}
                                 </div>
                             </div>
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    gap: '15px',
-                                    marginTop: '12px',
-                                }}
-                            >
+                            <div className="flex gap-4 mt-3">
                                 <div>
                                     <b>Artskoder</b>
                                     {cost.artskoder
@@ -132,7 +114,7 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                     return element
                 }),
 
-        [prevTotalCost, props.vakt.cost, props.avstemming, props.vakt.is_double]
+        [isDarkMode, props.vakt.cost, props.avstemming, props.vakt.is_double]
     )
 
     useEffect(() => {
@@ -155,7 +137,7 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                         <ReadMore
                             header={`Vis ${props.vakt.cost.length - 1} tidligere beregning${props.vakt.cost.length - 1 > 1 ? 'er' : ''}`}
                             size="small"
-                            style={{ marginBottom: '8px', fontSize: '0.85em' }}
+                            className="mb-2 text-sm"
                         >
                             {elements.slice(0, -1)}
                         </ReadMore>

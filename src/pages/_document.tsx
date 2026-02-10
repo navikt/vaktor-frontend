@@ -29,9 +29,22 @@ export default class MyDocument extends Document {
 
     render() {
         return (
-            <Html lang="no">
+            <Html lang="no" data-theme="dark" className="dark">
                 <Head />
                 <body>
+                    <script
+                        dangerouslySetInnerHTML={{
+                            __html: `
+                                (function() {
+                                    try {
+                                        const theme = localStorage.getItem('vaktor-theme') || 'dark';
+                                        document.documentElement.className = theme;
+                                        document.documentElement.setAttribute('data-theme', theme);
+                                    } catch (e) {}
+                                })();
+                            `,
+                        }}
+                    />
                     <Main />
                     <NextScript />
                 </body>
