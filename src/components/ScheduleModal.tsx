@@ -20,14 +20,37 @@ import ScheduleChanges from './utils/ScheduleChanges'
 import moment from 'moment'
 import { hasAnyRole } from '../utils/roles'
 
-const update_schedule = async (period: Schedules, action: string, selectedVakthaver: string, addVakt: Dispatch<any>) => {
-    await fetch(
-        `/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
-    )
-        .then((r) => r.json())
-        .then((data) => {
-            addVakt(data)
-        })
+const update_schedule = async (
+    period: Schedules,
+    action: string,
+    selectedVakthaver: string,
+    addVakt: Dispatch<any>,
+    setError: Dispatch<string | null>,
+    setLoading: Dispatch<boolean>
+) => {
+    setLoading(true)
+    setError(null)
+    try {
+        const response = await fetch(
+            `/api/update_schedule?schedule_id=${period.id}&action=${action}&selectedVakthaver=${selectedVakthaver}&group_id=${period.group_id}&dateFrom=${period.start_timestamp}&dateTo=${period.end_timestamp}`
+        )
+        const data = await response.json()
+
+        if (!response.ok) {
+            // Håndter feilmelding fra backend
+            const errorMessage = data.detail || data.message || 'Noe gikk galt ved oppdatering av vakt'
+            setError(errorMessage)
+            return false
+        }
+
+        addVakt(data)
+        return true
+    } catch (error) {
+        setError('Kunne ikke koble til serveren. Prøv igjen senere.')
+        return false
+    } finally {
+        setLoading(false)
+    }
 }
 
 const mapGroupOptions = (members: User[]) => {
@@ -47,6 +70,7 @@ const ScheduleModal = (props: {
 }) => {
     const [loading, setLoading] = useState(false)
     const [response, setResponse] = useState()
+    const [error, setError] = useState<string | null>(null)
 
     const [groupData, setgroupData] = useState<User[]>([])
     const [selectedVakthaver, setVakthaver] = useState('')
@@ -95,6 +119,7 @@ const ScheduleModal = (props: {
                 open={props.isOpen}
                 onClose={() => {
                     setConfirmState(false)
+                    setError(null)
                     props.setIsOpen(false)
                 }}
                 aria-label="Endre vaktperiode"
@@ -240,6 +265,11 @@ const ScheduleModal = (props: {
                             </div>
                         )}
                         <br />
+                        {error && (
+                            <Alert variant="error" style={{ marginBottom: '1rem' }} closeButton onClose={() => setError(null)}>
+                                {error}
+                            </Alert>
+                        )}
                         <ConfirmationPanel
                             disabled={startTimestamp > endTimestamp || selectedVakthaver === '' || action === ''}
                             checked={confirmState}
@@ -251,15 +281,15 @@ const ScheduleModal = (props: {
                         <br />
                         <Button
                             className="buttonConfirm"
-                            //disabled={selectedVakthaver === ""}
-                            disabled={confirmState === false}
+                            disabled={confirmState === false || loading}
+                            loading={loading}
                             style={{
                                 height: '50px',
                                 marginTop: '25px',
                                 marginBottom: '25px',
                                 minWidth: '300px',
                             }}
-                            onClick={() => {
+                            onClick={async () => {
                                 let computedAction = action
                                 const computedStart = action === 'replace' ? props.schedule.start_timestamp : startTimestamp + clock_start * 3600
                                 const computedEnd = action === 'replace' ? props.schedule.end_timestamp : endTimestamp + clock_end * 3600
@@ -276,11 +306,14 @@ const ScheduleModal = (props: {
                                     end_timestamp: computedEnd,
                                     schedule_id: props.schedule.id,
                                 }
-                                update_schedule(period, computedAction, selectedVakthaver, props.addVakt)
-                                props.setIsOpen(false)
-                                setConfirmState(false)
-                                setClockEnd(0)
-                                setClockStart(0)
+                                const success = await update_schedule(period, computedAction, selectedVakthaver, props.addVakt, setError, setLoading)
+                                if (success) {
+                                    props.setIsOpen(false)
+                                    setConfirmState(false)
+                                    setClockEnd(0)
+                                    setClockStart(0)
+                                    setError(null)
+                                }
                             }}
                         >
                             Legg til endring
