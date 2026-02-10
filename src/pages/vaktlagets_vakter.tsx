@@ -64,8 +64,8 @@ const Home: NextPage = () => {
     }
 
     const hasAccess =
-        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title.toLowerCase())) ||
-        user?.group_roles?.some((role) => ['vakthaver', 'vaktsjef', 'personalleder', 'leveranseleder'].includes(role.title.toLowerCase()))
+        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title?.toLowerCase())) ||
+        user?.group_roles?.some((gr) => ['vakthaver', 'vaktsjef', 'personalleder', 'leveranseleder'].includes(gr.role?.title?.toLowerCase()))
 
     if (hasAccess) {
         return (
