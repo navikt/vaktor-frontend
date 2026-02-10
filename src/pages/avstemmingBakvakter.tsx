@@ -4,13 +4,14 @@ import 'moment/locale/nb'
 import AvstemmingBakvakter from '../components/AvstemmingBakvakter'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
+import { hasAnyRole } from '../utils/roles'
 
 const Home: NextPage = () => {
     const { user } = useAuth()
 
     moment.locale('nb')
 
-    const hasAccess = user?.roles?.some((role) => ['okonomi', 'admin'].includes(role.title.toLowerCase()))
+    const hasAccess = hasAnyRole(user, ['okonomi', 'admin'])
 
     if (hasAccess) {
         return (

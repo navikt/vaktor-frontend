@@ -18,7 +18,7 @@ import {
     Popover,
 } from '@navikt/ds-react'
 import { PlusIcon, TrashIcon, PersonIcon, PersonGroupIcon } from '@navikt/aksel-icons'
-import { User, Vaktlag, Roles, GroupRole } from '../types/types'
+import { User, Vaktlag, GroupRole } from '../types/types'
 
 interface UserWithGroupRoles extends User {
     group_roles: GroupRole[]
@@ -33,7 +33,6 @@ interface RoleAssignment {
 const UserRoleManagement: React.FC = () => {
     const [users, setUsers] = useState<UserWithGroupRoles[]>([])
     const [groups, setGroups] = useState<Vaktlag[]>([])
-    const [allRoles, setAllRoles] = useState<Roles[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
@@ -67,18 +66,16 @@ const UserRoleManagement: React.FC = () => {
         setLoading(true)
         setError(null)
         try {
-            const [usersRes, groupsRes, rolesRes] = await Promise.all([fetch('/api/users'), fetch('/api/groups'), fetch('/api/roles')])
+            const [usersRes, groupsRes] = await Promise.all([fetch('/api/users'), fetch('/api/groups')])
 
             if (!usersRes.ok) throw new Error('Kunne ikke hente brukere')
             if (!groupsRes.ok) throw new Error('Kunne ikke hente grupper')
 
             const usersData = await usersRes.json()
             const groupsData = await groupsRes.json()
-            const rolesData = rolesRes.ok ? await rolesRes.json() : []
 
             setUsers(usersData)
             setGroups(groupsData)
-            setAllRoles(rolesData)
         } catch (err) {
             setError((err as Error).message)
         } finally {

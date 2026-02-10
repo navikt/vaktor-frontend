@@ -4,9 +4,9 @@ import 'moment/locale/nb'
 import { GuidePanel, Button } from '@navikt/ds-react'
 import { CalendarIcon } from '@navikt/aksel-icons'
 import UpdateSchedule from '../components/VaktlagetsVakter'
-import { useState, useEffect } from 'react'
-import { User } from '../types/types'
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { hasAnyRole, ADMIN_ROLES, LEADER_ROLES } from '../utils/roles'
 
 const Home: NextPage = () => {
     const { user } = useAuth()
@@ -63,9 +63,7 @@ const Home: NextPage = () => {
         }
     }
 
-    const hasAccess =
-        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title.toLowerCase())) ||
-        user?.group_roles?.some((role) => ['vakthaver', 'vaktsjef', 'personalleder', 'leveranseleder'].includes(role.title.toLowerCase()))
+    const hasAccess = hasAnyRole(user, [...ADMIN_ROLES, ...LEADER_ROLES])
 
     if (hasAccess) {
         return (

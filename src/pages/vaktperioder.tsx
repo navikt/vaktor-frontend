@@ -1,19 +1,17 @@
 import type { NextPage } from 'next'
 import moment from 'moment'
 import 'moment/locale/nb'
-import { GuidePanel, Select } from '@navikt/ds-react'
+import { GuidePanel } from '@navikt/ds-react'
 import Vaktperioder from '../components/Vaktperioder'
 import { useAuth } from '../context/AuthContext'
-import { Vaktlag } from '../types/types'
+import { hasAnyRole, ADMIN_ROLES } from '../utils/roles'
 
 const Home: NextPage = () => {
     const { user } = useAuth()
 
     moment.locale('nb')
 
-    const hasAccess =
-        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title.toLowerCase())) ||
-        user?.group_roles?.some((role) => ['vaktsjef', 'leveranseleder'].includes(role.title.toLowerCase()))
+    const hasAccess = hasAnyRole(user, [...ADMIN_ROLES, 'vaktsjef', 'leveranseleder'])
 
     if (hasAccess) {
         return (

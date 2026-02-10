@@ -4,15 +4,14 @@ import 'moment/locale/nb'
 import AdminLeder from '../components/LeveranselederAdmin'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
+import { hasAnyRole, ADMIN_ROLES } from '../utils/roles'
 
 const Home: NextPage = () => {
     const { user } = useAuth()
 
     moment.locale('nb')
 
-    const hasAccess =
-        user?.roles?.some((role) => ['bdm', 'admin'].includes(role.title.toLowerCase())) ||
-        user?.group_roles?.some((role) => ['leveranseleder'].includes(role.title.toLowerCase()))
+    const hasAccess = hasAnyRole(user, [...ADMIN_ROLES, 'leveranseleder'])
 
     if (hasAccess) {
         return (

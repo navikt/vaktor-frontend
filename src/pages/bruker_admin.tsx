@@ -2,11 +2,12 @@ import type { NextPage } from 'next'
 import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
 import UserRoleManagement from '../components/UserRoleManagement'
+import { hasAnyRole } from '../utils/roles'
 
 const BrukerAdmin: NextPage = () => {
     const { user } = useAuth()
 
-    const hasAccess = user?.roles?.some((role) => ['admin'].includes(role.title.toLowerCase()))
+    const hasAccess = hasAnyRole(user, ['admin'])
 
     if (hasAccess) {
         return (

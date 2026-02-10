@@ -1,11 +1,6 @@
 import { Alert, Page, VStack } from '@navikt/ds-react'
 import { useAuth } from '../../context/AuthContext'
-import { User } from '../../types/types'
-
-// A function to check if the user has any of the specified roles
-const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
-    return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
-}
+import { hasAnyRole } from '../../utils/roles'
 
 const Header = () => {
     const { user } = useAuth()

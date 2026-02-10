@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { User } from '../types/types'
 import UserInfoDetails from './utils/UserInfoDetails'
 import { useAuth } from '../context/AuthContext'
+import { hasAnyRole } from '../utils/roles'
 
 const iconStyle = {
     display: 'flex',
@@ -12,10 +13,6 @@ const iconStyle = {
     alignItems: 'center',
     height: '53px',
     marginRight: '10px',
-}
-
-const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
-    return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
 }
 
 const ItemDetailsModal = (props: {

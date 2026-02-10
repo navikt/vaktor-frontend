@@ -2,7 +2,7 @@ import { Button, Table, Loader, MonthPicker, useMonthpicker, Search, Select, Hel
 import moment from 'moment'
 import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Schedules, User } from '../types/types'
+import { Schedules } from '../types/types'
 import ApproveButton from './utils/ApproveButton'
 
 import MapCost from './utils/mapCost'
@@ -11,10 +11,7 @@ import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
 import { useTheme } from '../context/ThemeContext'
 import { Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
-
-const hasAnyRole = (user: User, roleTitles: string[]): boolean => {
-    return user.roles?.some((role) => roleTitles.includes(role.title)) ?? false
-}
+import { hasAnyRole } from '../utils/roles'
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
@@ -341,12 +338,14 @@ const AdminLeder = ({}) => {
 
         // Convert the grouped and sorted schedules into an array of JSX elements
         let rowCount = 0
+        const canViewCost = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'])
+        const columnCount = canViewCost ? 7 : 6
         const groupedRows = Object.entries(groupedByGroupName).flatMap(([koststed, schedules], index) => [
             // This is the row for the group header
 
             // TODO: Make a timeline visualization of the schedule
             <Table.Row key={`header-${koststed}`}>
-                <Table.DataCell colSpan={9}>
+                <Table.DataCell colSpan={columnCount}>
                     <b>{koststed}</b>
                     <TimeLine schedules={schedules} />
                 </Table.DataCell>
@@ -505,22 +504,26 @@ const AdminLeder = ({}) => {
                                 )}
                             </div>
                         </Table.DataCell>
-                        <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
-                            {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && vakter.cost.length !== 0 ? (
-                                <div
-                                    style={{
-                                        padding: '8px',
-                                        backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                                        borderRadius: '4px',
-                                        border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
-                                    }}
-                                >
-                                    <MapCost vakt={vakter}></MapCost>
-                                </div>
-                            ) : (
-                                <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen beregning foreligger</span>
-                            )}
-                        </Table.DataCell>
+
+                        {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
+                            <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
+                                {vakter.cost.length !== 0 ? (
+                                    <div
+                                        style={{
+                                            padding: '8px',
+                                            backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                                            borderRadius: '4px',
+                                            border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
+                                        }}
+                                    >
+                                        <MapCost vakt={vakter}></MapCost>
+                                    </div>
+                                ) : (
+                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen beregning foreligger</span>
+                                )}
+                            </Table.DataCell>
+                        )}
+        
                         <Table.DataCell style={{ padding: '8px' }}>
                             <div
                                 style={{
@@ -710,7 +713,9 @@ const AdminLeder = ({}) => {
                         <Table.HeaderCell scope="col">Periode</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Endringer</Table.HeaderCell>
                         <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
-                        <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>
+                        {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
+                            <Table.HeaderCell scope="col">Kostnad</Table.HeaderCell>
+                        )}
                         <Table.HeaderCell scope="col">Audit</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>

@@ -5,15 +5,13 @@ import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
 import DineVakter from '../components/DineVakter'
 import NextDeadlineBox from '../components/utils/NextDeadlineBox'
+import { hasAnyRole } from '../utils/roles'
 
 const Home: NextPage = () => {
     const { user } = useAuth()
     moment.locale('nb')
 
-    // Check if the roles array exists and includes any of the specified roles
-    const hasAccess =
-        user?.roles?.some((role) => ['admin'].includes(role.title.toLowerCase())) ||
-        user?.group_roles?.some((role) => ['vakthaver', 'vaktsjef', 'admin'].includes(role.title.toLowerCase()))
+    const hasAccess = hasAnyRole(user, ['admin', 'vakthaver', 'vaktsjef'])
 
     if (hasAccess) {
         return (
