@@ -6,7 +6,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const { group_id, start_timestamp, end_timestamp } = req.query
-    const token = req.headers.authorization
+    let token = req.headers.authorization ?? 'No Authorization header'
+
+    if (process.env.FAKE_TOKEN) {
+        token = process.env.FAKE_TOKEN
+    }
 
     if (!group_id || !start_timestamp || !end_timestamp) {
         return res.status(400).json({ detail: 'Missing required query parameters' })
@@ -19,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                ...(token && { Authorization: token }),
+                Authorization: token,
             },
         })
 
