@@ -60,6 +60,11 @@ export enum RouterAudit {
     PATH = '/audit',
 }
 
+export enum RouterVaktlagOpprett {
+    NAME = 'Opprett Vaktlag',
+    PATH = '/vaktlag_opprett',
+}
+
 // ---
 
 // Error
