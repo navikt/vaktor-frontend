@@ -12,9 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const { group_id, start_timestamp, months, rollover_day, rollover_time } = req.query
+        const { group_id, start_timestamp, end_timestamp, rollover_day, rollover_time } = req.query
 
-        const path = `${process.env.BACKEND_URL}/api/v1/schedules/preview?group_id=${group_id}&start_timestamp=${start_timestamp}&months=${months}&rollover_day=${rollover_day}&rollover_time=${rollover_time}`
+        const path = `${process.env.BACKEND_URL}/api/v1/schedules/preview?group_id=${group_id}&start_timestamp=${start_timestamp}&end_timestamp=${end_timestamp}&rollover_day=${rollover_day}&rollover_time=${rollover_time}`
 
         const backendResponse = await fetch(path, {
             method: 'POST',

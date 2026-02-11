@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { Button, Dropdown, BodyShort, HStack } from '@navikt/ds-react'
-import { MenuHamburgerIcon, MoonIcon, SunIcon } from '@navikt/aksel-icons'
+import { MenuHamburgerIcon, MoonIcon, SunIcon, MonitorIcon } from '@navikt/aksel-icons'
 import Image from 'next/image'
 
 import { useAuth } from '../../context/AuthContext'
@@ -17,7 +17,7 @@ type NavRoute = {
 
 const Navbar: React.FC = () => {
     const { user } = useAuth()
-    const { theme, toggleTheme } = useTheme()
+    const { theme, preference, setThemePreference } = useTheme()
     const today = new Date()
     const greetings = ['Hei, ', today.getMonth() === 11 ? 'God jul, ' : ''].filter(Boolean)
 
@@ -107,13 +107,48 @@ const Navbar: React.FC = () => {
                     </Dropdown>
                 )}
 
-                <Button
-                    onClick={toggleTheme}
-                    variant="tertiary"
-                    icon={theme === 'dark' ? <SunIcon aria-hidden /> : <MoonIcon aria-hidden />}
-                    aria-label={theme === 'dark' ? 'Bytt til lys modus' : 'Bytt til mørk modus'}
-                    style={{ marginLeft: '5px', marginRight: '5px', height: '35px' }}
-                />
+                <Dropdown>
+                    <Button
+                        as={Dropdown.Toggle}
+                        variant="tertiary"
+                        icon={
+                            preference === 'system' ? (
+                                <MonitorIcon aria-hidden />
+                            ) : theme === 'dark' ? (
+                                <MoonIcon aria-hidden />
+                            ) : (
+                                <SunIcon aria-hidden />
+                            )
+                        }
+                        aria-label="Velg tema"
+                        style={{ marginLeft: '5px', marginRight: '5px', height: '35px' }}
+                    />
+                    <Dropdown.Menu>
+                        <Dropdown.Menu.List>
+                            <Dropdown.Menu.List.Item onClick={() => setThemePreference('light')}>
+                                <HStack gap="space-2" align="center">
+                                    <SunIcon aria-hidden />
+                                    Lys
+                                    {preference === 'light' && ' ✓'}
+                                </HStack>
+                            </Dropdown.Menu.List.Item>
+                            <Dropdown.Menu.List.Item onClick={() => setThemePreference('dark')}>
+                                <HStack gap="space-2" align="center">
+                                    <MoonIcon aria-hidden />
+                                    Mørk
+                                    {preference === 'dark' && ' ✓'}
+                                </HStack>
+                            </Dropdown.Menu.List.Item>
+                            <Dropdown.Menu.List.Item onClick={() => setThemePreference('system')}>
+                                <HStack gap="space-2" align="center">
+                                    <MonitorIcon aria-hidden />
+                                    System
+                                    {preference === 'system' && ' ✓'}
+                                </HStack>
+                            </Dropdown.Menu.List.Item>
+                        </Dropdown.Menu.List>
+                    </Dropdown.Menu>
+                </Dropdown>
             </nav>
         </>
     )
