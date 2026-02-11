@@ -132,3 +132,16 @@ export interface Error_messages {
     schedule_id: string
     error: string
 }
+
+export interface AuditLog {
+    id: string
+    action: string
+    entity_type: string
+    entity_id: string | null
+    group_id: string | null
+    changed_by: string
+    changed_by_role: string | null
+    details: Record<string, unknown> | null
+    timestamp: string
+    user?: User
+}

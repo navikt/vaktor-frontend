@@ -479,8 +479,33 @@ const Admin = () => {
                                 <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
                             )}
                         </Table.DataCell>
-                        <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
+                        <Table.DataCell style={{ minWidth: '180px', padding: '8px' }}>
                             <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                                <Select
+                                    label="Sett status"
+                                    size="small"
+                                    value={vakter.approve_level}
+                                    disabled={vakter.approve_level >= 5}
+                                    onChange={async (e) => {
+                                        const newLevel = Number(e.target.value)
+                                        const updatedSchedule = {
+                                            ...vakter,
+                                            approve_level: newLevel,
+                                        }
+                                        setIsLoading(true)
+                                        await update_schedule(updatedSchedule, setResponse, setResponseError)
+                                    }}
+                                >
+                                    <option value={0}>0 - Trenger godkjenning</option>
+                                    <option value={1}>1 - Godkjent av ansatt</option>
+                                    <option value={2}>2 - Venter på utregning</option>
+                                    <option value={3}>3 - Godkjent av vaktsjef</option>
+                                    <option value={4}>4 - Godkjent av BDM</option>
+                                    <option value={5} disabled>5 - Overført til lønn</option>
+                                    <option value={6} disabled>6 - Venter på diff-utregning</option>
+                                    <option value={7} disabled>7 - Diff utregnet</option>
+                                    <option value={8} disabled>8 - Overført etter rekjøring</option>
+                                </Select>
                                 <Button
                                     size="xsmall"
                                     style={{
