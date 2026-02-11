@@ -55,6 +55,11 @@ export enum RouterBrukerAdmin {
     PATH = '/bruker_admin',
 }
 
+export enum RouterAudit {
+    NAME = 'Audit-logg',
+    PATH = '/audit',
+}
+
 // ---
 
 // Error
