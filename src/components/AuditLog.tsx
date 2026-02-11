@@ -1,16 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-    Table,
-    Select,
-    Loader,
-    Alert,
-    Heading,
-    Button,
-    Tag,
-    HStack,
-    VStack,
-    Box,
-} from '@navikt/ds-react'
+import { Table, Select, Loader, Alert, Heading, Button, Tag, HStack, VStack, Box } from '@navikt/ds-react'
 import { AuditLog as AuditLogType, Vaktlag } from '../types/types'
 
 const ACTION_LABELS: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'error' | 'neutral' }> = {
@@ -124,10 +113,10 @@ export default function AuditLogComponent() {
     const uniqueActions = Object.keys(ACTION_LABELS)
 
     return (
-        <VStack gap="6" className="p-4">
+        <VStack gap="space-6" className="p-4">
             <Heading size="medium">Audit-logg</Heading>
 
-            <HStack gap="4" wrap>
+            <HStack gap="space-4" wrap>
                 <Select
                     label="Vaktlag"
                     size="small"
@@ -225,23 +214,15 @@ export default function AuditLogComponent() {
                             }
                             return (
                                 <Table.Row key={audit.id}>
-                                    <Table.DataCell>
-                                        {formatTimestamp(audit.timestamp)}
-                                    </Table.DataCell>
+                                    <Table.DataCell>{formatTimestamp(audit.timestamp)}</Table.DataCell>
                                     <Table.DataCell>
                                         <Tag variant={actionInfo.variant} size="small">
                                             {actionInfo.label}
                                         </Tag>
                                     </Table.DataCell>
-                                    <Table.DataCell>
-                                        {ENTITY_TYPE_LABELS[audit.entity_type] || audit.entity_type}
-                                    </Table.DataCell>
-                                    <Table.DataCell>
-                                        {audit.user?.name || audit.changed_by}
-                                    </Table.DataCell>
-                                    <Table.DataCell>
-                                        {audit.changed_by_role || '-'}
-                                    </Table.DataCell>
+                                    <Table.DataCell>{ENTITY_TYPE_LABELS[audit.entity_type] || audit.entity_type}</Table.DataCell>
+                                    <Table.DataCell>{audit.user?.name || audit.changed_by}</Table.DataCell>
+                                    <Table.DataCell>{audit.changed_by_role || '-'}</Table.DataCell>
                                     <Table.DataCell style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         {formatDetails(audit.details)}
                                     </Table.DataCell>
