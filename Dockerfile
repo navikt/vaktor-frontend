@@ -1,40 +1,47 @@
-# Base on offical Node.js Alpine image
-FROM node:20-alpine
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
+WORKDIR /app
 
-# Set working directory
-WORKDIR /usr/src/app
-
-# Copy package.json and package-lock.json before other files
 COPY package*.json ./
 
 RUN --mount=type=secret,id=NODE_AUTH_TOKEN sh -c \
-    'npm config set //npm.pkg.github.com/:_authToken=$(cat /run/secrets/NODE_AUTH_TOKEN)'
-RUN npm config set @navikt:registry=https://npm.pkg.github.com
+    'npm config set //npm.pkg.github.com/:_authToken=$(cat /run/secrets/NODE_AUTH_TOKEN)' && \
+    npm config set @navikt:registry=https://npm.pkg.github.com && \
+    npm ci
 
-# Install dependencies
-RUN npm install
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
 
-# Copy all files
-
+COPY --from=deps /app/node_modules ./node_modules
+COPY package*.json ./
 COPY src/ src/
 COPY public/ public/
-COPY next.config.js next.config.js
-COPY sentry.client.config.ts sentry.client.config.ts
-COPY sentry.server.config.ts sentry.server.config.ts
-COPY sentry.edge.config.ts sentry.edge.config.ts
-#COPY .babelrc .babelrc
-#COPY babel.config.js babel.config.js
+COPY next.config.js .
+COPY tsconfig.json .
+COPY postcss.config.js .
+COPY tailwind.config.js .
+COPY sentry.client.config.ts .
+COPY sentry.server.config.ts .
+COPY sentry.edge.config.ts .
 
-# Build app with Sentry source map upload (falls back gracefully if secret missing)
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
-    SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN 2>/dev/null || echo "") npm run build
+    SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN 2>/dev/null || echo "") \
+    npm run build
 
-# Expose the listening port
+# Stage 3: Production with distroless
+FROM gcr.io/distroless/nodejs20-debian12 AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
 EXPOSE 3000
 
-# Run container as non-root (unprivileged) user
-# The node user is provided in the Node.js Alpine base image
-USER node
-
-# Run npm start script when container starts
-CMD [ "npm", "start" ]
+CMD ["server.js"]
