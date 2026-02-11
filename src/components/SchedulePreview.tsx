@@ -37,7 +37,7 @@ interface SchedulePreviewProps {
     groupId: string
     userIds: string[]
     startTimestamp: number
-    months: number
+    endTimestamp: number
     rolloverDay: number
     rolloverTime: number
     onConfirm: () => void
@@ -98,7 +98,7 @@ const SchedulePreview = ({
     groupId,
     userIds,
     startTimestamp,
-    months,
+    endTimestamp,
     rolloverDay,
     rolloverTime,
     onConfirm,
@@ -113,8 +113,8 @@ const SchedulePreview = ({
         setLoading(true)
         setError('')
 
-        console.log('[SchedulePreview] Fetching with months:', months)
-        const url = `/api/preview_schedule?group_id=${groupId}&start_timestamp=${startTimestamp}&months=${months}&rollover_day=${rolloverDay}&rollover_time=${rolloverTime}`
+        console.log('[SchedulePreview] Fetching with endTimestamp:', endTimestamp)
+        const url = `/api/preview_schedule?group_id=${groupId}&start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}&rollover_day=${rolloverDay}&rollover_time=${rolloverTime}`
         console.log('[SchedulePreview] Full URL:', url)
         const fetchOptions = {
             method: 'POST',
@@ -150,7 +150,16 @@ const SchedulePreview = ({
 
     return (
         <>
-            <Button variant="secondary" onClick={fetchPreview} loading={loading} disabled={disabled}>
+            <Button
+                variant="secondary"
+                onClick={fetchPreview}
+                loading={loading}
+                disabled={disabled}
+                style={{
+                    minWidth: '210px',
+                    marginBottom: '15px',
+                }}
+            >
                 Forhåndsvisning
             </Button>
 

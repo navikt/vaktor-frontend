@@ -1,6 +1,6 @@
 import { Modal, Button, Table, Alert, Heading, Box, Detail, VStack, HStack, DatePicker, useDatepicker } from '@navikt/ds-react'
 import { TrashIcon } from '@navikt/aksel-icons'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DateTime } from 'luxon'
 import { useTheme } from '../context/ThemeContext'
 
@@ -57,10 +57,39 @@ const BulkDeleteSchedules = ({ groupId, disabled = false, onDeleted }: BulkDelet
         defaultSelected: startDate,
     })
 
-    const { datepickerProps: endDatepickerProps, inputProps: endInputProps } = useDatepicker({
+    const {
+        datepickerProps: endDatepickerProps,
+        inputProps: endInputProps,
+        setSelected: setSelectedEnd,
+    } = useDatepicker({
         onDateChange: setEndDate,
         defaultSelected: endDate,
     })
+
+    useEffect(() => {
+        const fetchLastSchedule = async () => {
+            try {
+                const response = await fetch(`/api/last_schedule?group_id=${groupId}`)
+                if (response.ok) {
+                    const lastSchedule = await response.json()
+                    if (lastSchedule && lastSchedule.end_timestamp) {
+                        // Set end date to +1 day from last schedule
+                        const lastDate = new Date(lastSchedule.end_timestamp * 1000)
+                        const nextDay = DateTime.fromJSDate(lastDate).plus({ days: 1 }).toJSDate()
+                        setEndDate(nextDay)
+                        setSelectedEnd(nextDay)
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching last schedule:', error)
+            }
+        }
+
+        if (groupId) {
+            fetchLastSchedule()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [groupId])
 
     const fetchPreview = async () => {
         setLoading(true)

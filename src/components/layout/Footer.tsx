@@ -1,4 +1,5 @@
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { EnvelopeClosedIcon, PhoneIcon } from '@navikt/aksel-icons'
 import { BodyShort, Label } from '@navikt/ds-react'
 import styled from 'styled-components'
@@ -23,13 +24,13 @@ const Section = styled.div`
         width: 1.4rem;
     }
 `
-const FooterContainer = styled.footer`
+const FooterContainer = styled.footer<{ $isDarkMode: boolean }>`
     width: 100%;
     margin-top: auto; /*Footer always at bottom (if min.height of container is 100vh)*/
     padding: 1rem 2rem;
     min-height: 5.5rem;
-    background-color: white;
-    border-top: 1px solid #eaeaea;
+    background-color: ${(props) => (props.$isDarkMode ? '#1a1a1a' : 'white')};
+    border-top: 1px solid ${(props) => (props.$isDarkMode ? '#444' : '#eaeaea')};
     display: flex;
     align-items: center;
     justify-content: center;
@@ -64,7 +65,7 @@ const FooterContainer = styled.footer`
     }
 
     a {
-        color: black;
+        color: ${(props) => (props.$isDarkMode ? '#e0e0e0' : 'black')};
     }
 
     @media (min-width: 600px) {
@@ -80,9 +81,11 @@ const FooterContainer = styled.footer`
 
 const Footer = () => {
     const { user } = useAuth()
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
 
     return (
-        <FooterContainer>
+        <FooterContainer $isDarkMode={isDarkMode}>
             {user ? (
                 <ContactInformation>
                     <Label>NAV IT Operasjonssenteret</Label>
