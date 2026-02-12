@@ -1,13 +1,14 @@
-import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, useMonthpicker } from '@navikt/ds-react'
+import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, GuidePanel } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { Schedules } from '../types/types'
-import MapCost from './utils/mapCost'
-import MapAudit from './utils/mapAudit'
-import MapApproveStatus from './utils/MapApproveStatus'
+import { mapVakter } from './utils/mapVakter'
 import VarsleModal from './VarsleModal'
+import { useTheme } from '../context/ThemeContext'
 
 const AvstemmingMangler = () => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [loading, setLoading] = useState(false)
 
@@ -27,6 +28,7 @@ const AvstemmingMangler = () => {
 
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
+    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
     const [fileType, setFileType] = useState(Number)
     const [isLoading, setIsLoading] = useState(false)
     const [responseError, setResponseError] = useState('')
@@ -35,8 +37,6 @@ const AvstemmingMangler = () => {
 
     const currentDate = new Date()
     const selectedMonth = currentDate.getMonth()
-
-    let rowCount = 0
 
     const generateFile = async (schedule_ids: string[], fileType: number, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
         const url = `/api/generate_transactions?file_type=${fileType}`
@@ -94,193 +94,14 @@ const AvstemmingMangler = () => {
             })
     }
 
-    const getStatusColor = (approveLevel: number) => {
-        switch (approveLevel) {
-            case 1:
-                return '#66CBEC'
-            case 2:
-                return '#99DEAD'
-            case 3:
-                return '#99DEAD'
-            case 4:
-                return '#E18071'
-            case 5:
-                return '#E18071'
-            case 6:
-                return '#99DEAD'
-            case 7:
-                return '#99DEAD'
-            case 8:
-                return '#E18071'
-            default:
-                return '#FFFFFF'
-        }
-    }
-
-    const mapVakter = (vaktliste: Schedules[]) => {
-        // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByKoststed: Record<string, Schedules[]> = vaktliste.reduce(
-            (acc: Record<string, Schedules[]>, current) => {
-                const koststed = current.cost.length === 0 ? 'koststed not set' : current.cost[current.cost.length - 1].koststed
-                if (!acc[koststed]) {
-                    acc[koststed] = []
-                }
-                acc[koststed].push(current)
-                return acc
-            },
-            {} as Record<string, Schedules[]>
-        )
-
-        // Sort each group by start_timestamp
-        Object.keys(groupedByKoststed).forEach((koststedKey) => {
-            groupedByKoststed[koststedKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
-        })
-
-        // Sort each group by start_timestamp
-        Object.keys(groupedByKoststed).forEach((koststedKey) => {
-            groupedByKoststed[koststedKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
-        })
-
-        // Convert the grouped and sorted schedules into an array of JSX elements
-        const groupedRows = Object.entries(groupedByKoststed).flatMap(([koststed, schedules], index) => [
-            // This is the row for the group header
-            <Table.Row key={`header-${koststed}`}>
-                <Table.DataCell colSpan={7}>
-                    <b>Koststed: {koststed}</b>
-                </Table.DataCell>
-            </Table.Row>,
-            // These are the individual rows for the schedules
-            ...schedules.map((vakter, i) => (
-                <Table.Row key={`row-${vakter.id}-${i}`}>
-                    <Table.DataCell style={{ padding: '6px', width: '40px' }}>{++rowCount}</Table.DataCell>
-                    <Table.DataCell scope="row" style={{ padding: '8px', width: '200px' }}>
-                        <div style={{ lineHeight: '1.4' }}>
-                            <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>{vakter.user.name}</div>
-                            <div style={{ fontSize: '0.8em', color: '#666' }}>{vakter.user.id.toUpperCase()}</div>
-                            <div style={{ fontSize: '0.8em', color: '#666' }}>{vakter.group.name}</div>
-                        </div>
-                    </Table.DataCell>
-                    <Table.DataCell scope="row" style={{ padding: '6px', width: '70px', fontSize: '0.85em' }}>
-                        {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
-                    </Table.DataCell>
-                    <Table.DataCell style={{ padding: '8px', width: '220px', backgroundColor: getStatusColor(vakter.approve_level) }}>
-                        <div style={{ lineHeight: '1.4' }}>
-                            <div style={{ marginBottom: '4px' }}>
-                                <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
-                            </div>
-                            <div style={{ fontSize: '0.8em', color: '#666', marginBottom: '2px' }}>
-                                <b>ID:</b>{' '}
-                                <span
-                                    style={{
-                                        display: 'inline-block',
-                                        border: '1px solid #ccc',
-                                        padding: '2px 5px',
-                                        cursor: 'pointer',
-                                        backgroundColor: '#f9f9f9',
-                                        fontSize: '0.85em',
-                                    }}
-                                    onClick={() => navigator.clipboard.writeText(vakter.id)}
-                                    title="Click to copy"
-                                >
-                                    {vakter.id}
-                                </span>
-                            </div>
-                            <div style={{ fontSize: '0.8em', marginBottom: '2px' }}>
-                                <b>Uke:</b> {moment(vakter.start_timestamp * 1000).week()}{' '}
-                                {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
-                                    ? ' - ' + moment(vakter.end_timestamp * 1000).week()
-                                    : ''}
-                            </div>
-                            <div style={{ fontSize: '0.8em' }}>
-                                <b>Start:</b>{' '}
-                                {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                            <div style={{ fontSize: '0.8em', marginTop: '2px' }}>
-                                <b>Slutt:</b>{' '}
-                                {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                            {vakter.vakter.length !== 0 && (
-                                <div style={{ marginTop: '6px', marginBottom: '6px' }}>
-                                    <b style={{ fontSize: '0.8em' }}>Endringer:</b>
-                                    {vakter.vakter.map((endringer, idx: number) => (
-                                        <div key={idx} style={{ marginTop: '4px', fontSize: '0.75em' }}>
-                                            <div>
-                                                <b>ID:</b>{' '}
-                                                <span
-                                                    style={{
-                                                        display: 'inline-block',
-                                                        border: '1px solid #ccc',
-                                                        padding: '1px 3px',
-                                                        cursor: 'pointer',
-                                                        backgroundColor: '#f9f9f9',
-                                                        fontSize: '0.9em',
-                                                    }}
-                                                    onClick={() => navigator.clipboard.writeText(endringer.id)}
-                                                    title="Click to copy"
-                                                >
-                                                    {endringer.id}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <b>{endringer.type === 'bakvakt' ? 'bistand' : endringer.type}:</b> {endringer.user.name}
-                                            </div>
-                                            <div>
-                                                <b>Start:</b>{' '}
-                                                {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </div>
-                                            <div>
-                                                <b>Slutt:</b>{' '}
-                                                {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </Table.DataCell>
-                    <Table.DataCell scope="row" style={{ padding: '8px', width: '250px', maxWidth: '250px' }}>
-                        {vakter.cost.length !== 0 ? <MapCost vakt={vakter} avstemming={true}></MapCost> : 'ingen beregning foreligger'}
-                    </Table.DataCell>
-
-                    <Table.DataCell scope="row" style={{ padding: '8px', width: '200px', maxWidth: '200px', overflow: 'hidden' }}>
-                        {vakter.audits.length !== 0 ? <MapAudit audits={vakter.audits} /> : 'Ingen hendelser'}
-                    </Table.DataCell>
-                </Table.Row>
-            )),
-        ])
-        return groupedRows
-    }
-
     useEffect(() => {
-        setLoading(true)
-        const path = `/api/unfinished_schedules`
-        fetch(path)
-            .then(async (scheduleRes) => scheduleRes.json())
-            .then((itemData) => {
+        const fetchSchedules = async () => {
+            setLoading(true)
+            const path = `/api/unfinished_schedules`
+            try {
+                const scheduleRes = await fetch(path)
+                const itemData = await scheduleRes.json()
+                
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
@@ -323,7 +144,13 @@ const AvstemmingMangler = () => {
 
                 setDistinctFilenames(sortedFilenames)
                 setLoading(false)
-            })
+            } catch (error) {
+                console.error('Failed to fetch schedules:', error)
+                setLoading(false)
+            }
+        }
+
+        fetchSchedules()
     }, [response, FilterOnDoubleSchedules])
 
     if (itemData === undefined) return <></>
@@ -360,7 +187,10 @@ const AvstemmingMangler = () => {
     if (limit300 && filteredVakter.length > 500) {
         filteredVakter = filteredVakter.slice(0, 500)
     }
-    let listeAvVakter = mapVakter(filteredVakter)
+    let listeAvVakter = mapVakter({
+        vaktliste: filteredVakter,
+        isDarkMode,
+    })
     let totalCost_filtered = filteredVakter
 
     const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
@@ -381,92 +211,124 @@ const AvstemmingMangler = () => {
 
     return (
         <>
-            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end' }}>
-                <ExpansionCard aria-label="generer-pr28-fil" size="small" style={{ justifyContent: 'center', width: '280px' }}>
-                    <ExpansionCard.Header>
-                        <ExpansionCard.Title>Generer pr28-fil</ExpansionCard.Title>
-                    </ExpansionCard.Header>
-                    <ExpansionCard.Content>
-                        <div style={{ display: 'grid', justifyContent: 'center', gap: '10px' }}>
-                            <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                                <Select label="Velg type fil" onChange={(e) => setFileType(Number(e.target.value))}>
-                                    <option value="">Gjør et valg</option>
-                                    <option value={1}>Ordinær kjøring</option>
-                                    <option value={2}>Diff-fil</option>
-                                </Select>
-                            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '20px', marginBottom: '20px', alignItems: 'start' }}>
+                <GuidePanel style={{ height: 'fit-content', maxWidth: '400px' }}>
+                    <p>Sjekk vaktperioder som mangler utbetaling og generer PR28-fil for innsending til ØT.</p>
+                </GuidePanel>
 
-                            <Button
-                                onClick={() => {
-                                    setOpenState(true)
-                                }}
-                                style={{
-                                    maxWidth: '210px',
-                                    marginLeft: '30px',
-                                    marginTop: '5px',
-                                    marginBottom: '5px',
-                                }}
-                                disabled={isLoading || !fileType} // disable button when loading
-                                ref={buttonRef}
-                            >
-                                Generer pr28-fil
-                            </Button>
-                            <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
-                                <Popover.Content
-                                    style={{
-                                        textAlign: 'center',
-                                        backgroundColor: 'rgba(241, 241, 241, 1)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '10px',
-                                        maxWidth: '250px',
+                <div
+                    style={{
+                        display: 'grid',
+                        gap: '8px',
+                        padding: '15px',
+                        backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                        borderRadius: '4px',
+                        minWidth: '220px',
+                        justifySelf: 'center',
+                    }}
+                >
+                    <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '5px' }}>Oppsummering</div>
+                    <div>
+                        <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                    </div>
+                    <div>
+                        <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                    </div>
+                    <div>
+                        <b>Antall vakter: {filteredVakter.length}</b>
+                    </div>
+                </div>
+
+                <div style={{ width: '280px' }}>
+                    <ExpansionCard aria-label="generer-pr28-fil" size="small">
+                        <ExpansionCard.Header>
+                            <ExpansionCard.Title>Generer pr28-fil</ExpansionCard.Title>
+                        </ExpansionCard.Header>
+                        <ExpansionCard.Content>
+                            <div style={{ display: 'grid', justifyContent: 'center', gap: '10px' }}>
+                                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
+                                    <Select label="Velg type fil" onChange={(e) => setFileType(Number(e.target.value))}>
+                                        <option value="">Gjør et valg</option>
+                                        <option value={1}>Ordinær kjøring</option>
+                                        <option value={2}>Diff-fil</option>
+                                    </Select>
+                                </div>
+
+                                <Button
+                                    onClick={(e) => {
+                                        setAnchorEl(e.currentTarget)
+                                        setOpenState(true)
                                     }}
+                                    style={{
+                                        maxWidth: '210px',
+                                        marginLeft: '30px',
+                                        marginTop: '5px',
+                                        marginBottom: '5px',
+                                    }}
+                                    disabled={isLoading || !fileType}
+                                    ref={buttonRef}
                                 >
-                                    Er du sikker på vil generere fil for for for{' '}
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => {
-                                            if (filteredVakter) {
-                                                generateFile(
-                                                    filteredVakter.map((s) => s.id),
-                                                    fileType,
-                                                    setResponse,
-                                                    setResponseError
-                                                )
-                                                setIsLoading(true)
-                                            } else {
-                                                console.log('Noe gikk galt :shrug:')
-                                            }
-                                        }}
-                                        disabled={isLoading || !fileType} // disable button when loading
-                                    >
-                                        {isLoading ? <Loader /> : 'Generer fil nå!'}
-                                    </Button>
-                                    <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => {
-                                            if (filteredVakter) {
-                                                generateFile(
-                                                    filteredVakter.map((s) => s.id),
-                                                    fileType,
-                                                    setResponse,
-                                                    setResponseError
-                                                )
-                                                setIsLoading(true)
-                                            } else {
-                                                console.log('Noe gikk galt :shrug:')
-                                            }
-                                        }}
-                                        disabled={isLoading || !fileType} // disable button when loading
-                                    >
-                                        {isLoading ? <Loader /> : 'Generer fil nå!'}
-                                    </Button>
-                                </Popover.Content>
-                            </Popover>
-                        </div>
-                    </ExpansionCard.Content>
-                </ExpansionCard>
+                                    Generer pr28-fil
+                                </Button>
+                                {openState && (
+                                    <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={anchorEl}>
+                                        <Popover.Content
+                                            style={{
+                                                textAlign: 'center',
+                                                backgroundColor: 'rgba(241, 241, 241, 1)',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '10px',
+                                                maxWidth: '250px',
+                                            }}
+                                        >
+                                            Er du sikker på vil generere fil for for for{' '}
+                                            <Button
+                                                variant="danger"
+                                                onClick={() => {
+                                                    if (filteredVakter) {
+                                                        generateFile(
+                                                            filteredVakter.map((s) => s.id),
+                                                            fileType,
+                                                            setResponse,
+                                                            setResponseError
+                                                        )
+                                                        setIsLoading(true)
+                                                    } else {
+                                                        console.log('Noe gikk galt :shrug:')
+                                                    }
+                                                }}
+                                                disabled={isLoading || !fileType}
+                                            >
+                                                {isLoading ? <Loader /> : 'Generer fil nå!'}
+                                            </Button>
+                                            <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
+                                            <Button
+                                                variant="danger"
+                                                onClick={() => {
+                                                    if (filteredVakter) {
+                                                        generateFile(
+                                                            filteredVakter.map((s) => s.id),
+                                                            fileType,
+                                                            setResponse,
+                                                            setResponseError
+                                                        )
+                                                        setIsLoading(true)
+                                                    } else {
+                                                        console.log('Noe gikk galt :shrug:')
+                                                    }
+                                                }}
+                                                disabled={isLoading || !fileType}
+                                            >
+                                                {isLoading ? <Loader /> : 'Generer fil nå!'}
+                                            </Button>
+                                        </Popover.Content>
+                                    </Popover>
+                                )}
+                            </div>
+                        </ExpansionCard.Content>
+                    </ExpansionCard>
+                </div>
             </div>
 
             <div>
@@ -475,19 +337,7 @@ const AvstemmingMangler = () => {
                 )}
             </div>
 
-            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', columnGap: '15px', marginTop: '15px' }}>
-                <div>
-                    <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
-                </div>
-                <div>
-                    <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
-                </div>
-                <div>
-                    <b>Antall vakter: {rowCount}</b>
-                </div>
-            </div>
-
-            <div className="min-h-96" style={{ display: 'flex' }}>
+            <div style={{ display: 'flex', marginBottom: '20px' }}>
                 <form style={{ width: '300px', marginLeft: '15px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
                 </form>
@@ -543,7 +393,7 @@ const AvstemmingMangler = () => {
                     </CheckboxGroup>
                 </div>
                 <div style={{ width: '200px', marginLeft: '15px', marginTop: '30px' }}>
-                    <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
+                    <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)} variant="secondary">
                         Send påminnelse
                     </Button>
                 </div>
@@ -555,9 +405,6 @@ const AvstemmingMangler = () => {
                             <Table.HeaderCell style={{ padding: '6px', width: '40px' }}>#</Table.HeaderCell>
                             <Table.HeaderCell scope="col" style={{ padding: '8px', width: '200px' }}>
                                 Navn
-                            </Table.HeaderCell>
-                            <Table.HeaderCell scope="col" style={{ padding: '6px', width: '70px' }}>
-                                Type vakt
                             </Table.HeaderCell>
                             <Table.HeaderCell
                                 scope="col"
@@ -586,7 +433,7 @@ const AvstemmingMangler = () => {
                         {loading ? <Loader /> : null}
                         {listeAvVakter.length === 0 && !loading ? (
                             <Table.Row>
-                                <Table.DataCell colSpan={6}>
+                                <Table.DataCell colSpan={5}>
                                     <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3>
                                 </Table.DataCell>
                             </Table.Row>
