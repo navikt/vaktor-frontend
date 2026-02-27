@@ -1,5 +1,4 @@
 import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, GuidePanel } from '@navikt/ds-react'
-import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { Schedules } from '../types/types'
 import { mapVakter } from './utils/mapVakter'

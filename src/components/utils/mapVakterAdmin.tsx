@@ -9,8 +9,6 @@ import MapAudit from './mapAudit'
 import DeleteVaktButton from './DeleteVaktButton'
 import { ReactNode } from 'react'
 
-import { Dispatch, SetStateAction } from 'react'
-
 interface MapVakterAdminProps {
     vaktliste: Schedules[]
     isDarkMode: boolean
