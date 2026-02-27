@@ -101,7 +101,7 @@ const AvstemmingMangler = () => {
             try {
                 const scheduleRes = await fetch(path)
                 const itemData = await scheduleRes.json()
-                
+
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
                 setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
@@ -191,23 +191,20 @@ const AvstemmingMangler = () => {
         vaktliste: filteredVakter,
         isDarkMode,
     })
-    let totalCost_filtered = filteredVakter
 
-    const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
-        if (!currentSchedule || !Array.isArray(currentSchedule.cost)) return accumulator
-        const lastCost =
-            currentSchedule.cost.length > 0 && currentSchedule.cost[currentSchedule.cost.length - 1].total_cost
-                ? Number(currentSchedule.cost[currentSchedule.cost.length - 1].total_cost)
-                : 0
-        return accumulator + lastCost
-    }, 0)
-
-    const totalCostDiff = totalCost_filtered.reduce((accumulator, currentSchedule) => {
-        if (!currentSchedule || !Array.isArray(currentSchedule.cost) || currentSchedule.cost.length < 2) return accumulator
-        const latestCost = Number(currentSchedule.cost[currentSchedule.cost.length - 1].total_cost) || 0
-        const secondLatestCost = Number(currentSchedule.cost[currentSchedule.cost.length - 2].total_cost) || 0
-        return accumulator + (latestCost - secondLatestCost)
-    }, 0)
+    const { totalCost, totalCostDiff } = filteredVakter.reduce(
+        (acc, schedule) => {
+            if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length === 0) return acc
+            const costs = schedule.cost
+            acc.totalCost += Number(costs[costs.length - 1].total_cost) || 0
+            if (costs.length >= 2) {
+                // Diff: siste beregning minus nest siste (kun siste rekjøring)
+                acc.totalCostDiff += (Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0)
+            }
+            return acc
+        },
+        { totalCost: 0, totalCostDiff: 0 }
+    )
 
     return (
         <>

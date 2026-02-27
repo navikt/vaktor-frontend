@@ -1,4 +1,17 @@
-import { Table, Loader, MonthPicker, useMonthpicker, Search, Select, Button, Popover, ExpansionCard, CheckboxGroup, Checkbox } from '@navikt/ds-react'
+import {
+    Table,
+    Loader,
+    MonthPicker,
+    useMonthpicker,
+    Search,
+    Select,
+    Button,
+    Popover,
+    ExpansionCard,
+    CheckboxGroup,
+    Checkbox,
+    GuidePanel,
+} from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -167,107 +180,120 @@ const AvstemmingOkonomi = () => {
         isDarkMode,
     })
 
-    let totalCost_filtered = filteredVakter
-
-    const totalCost = totalCost_filtered.reduce((accumulator, currentSchedule) => {
-        if (!currentSchedule || !Array.isArray(currentSchedule.cost)) return accumulator
-        const lastCost =
-            currentSchedule.cost.length > 0 && currentSchedule.cost[currentSchedule.cost.length - 1].total_cost
-                ? Number(currentSchedule.cost[currentSchedule.cost.length - 1].total_cost)
-                : 0
-        return accumulator + lastCost
-    }, 0)
-
-    const totalCostDiff = totalCost_filtered.reduce((accumulator, currentSchedule) => {
-        if (!currentSchedule || !Array.isArray(currentSchedule.cost) || currentSchedule.cost.length < 2) return accumulator
-        const latestCost = Number(currentSchedule.cost[currentSchedule.cost.length - 1].total_cost) || 0
-        const secondLatestCost = Number(currentSchedule.cost[currentSchedule.cost.length - 2].total_cost) || 0
-        return accumulator + (latestCost - secondLatestCost)
-    }, 0)
+    const { totalCost, totalCostDiff } = filteredVakter.reduce(
+        (acc, schedule) => {
+            if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length === 0) return acc
+            const costs = schedule.cost
+            acc.totalCost += Number(costs[costs.length - 1].total_cost) || 0
+            if (costs.length >= 2) {
+                // Diff: siste beregning minus nest siste (kun siste rekjøring)
+                acc.totalCostDiff += (Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0)
+            }
+            return acc
+        },
+        { totalCost: 0, totalCostDiff: 0 }
+    )
 
     return (
         <>
-            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end' }}>
-                <ExpansionCard aria-label="reberegning-av-vakter" size="small" style={{ justifyContent: 'center', width: '280px' }}>
-                    <ExpansionCard.Header>
-                        <ExpansionCard.Title>Reberegning</ExpansionCard.Title>
-                    </ExpansionCard.Header>
-                    <ExpansionCard.Content>
-                        <div style={{ display: 'grid', justifyContent: 'center', gap: '10px' }}>
-                            <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                                <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
-                                    <option value="">Gjør et valg</option>
-                                    <option value={1}>Ordinær kjøring</option>
-                                    <option value={2}>Lønnsendring</option>
-                                    <option value={3}>Feilutregning/Feil i Vaktor</option>
-                                    <option value={4}>Sekundærkjøring</option>
-                                </Select>
-                            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '20px', marginBottom: '20px', alignItems: 'start' }}>
+                <GuidePanel style={{ height: 'fit-content', maxWidth: '400px' }}>
+                    <p>Avstemming for ØT</p>
+                </GuidePanel>
 
-                            <Button
-                                onClick={() => {
-                                    setOpenState(true)
-                                }}
-                                style={{
-                                    maxWidth: '210px',
-                                    marginLeft: '30px',
-                                    marginTop: '5px',
-                                    marginBottom: '5px',
-                                }}
-                                disabled={isLoading || !actionReason} // disable button when loading
-                                ref={buttonRef}
-                            >
-                                Reberegn {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
-                            </Button>
-                            <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
-                                <Popover.Content
-                                    style={{
-                                        textAlign: 'center',
-                                        backgroundColor: isDarkMode ? '#2a2a2a' : 'rgba(241, 241, 241, 1)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '10px',
-                                        maxWidth: '250px',
+                <div
+                    style={{
+                        display: 'grid',
+                        gap: '8px',
+                        padding: '15px',
+                        backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                        borderRadius: '4px',
+                        minWidth: '220px',
+                        justifySelf: 'center',
+                    }}
+                >
+                    <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '5px' }}>Oppsummering</div>
+                    <div>
+                        <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                    </div>
+                    <div>
+                        <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                    </div>
+                    <div>
+                        <b>Antall vakter: {filteredVakter.length}</b>
+                    </div>
+                </div>
+
+                <div style={{ width: '280px' }}>
+                    <ExpansionCard aria-label="reberegning-av-vakter" size="small" style={{ justifyContent: 'center', width: '280px' }}>
+                        <ExpansionCard.Header>
+                            <ExpansionCard.Title>Reberegning</ExpansionCard.Title>
+                        </ExpansionCard.Header>
+                        <ExpansionCard.Content>
+                            <div style={{ display: 'grid', justifyContent: 'center', gap: '10px' }}>
+                                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
+                                    <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
+                                        <option value="">Gjør et valg</option>
+                                        <option value={1}>Ordinær kjøring</option>
+                                        <option value={2}>Lønnsendring</option>
+                                        <option value={3}>Feilutregning/Feil i Vaktor</option>
+                                        <option value={4}>Sekundærkjøring</option>
+                                    </Select>
+                                </div>
+
+                                <Button
+                                    onClick={() => {
+                                        setOpenState(true)
                                     }}
+                                    style={{
+                                        maxWidth: '210px',
+                                        marginLeft: '30px',
+                                        marginTop: '5px',
+                                        marginBottom: '5px',
+                                    }}
+                                    disabled={isLoading || !actionReason} // disable button when loading
+                                    ref={buttonRef}
                                 >
-                                    Er du sikker på vil reberegne perioder for{' '}
-                                    {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''} for{' '}
-                                    <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => {
-                                            if (selectedMonth) {
-                                                recalculateSchedules(
-                                                    filteredVakter.map((s) => s.id),
-                                                    actionReason,
-                                                    setResponse,
-                                                    setResponseError
-                                                )
-                                                setIsLoading(true)
-                                            } else {
-                                                console.log('SelectedMonth not set')
-                                            }
+                                    Reberegn {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
+                                </Button>
+                                <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
+                                    <Popover.Content
+                                        style={{
+                                            textAlign: 'center',
+                                            backgroundColor: isDarkMode ? '#2a2a2a' : 'rgba(241, 241, 241, 1)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '10px',
+                                            maxWidth: '250px',
                                         }}
-                                        disabled={isLoading || !actionReason} // disable button when loading
                                     >
-                                        {isLoading ? <Loader /> : 'Rekalkuler nå!'}
-                                    </Button>
-                                </Popover.Content>
-                            </Popover>
-                        </div>
-                    </ExpansionCard.Content>
-                </ExpansionCard>
-            </div>
-
-            <div style={{ textAlign: 'end', display: 'grid', justifyContent: 'end', columnGap: '15px', marginTop: '15px' }}>
-                <div>
-                    <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
-                </div>
-                <div>
-                    <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
-                </div>
-                <div>
-                    <b>Antall vakter: {filteredVakter.length}</b>
+                                        Er du sikker på vil reberegne perioder for{' '}
+                                        {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''} for{' '}
+                                        <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
+                                        <Button
+                                            variant="danger"
+                                            onClick={() => {
+                                                if (selectedMonth) {
+                                                    recalculateSchedules(
+                                                        filteredVakter.map((s) => s.id),
+                                                        actionReason,
+                                                        setResponse,
+                                                        setResponseError
+                                                    )
+                                                    setIsLoading(true)
+                                                } else {
+                                                    console.log('SelectedMonth not set')
+                                                }
+                                            }}
+                                            disabled={isLoading || !actionReason} // disable button when loading
+                                        >
+                                            {isLoading ? <Loader /> : 'Rekalkuler nå!'}
+                                        </Button>
+                                    </Popover.Content>
+                                </Popover>
+                            </div>
+                        </ExpansionCard.Content>
+                    </ExpansionCard>
                 </div>
             </div>
 
