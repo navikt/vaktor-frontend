@@ -2,9 +2,17 @@ import { Dispatch, useCallback, useEffect, useState } from 'react'
 import { User } from '../types/types'
 import { Table } from '@navikt/ds-react'
 
-const VaktlagMembers = (props: { member: User; setItemData: Dispatch<User[]>; itemData: User[] }) => {
+const VaktlagMembers = (props: { member: User; setItemData: Dispatch<User[]>; itemData: User[]; groupId?: string }) => {
     const [error, setError] = useState('')
     const [groupOrderIndexes, setGroupOrderIndexes] = useState<number[]>([])
+
+    // Finn riktig rolle basert på groupId
+    const getRole = () => {
+        if (!props.groupId) return props.member.role
+
+        const groupRole = props.member.group_roles?.find((gr) => gr.group_id === props.groupId)
+        return groupRole?.role?.title || props.member.role
+    }
 
     useEffect(() => {
         props.itemData
@@ -26,7 +34,7 @@ const VaktlagMembers = (props: { member: User; setItemData: Dispatch<User[]>; it
         <Table.Row key={props.member.name}>
             <Table.DataCell>{props.member.name}</Table.DataCell>
             <Table.HeaderCell scope="row">{props.member.id}</Table.HeaderCell>
-            <Table.DataCell>{props.member.role}</Table.DataCell>
+            <Table.DataCell>{getRole()}</Table.DataCell>
         </Table.Row>
     )
 }

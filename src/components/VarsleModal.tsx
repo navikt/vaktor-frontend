@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, Modal, Radio, RadioGroup } from '@navikt/ds-react'
 import { Schedules } from '../types/types'
+import { useTheme } from '../context/ThemeContext'
 
 const send_alert = async (data: any) => {
     const response = await fetch('/api/send_alert', {
@@ -19,6 +20,9 @@ const send_alert = async (data: any) => {
     }
 }
 const VarsleModal = (props: { listeAvVakter: Schedules[]; handleClose: Function; month: Date }) => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
+
     useEffect(() => {}, [])
 
     const [selectedHowRadio, setSelectedHowRadio] = useState('slack')
@@ -69,9 +73,25 @@ const VarsleModal = (props: { listeAvVakter: Schedules[]; handleClose: Function;
                         <div style={{ marginTop: '20px' }}>
                             Vil varsle om {props.listeAvVakter.length} vakter:
                             {/* Highlight the schedules */}
-                            <div style={{ padding: '10px', marginTop: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
+                            <div
+                                style={{
+                                    padding: '10px',
+                                    marginTop: '10px',
+                                    border: isDarkMode ? '1px solid #444' : '1px solid #ccc',
+                                    borderRadius: '5px',
+                                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                                }}
+                            >
                                 {props.listeAvVakter.map((schedule, index) => (
-                                    <div key={index} style={{ background: '#f0f0f0', margin: '5px 0', padding: '5px', borderRadius: '5px' }}>
+                                    <div
+                                        key={index}
+                                        style={{
+                                            background: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+                                            margin: '5px 0',
+                                            padding: '5px',
+                                            borderRadius: '5px',
+                                        }}
+                                    >
                                         {schedule.id} --- {schedule.user.name}
                                     </div>
                                 ))}

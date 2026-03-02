@@ -2,6 +2,7 @@ import { Button, Table, Loader, Pagination, Alert, Select, ToggleGroup, TextFiel
 import moment from 'moment'
 import { useEffect, useState, Dispatch } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { Schedules, User, Vaktlag } from '../types/types'
 import PerioderOptions from './PerioderOptions'
 import VaktlagMembers from './VaktlagMembers'
@@ -67,6 +68,8 @@ const createVaktlag = async (
 
 const VaktlagAdmin = () => {
     const { user } = useAuth()
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [itemData, setItemData] = useState<User[]>([])
     const [response, setResponse] = useState([])
     const [responseError, setResponseError] = useState('')
@@ -84,7 +87,15 @@ const VaktlagAdmin = () => {
                     user.group_order_index = index + 1
                 }
                 user.id = user.id.toUpperCase()
-                return <VaktlagMembers member={user} key={index} itemData={members} setItemData={setItemData}></VaktlagMembers>
+                return (
+                    <VaktlagMembers
+                        member={user}
+                        key={index}
+                        itemData={members}
+                        setItemData={setItemData}
+                        groupId={selectedVaktlag?.id}
+                    ></VaktlagMembers>
+                )
             })
 
     const mapMembersMidlertidig = (members: User[]) =>
@@ -189,7 +200,7 @@ const VaktlagAdmin = () => {
     return (
         <>
             {response.length !== 0 || responseError !== '' ? (
-                mapResponse(response, page, setPage, responseError)
+                mapResponse(response, page, setPage, responseError, isDarkMode)
             ) : (
                 <div
                     style={{
@@ -291,19 +302,19 @@ const VaktlagAdmin = () => {
                         </>
                     ) : (
                         <>
-                            <Label>Navn</Label>
-                            {selectedVaktlag.name}
-                            <Label>Type</Label>
-                            {selectedVaktlag.type}
-                            <Label>Description</Label>
-                            {selectedVaktlag.description}
+                            <Label style={{ color: isDarkMode ? '#e6e6e6' : undefined }}>Navn</Label>
+                            <div style={{ color: isDarkMode ? '#d1d1d1' : undefined }}>{selectedVaktlag.name}</div>
+                            <Label style={{ color: isDarkMode ? '#e6e6e6' : undefined }}>Type</Label>
+                            <div style={{ color: isDarkMode ? '#d1d1d1' : undefined }}>{selectedVaktlag.type}</div>
+                            <Label style={{ color: isDarkMode ? '#e6e6e6' : undefined }}>Description</Label>
+                            <div style={{ color: isDarkMode ? '#d1d1d1' : undefined }}>{selectedVaktlag.description}</div>
 
                             <div style={{ margin: 'auto', gap: '20px', display: 'grid' }}>
                                 <Table
                                     style={{
                                         minWidth: '650px',
                                         maxWidth: '60vw',
-                                        backgroundColor: 'white',
+                                        backgroundColor: isDarkMode ? '#1a1a1a' : 'white',
                                         marginTop: '2vh',
                                         marginBottom: '3vh',
                                     }}
@@ -381,7 +392,7 @@ const VaktlagAdmin = () => {
 
 export default VaktlagAdmin
 
-const mapResponse = (schedules: Schedules[], page: number, setPage: Dispatch<number>, error: string) => {
+const mapResponse = (schedules: Schedules[], page: number, setPage: Dispatch<number>, error: string, isDarkMode: boolean) => {
     const rowsPerPage = 10
     let sortData = schedules
     sortData = sortData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
@@ -415,7 +426,7 @@ const mapResponse = (schedules: Schedules[], page: number, setPage: Dispatch<num
             }}
         >
             <Alert variant="success">Et vaktlagt ble opprettet:</Alert>
-            <Table size="small">
+            <Table size="small" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : 'white' }}>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell scope="col">Navn</Table.HeaderCell>

@@ -626,90 +626,6 @@ const Vaktperioder = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    ) : (
-                                    <>
-                                        {lastVakt ? (
-                                            <div style={{ display: 'grid', justifyContent: 'center', alignItems: 'center' }}>
-                                                <div>
-                                                    <h3>
-                                                        Utvid vaktperiode fra siste vakt:{' '}
-                                                        {moment(lastVakt.end_timestamp * 1000).format('DD.MM.YYYY HH:mm')}
-                                                    </h3>
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        display: 'flex',
-                                                        gap: '40px',
-                                                        marginTop: '15px',
-                                                    }}
-                                                >
-                                                    <DatePicker {...startDatepickerProps}>
-                                                        <DatePicker.Input {...startInputProps} label="Fra" disabled />
-                                                    </DatePicker>
-                                                    <Select
-                                                        label="Angi dag for vaktbytte:"
-                                                        onChange={(e) => setRolloverDay(Number(e.target.value))}
-                                                        defaultValue="2"
-                                                    >
-                                                        <option value="0">Mandag</option>
-                                                        <option value="2">Onsdag</option>
-                                                    </Select>
-                                                    <Select
-                                                        label="Angi tid for vaktbytte:"
-                                                        onChange={(e) => setRolloverTime(Number(e.target.value))}
-                                                        defaultValue="12"
-                                                    >
-                                                        <option value="0">00:00</option>
-                                                        <option value="7">07:00</option>
-                                                        <option value="8">08:00</option>
-                                                        <option value="12">12:00</option>
-                                                    </Select>
-                                                    <DatePicker {...endDatepickerProps}>
-                                                        <DatePicker.Input {...endInputProps} label="Til" />
-                                                    </DatePicker>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div style={{ display: 'grid', justifyContent: 'center', alignItems: 'center' }}>
-                                                <div>
-                                                    <h3>Ingen eksisterende vakter funnet, opprett ny vaktperiode</h3>
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        display: 'flex',
-                                                        gap: '40px',
-                                                        marginTop: '15px',
-                                                    }}
-                                                >
-                                                    {' '}
-                                                    <DatePicker {...startDatepickerProps}>
-                                                        <DatePicker.Input {...startInputProps} label="Fra" />
-                                                    </DatePicker>
-                                                    <Select
-                                                        label="Angi dag for vaktbytte:"
-                                                        onChange={(e) => setRolloverDay(Number(e.target.value))}
-                                                        defaultValue="2"
-                                                    >
-                                                        <option value="0">Mandag</option>
-                                                        <option value="2">Onsdag</option>
-                                                    </Select>
-                                                    <Select
-                                                        label="Angi tid for vaktbytte:"
-                                                        onChange={(e) => setRolloverTime(Number(e.target.value))}
-                                                        defaultValue="12"
-                                                    >
-                                                        <option value="0">00:00</option>
-                                                        <option value="7">07:00</option>
-                                                        <option value="8">08:00</option>
-                                                        <option value="12">12:00</option>
-                                                    </Select>
-                                                    <DatePicker {...endDatepickerProps}>
-                                                        <DatePicker.Input {...endInputProps} label="Til" />
-                                                    </DatePicker>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </>
                                     <Table>
                                         <Table.Header>
                                             <Table.Row>
@@ -873,55 +789,31 @@ const Vaktperioder = () => {
                                             </Table.Body>
                                         </Table>
                                     </DndContext>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <SchedulePreview
-                                            groupId={selectedVaktlag}
-                                            userIds={itemData
-                                                .filter((user: User) => user.group_order_index !== 100)
-                                                .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
-                                                .map((user: User) => user.id)}
-                                            startTimestamp={startTimestamp || (selectedDay ? selectedDay.getTime() / 1000 : 0)}
-                                            endTimestamp={endTimestamp}
-                                            rolloverDay={rolloverDay}
-                                            rolloverTime={rolloverTime}
-                                            disabled={response.length !== 0 || endTimestamp == 0}
-                                            onConfirm={() => {
-                                                createSchedule(
-                                                    itemData.filter((user: User) => user.group_order_index !== 100),
-                                                    selectedVaktlag,
-                                                    setResponse,
-                                                    startTimestamp || (selectedDay ? selectedDay.getTime() / 1000 : 0),
-                                                    endTimestamp,
-                                                    isMidlertidlig,
-                                                    rolloverDay,
-                                                    setResponseError,
-                                                    rolloverTime
-                                                )
-                                            }}
-                                        />
-                                        <Button
-                                            disabled={response.length !== 0 || endTimestamp == 0}
-                                            style={{
-                                                minWidth: '210px',
-                                                marginBottom: '15px',
-                                            }}
-                                            onClick={() => {
-                                                createSchedule(
-                                                    itemData.filter((user: User) => user.group_order_index !== 100),
-                                                    selectedVaktlag,
-                                                    setResponse,
-                                                    startTimestamp || (selectedDay ? selectedDay.getTime() / 1000 : 0),
-                                                    endTimestamp,
-                                                    isMidlertidlig,
-                                                    rolloverDay,
-                                                    setResponseError,
-                                                    rolloverTime
-                                                )
-                                            }}
-                                        >
-                                            Generer vaktperioder (direkte)
-                                        </Button>
-                                    </div>
+                                    <SchedulePreview
+                                        groupId={selectedVaktlag}
+                                        userIds={itemData
+                                            .filter((user: User) => user.group_order_index !== 100)
+                                            .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
+                                            .map((user: User) => user.id)}
+                                        startTimestamp={startTimestamp || (selectedDay ? selectedDay.getTime() / 1000 : 0)}
+                                        endTimestamp={endTimestamp}
+                                        rolloverDay={rolloverDay}
+                                        rolloverTime={rolloverTime}
+                                        disabled={response.length !== 0 || endTimestamp == 0}
+                                        onConfirm={() => {
+                                            createSchedule(
+                                                itemData.filter((user: User) => user.group_order_index !== 100),
+                                                selectedVaktlag,
+                                                setResponse,
+                                                startTimestamp || (selectedDay ? selectedDay.getTime() / 1000 : 0),
+                                                endTimestamp,
+                                                isMidlertidlig,
+                                                rolloverDay,
+                                                setResponseError,
+                                                rolloverTime
+                                            )
+                                        }}
+                                    />
                                 </>
                             )}
                         </Tabs.Panel>

@@ -1,7 +1,6 @@
 import type { NextPage } from 'next'
 import moment from 'moment'
 import 'moment/locale/nb'
-import { GuidePanel } from '@navikt/ds-react'
 import { useAuth } from '../context/AuthContext'
 import AvstemmingMangler from '../components/AvstemmingMangler'
 import { hasAnyRole } from '../utils/roles'
@@ -15,11 +14,6 @@ const Home: NextPage = () => {
     if (hasAccess) {
         return (
             <div className="Container">
-                <div className="AdminGuideContainer">
-                    <GuidePanel className="AdminGuidePanel">
-                        <p>Avstemming for ØT</p>
-                    </GuidePanel>
-                </div>
                 <AvstemmingMangler />
             </div>
         )

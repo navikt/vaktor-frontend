@@ -73,7 +73,10 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                 <div>
                                     {mapCostStatus(Number(cost.type_id), isDarkMode)}
                                     <div className="mt-1">
-                                        Total: <b className={isDarkMode ? 'text-green-400' : 'text-green-700'}>{cost.total_cost}</b>
+                                        Total:{' '}
+                                        <b className={isDarkMode ? 'text-green-400' : 'text-green-700'}>
+                                            {Number(cost.total_cost).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                        </b>
                                     </div>
                                     <div className="text-sm text-text-subtle">
                                         Koststed: <b>{cost.koststed}</b>
@@ -82,7 +85,8 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                         <div
                                             className={`text-sm mt-1 ${diff < 0 ? (isDarkMode ? 'text-red-400' : 'text-red-600') : isDarkMode ? 'text-green-400' : 'text-green-700'}`}
                                         >
-                                            Diff: ({diff < 0 ? '-' : '+'}&#39;{Math.abs(diff).toFixed(2)})
+                                            Diff: ({diff < 0 ? '-' : '+'}
+                                            {Math.abs(diff).toLocaleString('no-NO', { minimumFractionDigits: 2 })})
                                         </div>
                                     )}
                                 </div>
@@ -94,7 +98,7 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                         .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
                                         .map((artskode, index) => (
                                             <div key={index}>
-                                                <b>{artskode.type}:</b> {artskode.sum}
+                                                <b>{artskode.type}:</b> {Number(artskode.sum).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
                                             </div>
                                         ))}
                                 </div>

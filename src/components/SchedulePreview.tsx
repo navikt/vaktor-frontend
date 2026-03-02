@@ -1,4 +1,5 @@
 import { Modal, Button, Table, Alert, Heading, BodyShort, Box, Detail } from '@navikt/ds-react'
+import { EyeIcon } from '@navikt/aksel-icons'
 import { useState } from 'react'
 import styled from 'styled-components'
 
@@ -155,12 +156,13 @@ const SchedulePreview = ({
                 onClick={fetchPreview}
                 loading={loading}
                 disabled={disabled}
+                icon={<EyeIcon aria-hidden />}
                 style={{
                     minWidth: '210px',
                     marginBottom: '15px',
                 }}
             >
-                Forhåndsvisning
+                Forhåndsvis ny vaktperiode
             </Button>
 
             <Modal open={open} onClose={() => setOpen(false)} aria-label="Forhåndsvisning av vaktplan">
