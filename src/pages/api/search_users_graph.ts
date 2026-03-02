@@ -7,7 +7,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    const query = req.query.query as string
+    const rawQuery = req.query.query
+
+    if (typeof rawQuery !== 'string') {
+        res.status(400).json({ error: 'Invalid query parameter' })
+        return
+    }
+
+    const query = rawQuery
 
     if (!query || query.length < 2) {
         res.status(400).json({ error: 'Search query must be at least 2 characters' })
