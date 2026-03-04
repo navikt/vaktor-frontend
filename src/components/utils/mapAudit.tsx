@@ -15,8 +15,8 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
     }
 
     audits.sort((a, b) => {
-        const timestampA = DateTime.fromISO(a.timestamp, { zone: 'utc' }).setZone('Europe/Oslo')
-        const timestampB = DateTime.fromISO(b.timestamp, { zone: 'utc' }).setZone('Europe/Oslo')
+        const timestampA = DateTime.fromISO(a.timestamp, { zone: 'Europe/Oslo' })
+        const timestampB = DateTime.fromISO(b.timestamp, { zone: 'Europe/Oslo' })
         return timestampA.valueOf() - timestampB.valueOf()
     })
 
@@ -47,7 +47,7 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
 
             {expanded &&
                 hiddenAudits.map((audit: Audit, index) => {
-                    const timestamp = DateTime.fromISO(audit.timestamp, { zone: 'utc' }).setZone('Europe/Oslo')
+                    const timestamp = DateTime.fromISO(audit.timestamp, { zone: 'Europe/Oslo' })
 
                     const date = timestamp.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY)
                     const time = timestamp.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
@@ -68,7 +68,7 @@ const MapAudit = ({ audits }: { audits: Audit[] }) => {
                 })}
 
             {visibleAudits.map((audit: Audit, index) => {
-                const timestamp = DateTime.fromISO(audit.timestamp, { zone: 'utc' }).setZone('Europe/Oslo')
+                const timestamp = DateTime.fromISO(audit.timestamp, { zone: 'Europe/Oslo' })
 
                 const date = timestamp.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY)
                 const time = timestamp.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
