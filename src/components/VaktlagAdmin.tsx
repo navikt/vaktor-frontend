@@ -563,8 +563,8 @@ const VaktlagAdmin: React.FC = () => {
                                                     }}
                                                 >
                                                     <strong>{group.name}</strong>
-                                                    <Tag variant={group.type === '247' ? 'info' : 'neutral'} size="xsmall">
-                                                        {group.type === '247' ? '24/7' : group.type || '-'}
+                                                    <Tag variant={group.type === 'Døgnkontinuerlig (24/7)' ? 'info' : 'neutral'} size="xsmall">
+                                                        {group.type || '-'}
                                                     </Tag>
                                                 </div>
                                                 <div
@@ -710,8 +710,8 @@ const VaktlagAdmin: React.FC = () => {
                             />
                             <Select label="Type" value={createForm.type} onChange={(e) => setCreateForm((f) => ({ ...f, type: e.target.value }))}>
                                 <option value="">Velg type</option>
-                                <option value="247">Døgnkontinuerlig 24/7</option>
-                                <option value="midlertidig">Midlertidig</option>
+                                <option value="Døgnkontinuerlig (24/7)">Døgnkontinuerlig (24/7)</option>
+                                <option value="Midlertidlig">Midlertidlig</option>
                             </Select>
                             <TextField
                                 label="Telefonnummer"
@@ -774,8 +774,8 @@ const VaktlagAdmin: React.FC = () => {
                                 />
                                 <Select label="Type" value={editForm.type} onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value }))}>
                                     <option value="">Velg type</option>
-                                    <option value="247">Døgnkontinuerlig 24/7</option>
-                                    <option value="midlertidig">Midlertidig</option>
+                                    <option value="Døgnkontinuerlig (24/7)">Døgnkontinuerlig (24/7)</option>
+                                    <option value="Midlertidlig">Midlertidlig</option>
                                 </Select>
                                 <TextField
                                     label="Telefonnummer"
