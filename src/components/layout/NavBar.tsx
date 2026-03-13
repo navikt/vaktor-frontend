@@ -44,7 +44,6 @@ const Navbar: React.FC = () => {
         { route: Routes.RouterUnfinished, roles: ['admin'] },
         { route: Routes.RouterVaktlagAdmin, roles: ['admin', 'leveranseleder'] },
         { route: Routes.RouterBrukerAdmin, roles: ['admin'] },
-        { route: Routes.RouterAdmin, roles: ['admin'] },
         { route: Routes.RouterAudit, roles: ['admin', 'okonomi'] },
     ]
 

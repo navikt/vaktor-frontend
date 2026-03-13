@@ -23,6 +23,7 @@ interface MapVakterAdminProps {
     update_schedule: (schedule: Schedules, setResponse: any, setResponseError: any) => Promise<void>
     delete_schedule: (scheduleId: string, setResponse: any, setResponseError: any) => Promise<void>
     showErrorModal: (message: string) => void
+    showActions?: boolean
     renderGroupHeader?: (groupName: string, schedules: Schedules[]) => ReactNode
 }
 
@@ -40,6 +41,7 @@ export const mapVakterAdmin = ({
     update_schedule,
     delete_schedule,
     showErrorModal,
+    showActions = true,
     renderGroupHeader,
 }: MapVakterAdminProps) => {
     const getStatusColor = (approveLevel: number) => {
@@ -108,207 +110,254 @@ export const mapVakterAdmin = ({
         groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
     })
 
-    // Convert the grouped and sorted schedules into an array of JSX elements
     let rowCount = 0
-    const groupedRows = Object.entries(groupedByGroupName).flatMap(([groupName, schedules]) => [
-        // This is the row for the group header
-        <Table.Row key={`header-${groupName}`}>
-            <Table.DataCell colSpan={7}>
-                <b>{groupName}</b>
-                {renderGroupHeader && renderGroupHeader(groupName, schedules)}
-            </Table.DataCell>
-        </Table.Row>,
-        // These are the individual rows for the schedules
-        ...schedules.map((vakter: Schedules, i: number) => {
-            rowCount++
-            return (
-                <Table.Row key={`row-${vakter.id}-${i}`}>
-                    <Table.DataCell>{rowCount}</Table.DataCell>
-                    <Table.DataCell
-                        scope="row"
-                        style={{
-                            padding: '12px',
-                            backgroundColor: getBistandBytteColor(vakter.type),
-                        }}
-                    >
-                        {vakter.user.ekstern === true && <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '4px' }}>EKSTERN</div>}
-                        <div style={{ lineHeight: '1.5' }}>
-                            <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
-                                {vakter.type === 'bakvakt' || vakter.type === 'bistand' ? (
-                                    <FirstAidKitIcon aria-hidden style={{ marginRight: '8px' }} />
-                                ) : vakter.type === 'bytte' ? (
-                                    <RecycleIcon aria-hidden style={{ marginRight: '8px' }} />
-                                ) : null}
-                                {vakter.user.name}
-                            </div>
-                            <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.user.id.toUpperCase()}</div>
-                            <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.group.name}</div>
-                            {vakter.user.roles && vakter.user.roles.length > 0 && (
-                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginTop: '4px' }}>
-                                    Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
-                                </div>
-                            )}
-                            {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
-                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>
-                                    Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
-                                </div>
-                            )}
-                            <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
-                                {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
-                            </div>
-                        </div>
-                    </Table.DataCell>
-                    <Table.DataCell style={{ minWidth: '200px', padding: '12px', backgroundColor: getStatusColor(vakter.approve_level) }}>
-                        <div style={{ lineHeight: '1.6' }}>
-                            <div style={{ marginBottom: '8px' }}>
-                                <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
-                            </div>
-                            <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '4px' }}>
-                                <b>ID:</b> {vakter.id}
-                            </div>
-                            <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>
-                                <b>Uke:</b> {moment(vakter.start_timestamp * 1000).week()}
-                                {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
-                                    ? ' - ' + moment(vakter.end_timestamp * 1000).week()
-                                    : ''}
-                            </div>
-                            <div style={{ fontSize: '0.85em' }}>
-                                <b>Start:</b>{' '}
-                                {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                            <div style={{ fontSize: '0.85em', marginTop: '4px' }}>
-                                <b>Slutt:</b>{' '}
-                                {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                        </div>
-                    </Table.DataCell>
-                    <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
-                        {vakter.vakter.length > 0 ? (
-                            <div style={{ lineHeight: '1.5' }}>
-                                {vakter.vakter.map((endringer, idx: number) => {
-                                    const endringType = endringer.type === 'bakvakt' ? 'bistand' : endringer.type
-                                    const endringBgColor = getBistandBytteColor(endringType)
-                                    return (
-                                        <div
-                                            key={idx}
-                                            style={{
-                                                marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                borderBottom:
-                                                    idx < vakter.vakter.length - 1 ? (isDarkMode ? '1px solid #444' : '1px solid #e0e0e0') : 'none',
-                                                backgroundColor: endringBgColor,
-                                                padding: endringBgColor !== 'transparent' ? '8px' : '0',
-                                                borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
-                                            }}
-                                        >
-                                            <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '2px' }}>
-                                                <b>ID:</b> {endringer.id}
-                                            </div>
-                                            <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>
-                                                {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}
-                                            </div>
-                                            <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
-                                            <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </div>
-                                            <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        ) : (
-                            <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
-                        )}
-                    </Table.DataCell>
-                    <Table.DataCell style={{ minWidth: '180px', padding: '8px' }}>
-                        <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
-                            <Select
-                                label="Sett status"
-                                size="small"
-                                value={vakter.approve_level}
-                                disabled={vakter.approve_level >= 5}
-                                onChange={async (e) => {
-                                    const newLevel = Number(e.target.value)
-                                    const updatedSchedule = {
-                                        ...vakter,
-                                        approve_level: newLevel,
-                                    }
-                                    setIsLoading(true)
-                                    await update_schedule(updatedSchedule, setResponse, setResponseError)
-                                }}
-                            >
-                                <option value={0}>0 - Trenger godkjenning</option>
-                                <option value={1}>1 - Godkjent av ansatt</option>
-                                <option value={2}>2 - Venter på utregning</option>
-                                <option value={3}>3 - Godkjent av vaktsjef</option>
-                                <option value={4}>4 - Godkjent av BDM</option>
-                                <option value={5} disabled>
-                                    5 - Overført til lønn
-                                </option>
-                                <option value={6} disabled>
-                                    6 - Venter på diff-utregning
-                                </option>
-                                <option value={7} disabled>
-                                    7 - Diff utregnet
-                                </option>
-                                <option value={8} disabled>
-                                    8 - Overført etter rekjøring
-                                </option>
-                            </Select>
-                            <Button
-                                size="xsmall"
+    const totalCols = showActions ? 7 : 5
+    const groupedRows = Object.entries(groupedByGroupName).flatMap(([groupName, schedules]) => {
+        const kostseder = Array.from(
+            new Set(schedules.flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : [])).filter(Boolean))
+        )
+        return [
+            // This is the row for the group header
+            <Table.Row key={`header-${groupName}`}>
+                <Table.DataCell colSpan={totalCols}>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                        <b style={{ fontSize: '1.05em' }}>{groupName}</b>
+                        {kostseder.map((k) => (
+                            <span
+                                key={k}
                                 style={{
-                                    height: '36px',
-                                    width: '150px',
-                                    marginBottom: '5px',
+                                    fontSize: '0.78em',
+                                    fontWeight: 600,
+                                    letterSpacing: '0.03em',
+                                    textTransform: 'uppercase',
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    backgroundColor: isDarkMode ? '#1e3a28' : '#d4edda',
+                                    color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
+                                    border: isDarkMode ? '1px solid #3a6b4a' : '1px solid #a8d5b5',
                                 }}
-                                onClick={() => {
-                                    setSchedule(vakter)
-                                    setIsOpen(true)
-                                }}
-                                disabled={vakter.approve_level > 0}
                             >
-                                Gjør endringer
-                            </Button>
+                                Koststed: {k}
+                            </span>
+                        ))}
+                    </div>
+                    {renderGroupHeader && renderGroupHeader(groupName, schedules)}
+                </Table.DataCell>
+            </Table.Row>,
+            // These are the individual rows for the schedules
+            ...schedules.map((vakter: Schedules, i: number) => {
+                rowCount++
+                return (
+                    <Table.Row key={`row-${vakter.id}-${i}`}>
+                        <Table.DataCell>{rowCount}</Table.DataCell>
+                        <Table.DataCell
+                            scope="row"
+                            style={{
+                                padding: '12px',
+                                backgroundColor: getBistandBytteColor(vakter.type),
+                            }}
+                        >
+                            {vakter.user.ekstern === true && <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '4px' }}>EKSTERN</div>}
+                            <div style={{ lineHeight: '1.5' }}>
+                                <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                                    {vakter.type === 'bakvakt' || vakter.type === 'bistand' ? (
+                                        <FirstAidKitIcon aria-hidden style={{ marginRight: '8px' }} />
+                                    ) : vakter.type === 'bytte' ? (
+                                        <RecycleIcon aria-hidden style={{ marginRight: '8px' }} />
+                                    ) : null}
+                                    {vakter.user.name}
+                                </div>
+                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.user.id.toUpperCase()}</div>
+                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.group.name}</div>
+                                {vakter.user.roles && vakter.user.roles.length > 0 && (
+                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginTop: '4px' }}>
+                                        Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
+                                    </div>
+                                )}
+                                {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
+                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>
+                                        Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
+                                    </div>
+                                )}
+                                <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
+                                    {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
+                                </div>
+                            </div>
+                        </Table.DataCell>
+                        <Table.DataCell style={{ minWidth: '200px', padding: '12px', backgroundColor: getStatusColor(vakter.approve_level) }}>
+                            <div style={{ lineHeight: '1.6' }}>
+                                <div style={{ marginBottom: '8px' }}>
+                                    <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
+                                </div>
+                                <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '4px' }}>
+                                    <b>ID:</b> {vakter.id}
+                                </div>
+                                <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>
+                                    <b>Uke:</b> {moment(vakter.start_timestamp * 1000).week()}
+                                    {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
+                                        ? ' - ' + moment(vakter.end_timestamp * 1000).week()
+                                        : ''}
+                                </div>
+                                <div style={{ fontSize: '0.85em' }}>
+                                    <b>Start:</b>{' '}
+                                    {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
+                                </div>
+                                <div style={{ fontSize: '0.85em', marginTop: '4px' }}>
+                                    <b>Slutt:</b>{' '}
+                                    {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
+                                </div>
+                            </div>
+                        </Table.DataCell>
+                        {showActions && (
+                            <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
+                                {vakter.vakter.length > 0 ? (
+                                    <div style={{ lineHeight: '1.5' }}>
+                                        {vakter.vakter.map((endringer, idx: number) => {
+                                            const endringType = endringer.type === 'bakvakt' ? 'bistand' : endringer.type
+                                            const endringBgColor = getBistandBytteColor(endringType)
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    style={{
+                                                        marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
+                                                        paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
+                                                        borderBottom:
+                                                            idx < vakter.vakter.length - 1
+                                                                ? isDarkMode
+                                                                    ? '1px solid #444'
+                                                                    : '1px solid #e0e0e0'
+                                                                : 'none',
+                                                        backgroundColor: endringBgColor,
+                                                        padding: endringBgColor !== 'transparent' ? '8px' : '0',
+                                                        borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
+                                                    }}
+                                                >
+                                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '2px' }}>
+                                                        <b>ID:</b> {endringer.id}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>
+                                                        {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
+                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
+                                                        {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
+                                                        {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ) : (
+                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
+                                )}
+                            </Table.DataCell>
+                        )}
+                        {showActions && (
+                            <Table.DataCell style={{ minWidth: '180px', padding: '8px' }}>
+                                <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                                    <Select
+                                        label="Sett status"
+                                        size="small"
+                                        value={vakter.approve_level}
+                                        disabled={vakter.approve_level >= 5}
+                                        onChange={async (e) => {
+                                            const newLevel = Number(e.target.value)
+                                            const updatedSchedule = {
+                                                ...vakter,
+                                                approve_level: newLevel,
+                                            }
+                                            setIsLoading(true)
+                                            await update_schedule(updatedSchedule, setResponse, setResponseError)
+                                        }}
+                                    >
+                                        <option value={0}>0 - Trenger godkjenning</option>
+                                        <option value={1}>1 - Godkjent av ansatt</option>
+                                        <option value={2}>2 - Venter på utregning</option>
+                                        <option value={3}>3 - Godkjent av vaktsjef</option>
+                                        <option value={4}>4 - Godkjent av BDM</option>
+                                        <option value={5} disabled>
+                                            5 - Overført til lønn
+                                        </option>
+                                        <option value={6} disabled>
+                                            6 - Venter på diff-utregning
+                                        </option>
+                                        <option value={7} disabled>
+                                            7 - Diff utregnet
+                                        </option>
+                                        <option value={8} disabled>
+                                            8 - Overført etter rekjøring
+                                        </option>
+                                    </Select>
+                                    <Button
+                                        size="xsmall"
+                                        style={{
+                                            height: '36px',
+                                            width: '150px',
+                                            marginBottom: '5px',
+                                        }}
+                                        onClick={() => {
+                                            setSchedule(vakter)
+                                            setIsOpen(true)
+                                        }}
+                                        disabled={vakter.approve_level > 0}
+                                    >
+                                        Gjør endringer
+                                    </Button>
 
-                            <DeleteVaktButton
-                                vakt={vakter}
-                                loading={loading}
-                                setLoading={setLoading}
-                                setResponse={setResponse}
-                                onError={showErrorModal}
-                                delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
-                            ></DeleteVaktButton>
-                        </div>
-                    </Table.DataCell>
-                    <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
-                        {vakter.cost.length !== 0 ? (
+                                    <DeleteVaktButton
+                                        vakt={vakter}
+                                        loading={loading}
+                                        setLoading={setLoading}
+                                        setResponse={setResponse}
+                                        onError={showErrorModal}
+                                        delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
+                                    ></DeleteVaktButton>
+                                </div>
+                            </Table.DataCell>
+                        )}
+                        <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
+                            {vakter.cost.length !== 0 ? (
+                                <div
+                                    style={{
+                                        padding: '8px',
+                                        backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                                        borderRadius: '4px',
+                                        border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
+                                    }}
+                                >
+                                    <MapCost vakt={vakter} avstemming={true}></MapCost>
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen beregning foreligger</span>
+                            )}
+                        </Table.DataCell>
+                        <Table.DataCell style={{ padding: '8px', minWidth: '200px' }}>
                             <div
                                 style={{
                                     padding: '8px',
@@ -317,41 +366,29 @@ export const mapVakterAdmin = ({
                                     border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
                                 }}
                             >
-                                <MapCost vakt={vakter} avstemming={true}></MapCost>
+                                {vakter.audits.length !== 0 ? (
+                                    <MapAudit audits={vakter.audits} />
+                                ) : (
+                                    <span style={{ fontSize: '0.8em', color: getTextColor('subtle') }}>Ingen hendelser</span>
+                                )}
                             </div>
-                        ) : (
-                            <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen beregning foreligger</span>
-                        )}
-                    </Table.DataCell>
-                    <Table.DataCell style={{ padding: '8px', minWidth: '200px' }}>
-                        <div
-                            style={{
-                                padding: '8px',
-                                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                                borderRadius: '4px',
-                                border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
-                            }}
-                        >
-                            {vakter.audits.length !== 0 ? (
-                                <MapAudit audits={vakter.audits} />
-                            ) : (
-                                <span style={{ fontSize: '0.8em', color: getTextColor('subtle') }}>Ingen hendelser</span>
+                            {showActions && (
+                                <Button
+                                    size="small"
+                                    onClick={() => {
+                                        setSchedule(vakter)
+                                        setIsAuditOpen(true)
+                                    }}
+                                    style={{ marginTop: '8px' }}
+                                >
+                                    Legg til audit
+                                </Button>
                             )}
-                        </div>
-                        <Button
-                            size="small"
-                            onClick={() => {
-                                setSchedule(vakter)
-                                setIsAuditOpen(true)
-                            }}
-                            style={{ marginTop: '8px' }}
-                        >
-                            Legg til audit
-                        </Button>
-                    </Table.DataCell>
-                </Table.Row>
-            )
-        }),
-    ])
+                        </Table.DataCell>
+                    </Table.Row>
+                )
+            }),
+        ]
+    })
     return groupedRows
 }

@@ -6,23 +6,33 @@ import {
     Search,
     Select,
     Button,
-    Popover,
+    Modal,
     ExpansionCard,
     CheckboxGroup,
     Checkbox,
-    GuidePanel,
+    Timeline,
+    TimelinePeriodProps,
+    Alert,
 } from '@navikt/ds-react'
 import moment from 'moment'
-import { Dispatch, useEffect, useRef, useState } from 'react'
+import { Dispatch, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Schedules } from '../types/types'
-import { mapVakter } from './utils/mapVakter'
+import { mapVakterAdmin } from './utils/mapVakterAdmin'
+import EndreVaktButton from './utils/AdminAdjustDate'
+import VarsleModal from './VarsleModal'
+import ErrorModal from './utils/ErrorModal'
+import AuditModal from './AuditModal'
+import { hasAnyRole } from '../utils/roles'
+import { FirstAidKitIcon, RecycleIcon, Buildings3Icon, WaitingRoomIcon } from '@navikt/aksel-icons'
 
 const AvstemmingOkonomi = () => {
     const { user } = useAuth()
     const { theme } = useTheme()
     const isDarkMode = theme === 'dark'
+    const isAdmin = hasAnyRole(user, ['admin'])
+
     const [itemData, setItemData] = useState<Schedules[]>([])
     const [loading, setLoading] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
@@ -34,9 +44,9 @@ const AvstemmingOkonomi = () => {
     const [response, setResponse] = useState([])
     const [responseError, setResponseError] = useState('')
 
-    const [actionReason, setActionReason] = useState(Number)
+    const [actionReason, setActionReason] = useState<number>(0)
+    const [reberegningError, setReberegningError] = useState<string | null>(null)
 
-    const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
     const [searchFilter, setSearchFilter] = useState('')
@@ -44,6 +54,187 @@ const AvstemmingOkonomi = () => {
     const [searchFilterAction, setSearchFilterAction] = useState(9)
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
+    const [FilterExternal, setFilterExternal] = useState(false)
+
+    // Admin-only state
+    const [selectedSchedule, setSchedule] = useState<Schedules>()
+    const [isOpen, setIsOpen] = useState<boolean>(false)
+    const [isAuditOpen, setIsAuditOpen] = useState<boolean>(false)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [varsleModalOpen, setVarsleModalOpen] = useState(false)
+
+    const showErrorModal = (message: string) => setErrorMessage(message)
+
+    const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
+        const vakter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'ordinær vakt')
+            .map((schedule) => ({
+                start: new Date(Number(schedule.start_timestamp) * 1000),
+                end: new Date(Number(schedule.end_timestamp) * 1000),
+                status: 'success',
+                icon: <WaitingRoomIcon aria-hidden />,
+                statusLabel: 'Vakt',
+                children: (
+                    <div>
+                        <b>{schedule.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(schedule.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(schedule.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        const vaktbistand: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bistand')
+            .map((change) => ({
+                start: new Date(change.start_timestamp * 1000),
+                end: new Date(change.end_timestamp * 1000),
+                status: 'info',
+                icon: <FirstAidKitIcon aria-hidden />,
+                statusLabel: 'Bistand',
+                children: (
+                    <div>
+                        <b>{change.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        const vaktbytter: TimelinePeriodProps[] = schedules
+            .filter((s) => s.type === 'bytte')
+            .map((change) => ({
+                start: new Date(Number(change.start_timestamp) * 1000),
+                end: new Date(Number(change.end_timestamp) * 1000),
+                status: 'warning',
+                icon: <RecycleIcon aria-hidden />,
+                statusLabel: 'Bytte',
+                children: (
+                    <div>
+                        <b>{change.user.name}</b>
+                        <br />
+                        Start:{' '}
+                        {new Date(change.start_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <br />
+                        Slutt:{' '}
+                        {new Date(change.end_timestamp * 1000).toLocaleString('no-NB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </div>
+                ),
+            }))
+
+        return (
+            <div
+                className="min-w-[800px]"
+                style={{
+                    /* @ts-ignore */
+                    '--ac-timeline-bar-border-radius': '0px',
+                }}
+            >
+                <Timeline>
+                    <Timeline.Row label="Vakter" icon={<Buildings3Icon aria-hidden />}>
+                        {vakter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bistand" icon={<FirstAidKitIcon aria-hidden />}>
+                        {vaktbistand.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                    <Timeline.Row label="Bytter" icon={<RecycleIcon aria-hidden />}>
+                        {vaktbytter.map((p, i) => (
+                            <Timeline.Period key={i} start={p.start} end={p.end} status={p.status} icon={p.icon} statusLabel={p.statusLabel}>
+                                {p.children ?? null}
+                            </Timeline.Period>
+                        ))}
+                    </Timeline.Row>
+                </Timeline>
+            </div>
+        )
+    }
+
+    const delete_schedule = async (schedule_id: string, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
+        try {
+            const response = await fetch(`/api/delete_schedule?schedule_id=${schedule_id}`)
+            const data = await response.json()
+            setResponse(data)
+        } catch (error) {
+            showErrorModal(`Feilet ved sletting av perioden: ${schedule_id}`)
+        }
+        setLoading(false)
+    }
+
+    const update_schedule = async (schedulelulu: Schedules, setResponse: Dispatch<any>, setResponseError: Dispatch<string>) => {
+        var url = `/api/admin_update_schedule`
+        var fetchOptions = {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(schedulelulu),
+        }
+        await fetch(url, fetchOptions)
+            .then(async (r) => {
+                if (!r.ok) {
+                    const rText = await r.json()
+                    setResponseError(rText.detail)
+                    return []
+                }
+                return r.json()
+            })
+            .then((data: Schedules) => {
+                setResponse(data)
+                setIsLoading(false)
+            })
+            .catch((error: Error) => {
+                setIsLoading(false)
+            })
+    }
 
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
@@ -78,35 +269,26 @@ const AvstemmingOkonomi = () => {
         endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
     }
 
-    const recalculateSchedules = async (
-        schedule_ids: string[],
-        action_reason: number,
-        setResponse: Dispatch<any>,
-        setResponseError: Dispatch<string>
-    ) => {
-        var url = `/api/recalculate_schedules?action_reason=${action_reason}`
-        var fetchOptions = {
-            method: 'POST',
-            body: JSON.stringify(schedule_ids),
-        }
-
-        await fetch(url, fetchOptions)
-            .then(async (r) => {
-                if (!r.ok) {
-                    const rText = await r.json()
-                    setResponseError(rText.detail)
-                    return []
-                }
-                return r.json()
-            })
-            .then((data: Schedules) => {
+    const recalculateSchedules = async (schedule_ids: string[], action_reason: number): Promise<boolean> => {
+        const url = `/api/recalculate_schedules?action_reason=${action_reason}`
+        try {
+            const r = await fetch(url, { method: 'POST', body: JSON.stringify(schedule_ids) })
+            if (!r.ok) {
+                const rText = await r.json()
+                setReberegningError(rText.detail || 'Reberegning feilet')
+                return false
+            } else {
+                const data = await r.json()
                 setResponse(data)
-                setIsLoading(false)
-            })
-            .catch((error: Error) => {
-                console.error(error.name, error.message)
-                setIsLoading(false)
-            })
+                setReberegningError(null)
+                return true
+            }
+        } catch {
+            setReberegningError('Nettverksfeil under reberegning')
+            return false
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     useEffect(() => {
@@ -117,11 +299,7 @@ const AvstemmingOkonomi = () => {
             .then((itemData) => {
                 itemData.sort((a: Schedules, b: Schedules) => a.start_timestamp - b.start_timestamp)
 
-                setItemData(itemData.filter((data: Schedules) => data.user.ekstern === false))
-
-                if (FilterOnDoubleSchedules === true) {
-                    setItemData(itemData.filter((data: Schedules) => data.is_double === true))
-                }
+                setItemData(itemData)
 
                 const distinctGroupNames: string[] = Array.from(new Set(itemData.map((data: { group: { name: string } }) => data.group.name)))
                 const sortedGroupNames = distinctGroupNames.sort((a, b) => a.localeCompare(b))
@@ -157,7 +335,7 @@ const AvstemmingOkonomi = () => {
                 setDistinctFilenames(sortedFilenames)
                 setLoading(false)
             })
-    }, [response, selectedMonth, FilterOnDoubleSchedules])
+    }, [response, selectedMonth])
 
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
@@ -171,13 +349,28 @@ const AvstemmingOkonomi = () => {
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
+        const isDoubleMatch = !FilterOnDoubleSchedules || value.is_double === true
+        const isExternalMatch = isAdmin ? !FilterExternal || !value.user.ekstern : !value.user.ekstern
 
-        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch
+        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isDoubleMatch && isExternalMatch
     })
 
-    let listeAvVakter = mapVakter({
+    let listeAvVakter = mapVakterAdmin({
         vaktliste: filteredVakter,
         isDarkMode,
+        loading,
+        setLoading,
+        setResponse,
+        setResponseError,
+        setSchedule,
+        setIsOpen,
+        setIsAuditOpen,
+        setIsLoading,
+        update_schedule,
+        delete_schedule,
+        showErrorModal,
+        showActions: isAdmin,
+        renderGroupHeader: (groupName, schedules) => <TimeLine schedules={schedules} />,
     })
 
     const { totalCost, totalCostDiff } = filteredVakter.reduce(
@@ -196,118 +389,178 @@ const AvstemmingOkonomi = () => {
 
     return (
         <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '20px', marginBottom: '20px', alignItems: 'start' }}>
-                <GuidePanel style={{ height: 'fit-content', maxWidth: '400px' }}>
-                    <p>Avstemming for ØT</p>
-                </GuidePanel>
+            {isAdmin && <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {isAdmin && varsleModalOpen && (
+                <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={selectedMonth || new Date()} />
+            )}
+            {isAdmin && isAuditOpen && selectedSchedule && (
+                <AuditModal open={isAuditOpen} onClose={() => setIsAuditOpen(false)} scheduleId={selectedSchedule.id} />
+            )}
+            {isAdmin && selectedSchedule && (
+                <EndreVaktButton
+                    vakt={selectedSchedule}
+                    isOpen={isOpen}
+                    setResponse={setResponse}
+                    setResponseError={setResponseError}
+                    setIsOpen={setIsOpen}
+                    update_schedule={update_schedule}
+                    setLoading={setLoading}
+                />
+            )}
 
-                <div
-                    style={{
-                        display: 'grid',
-                        gap: '8px',
-                        padding: '15px',
-                        backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                        borderRadius: '4px',
-                        minWidth: '220px',
-                        justifySelf: 'center',
-                    }}
-                >
-                    <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '5px' }}>Oppsummering</div>
-                    <div>
-                        <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
-                    </div>
-                    <div>
-                        <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
-                    </div>
-                    <div>
-                        <b>Antall vakter: {filteredVakter.length}</b>
+            {/* Header bar */}
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                    borderRadius: '6px',
+                    marginBottom: '16px',
+                    border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
+                }}
+            >
+                <div>
+                    <div style={{ fontSize: '1.1em', fontWeight: 700 }}>Avstemming ØT</div>
+                    <div style={{ fontSize: '0.85em', color: isDarkMode ? '#b0b0b0' : '#666', marginTop: '2px' }}>
+                        {filteredVakter.length} vakter &nbsp;·&nbsp; Kostnad: <b>{totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                        {totalCostDiff !== 0 && (
+                            <span
+                                style={{
+                                    marginLeft: '8px',
+                                    color: totalCostDiff < 0 ? (isDarkMode ? '#f08080' : '#c00') : isDarkMode ? '#7ecf9a' : '#1a5c2e',
+                                }}
+                            >
+                                (diff: {totalCostDiff > 0 ? '+' : ''}
+                                {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })})
+                            </span>
+                        )}
                     </div>
                 </div>
 
-                <div style={{ width: '280px' }}>
-                    <ExpansionCard aria-label="reberegning-av-vakter" size="small" style={{ justifyContent: 'center', width: '280px' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {isAdmin && (
+                        <Button variant="secondary" size="medium" disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
+                            Send påminnelse
+                        </Button>
+                    )}
+                    <ExpansionCard aria-label="reberegning-av-vakter" size="small">
                         <ExpansionCard.Header>
-                            <ExpansionCard.Title>Reberegning</ExpansionCard.Title>
+                            <ExpansionCard.Title size="small">Reberegning</ExpansionCard.Title>
                         </ExpansionCard.Header>
                         <ExpansionCard.Content>
-                            <div style={{ display: 'grid', justifyContent: 'center', gap: '10px' }}>
-                                <div style={{ maxWidth: '210px', marginLeft: '30px' }}>
-                                    <Select label="Velg Action Reason" onChange={(e) => setActionReason(Number(e.target.value))}>
-                                        <option value="">Gjør et valg</option>
-                                        <option value={1}>Ordinær kjøring</option>
-                                        <option value={2}>Lønnsendring</option>
-                                        <option value={3}>Feilutregning/Feil i Vaktor</option>
-                                        <option value={4}>Sekundærkjøring</option>
-                                    </Select>
-                                </div>
-
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <Select label="Årsak" size="small" onChange={(e) => setActionReason(Number(e.target.value))}>
+                                    <option value="">Gjør et valg</option>
+                                    <option value={1}>Ordinær kjøring</option>
+                                    <option value={2}>Lønnsendring</option>
+                                    <option value={3}>Feilutregning/Feil i Vaktor</option>
+                                    <option value={4}>Sekundærkjøring</option>
+                                </Select>
                                 <Button
+                                    size="small"
+                                    disabled={!actionReason}
                                     onClick={() => {
+                                        setReberegningError(null)
                                         setOpenState(true)
                                     }}
-                                    style={{
-                                        maxWidth: '210px',
-                                        marginLeft: '30px',
-                                        marginTop: '5px',
-                                        marginBottom: '5px',
-                                    }}
-                                    disabled={isLoading || !actionReason} // disable button when loading
-                                    ref={buttonRef}
                                 >
-                                    Reberegn {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''}
+                                    Reberegn {selectedMonth ? selectedMonth.toLocaleString('no-NO', { month: 'long' }) : ''}
                                 </Button>
-                                <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
-                                    <Popover.Content
-                                        style={{
-                                            textAlign: 'center',
-                                            backgroundColor: isDarkMode ? '#2a2a2a' : 'rgba(241, 241, 241, 1)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '10px',
-                                            maxWidth: '250px',
-                                        }}
-                                    >
-                                        Er du sikker på vil reberegne perioder for{' '}
-                                        {selectedMonth ? selectedMonth.toLocaleString('default', { month: 'long' }) : ''} for{' '}
-                                        <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
+                                <Modal open={openState} onClose={() => setOpenState(false)} header={{ heading: 'Bekreft reberegning' }} width={500}>
+                                    <Modal.Body>
+                                        {reberegningError && (
+                                            <Alert variant="error" style={{ marginBottom: '1rem' }}>
+                                                {reberegningError}
+                                            </Alert>
+                                        )}
+                                        <p>
+                                            Er du sikker på at du vil reberegne <b>{filteredVakter.length} perioder</b> i{' '}
+                                            <b>{selectedMonth ? selectedMonth.toLocaleString('no-NO', { month: 'long' }) : ''}</b>?
+                                        </p>
+                                        <div
+                                            style={{
+                                                padding: '8px',
+                                                border: isDarkMode ? '1px solid #444' : '1px solid #ccc',
+                                                borderRadius: '5px',
+                                                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                                                maxHeight: '250px',
+                                                overflowY: 'auto',
+                                            }}
+                                        >
+                                            {filteredVakter.map((s, i) => (
+                                                <div
+                                                    key={i}
+                                                    style={{
+                                                        background: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+                                                        margin: '4px 0',
+                                                        padding: '4px 8px',
+                                                        borderRadius: '4px',
+                                                        fontSize: '0.85em',
+                                                    }}
+                                                >
+                                                    {s.user.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </Modal.Body>
+                                    <Modal.Footer>
                                         <Button
                                             variant="danger"
+                                            disabled={isLoading}
+                                            loading={isLoading}
                                             onClick={() => {
                                                 if (selectedMonth) {
+                                                    setIsLoading(true)
                                                     recalculateSchedules(
                                                         filteredVakter.map((s) => s.id),
-                                                        actionReason,
-                                                        setResponse,
-                                                        setResponseError
-                                                    )
-                                                    setIsLoading(true)
-                                                } else {
-                                                    console.log('SelectedMonth not set')
+                                                        actionReason
+                                                    ).then((ok) => {
+                                                        if (ok) setOpenState(false)
+                                                    })
                                                 }
                                             }}
-                                            disabled={isLoading || !actionReason} // disable button when loading
                                         >
-                                            {isLoading ? <Loader /> : 'Rekalkuler nå!'}
+                                            Rekalkuler nå!
                                         </Button>
-                                    </Popover.Content>
-                                </Popover>
+                                        <Button variant="tertiary" onClick={() => setOpenState(false)} disabled={isLoading}>
+                                            Avbryt
+                                        </Button>
+                                    </Modal.Footer>
+                                </Modal>
                             </div>
                         </ExpansionCard.Content>
                     </ExpansionCard>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+            {/* Filter section */}
+            <div
+                style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    alignItems: 'flex-end',
+                    padding: '12px 16px',
+                    backgroundColor: isDarkMode ? '#1f1f1f' : '#fff',
+                    border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                    borderRadius: '6px',
+                    marginBottom: '16px',
+                }}
+            >
                 <MonthPicker {...monthpickerProps}>
                     <div className="grid gap-4">
-                        <MonthPicker.Input {...inputProps} label="Velg måned" />
+                        <MonthPicker.Input {...inputProps} label="Måned" />
                     </div>
                 </MonthPicker>
-                <form style={{ width: '300px' }}>
+                <div style={{ width: '220px' }}>
                     <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text.toLowerCase())} />
-                </form>
-                <div style={{ width: '200px' }}>
-                    <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
+                </div>
+                <div style={{ width: '180px' }}>
+                    <Select label="Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
                         <option value="">Alle</option>
                         {groupNames.map((groupName) => (
                             <option key={groupName} value={groupName}>
@@ -316,8 +569,8 @@ const AvstemmingOkonomi = () => {
                         ))}
                     </Select>
                 </div>
-                <div style={{ width: '200px' }}>
-                    <Select label="Velg Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
+                <div style={{ width: '180px' }}>
+                    <Select label="Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
                         <option value="">Alle</option>
                         {distinctFilenames.map((filename) => (
                             <option key={filename} value={filename}>
@@ -326,9 +579,8 @@ const AvstemmingOkonomi = () => {
                         ))}
                     </Select>
                 </div>
-
-                <div style={{ width: '200px' }}>
-                    <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
+                <div style={{ width: '220px' }}>
+                    <Select label="Status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
                         <option value={9}>Alle</option>
                         <option value={0}>Trenger godkjenning</option>
                         <option value={1}>Godkjent av ansatt</option>
@@ -342,45 +594,46 @@ const AvstemmingOkonomi = () => {
                         <option value={-1}>Ikke overført lønn</option>
                     </Select>
                 </div>
-                <div style={{ width: '200px' }}>
-                    <CheckboxGroup legend="Dobbel vakt" onChange={(val: string[]) => setFilterOnDoubleSchedules(val.includes('true'))}>
-                        <Checkbox value="true">Er dobbeltvakt</Checkbox>
-                    </CheckboxGroup>
-                </div>
+                <CheckboxGroup
+                    legend=""
+                    hideLegend
+                    onChange={(val: string[]) => {
+                        setFilterOnDoubleSchedules(val.includes('double'))
+                        if (isAdmin) setFilterExternal(val.includes('hideExternal'))
+                    }}
+                >
+                    <Checkbox value="double">Kun dobbeltvakter</Checkbox>
+                    {isAdmin && <Checkbox value="hideExternal">Skjul eksterne</Checkbox>}
+                </CheckboxGroup>
             </div>
             <div>
-                <Table zebraStripes>
+                <Table
+                    zebraStripes
+                    style={{ width: '100%', backgroundColor: isDarkMode ? '#1a1a1a' : 'white', marginBottom: '3vh', marginTop: '2vh' }}
+                >
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell style={{ padding: '6px', width: '40px' }}>#</Table.HeaderCell>
                             <Table.HeaderCell scope="col" style={{ padding: '12px', width: '200px' }}>
                                 Navn
                             </Table.HeaderCell>
-                            <Table.HeaderCell
-                                scope="col"
-                                style={{
-                                    padding: '12px',
-                                    minWidth: '200px',
-                                }}
-                            >
+                            <Table.HeaderCell scope="col" style={{ padding: '12px', minWidth: '200px' }}>
                                 Periode
                             </Table.HeaderCell>
-                            <Table.HeaderCell
-                                scope="col"
-                                style={{
-                                    padding: '12px',
-                                    minWidth: '250px',
-                                }}
-                            >
+                            {isAdmin && (
+                                <Table.HeaderCell scope="col" style={{ padding: '12px', minWidth: '180px' }}>
+                                    Endringer
+                                </Table.HeaderCell>
+                            )}
+                            {isAdmin && (
+                                <Table.HeaderCell scope="col" style={{ padding: '12px', minWidth: '180px' }}>
+                                    Actions
+                                </Table.HeaderCell>
+                            )}
+                            <Table.HeaderCell scope="col" style={{ padding: '12px', minWidth: '250px' }}>
                                 Kost
                             </Table.HeaderCell>
-                            <Table.HeaderCell
-                                scope="col"
-                                style={{
-                                    padding: '12px',
-                                    minWidth: '200px',
-                                }}
-                            >
+                            <Table.HeaderCell scope="col" style={{ padding: '12px', minWidth: '200px' }}>
                                 Audit
                             </Table.HeaderCell>
                         </Table.Row>
@@ -389,7 +642,7 @@ const AvstemmingOkonomi = () => {
                         {loading ? <Loader /> : null}
                         {listeAvVakter.length === 0 && !loading ? (
                             <Table.Row>
-                                <Table.DataCell colSpan={5}>
+                                <Table.DataCell colSpan={isAdmin ? 7 : 5}>
                                     <h3 style={{ margin: 'auto', color: 'red' }}>Ingen treff</h3>
                                 </Table.DataCell>
                             </Table.Row>

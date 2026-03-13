@@ -19,6 +19,7 @@ import {
 } from '@navikt/ds-react'
 import { PlusIcon, TrashIcon, PersonIcon, PersonGroupIcon } from '@navikt/aksel-icons'
 import { User, Vaktlag, GroupRole } from '../types/types'
+import { useTheme } from '../context/ThemeContext'
 
 interface UserWithGroupRoles extends User {
     group_roles: GroupRole[]
@@ -31,6 +32,8 @@ interface RoleAssignment {
 }
 
 const UserRoleManagement: React.FC = () => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [users, setUsers] = useState<UserWithGroupRoles[]>([])
     const [groups, setGroups] = useState<Vaktlag[]>([])
     const [loading, setLoading] = useState(true)
@@ -328,7 +331,7 @@ const UserRoleManagement: React.FC = () => {
                     {selectedGroup && <GroupRolesView groupId={selectedGroup} groups={groups} onRefresh={fetchData} />}
 
                     {!selectedGroup && (
-                        <Box style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px' }}>
+                        <Box style={{ padding: '1.5rem', background: isDarkMode ? '#2a2a2a' : '#f3f4f6', borderRadius: '8px' }}>
                             <BodyShort>Velg et vaktlag for å se roller</BodyShort>
                         </Box>
                     )}
@@ -402,6 +405,8 @@ const GroupRolesView: React.FC<{
     groups: Vaktlag[]
     onRefresh: () => void
 }> = ({ groupId, groups, onRefresh }) => {
+    const { theme } = useTheme()
+    const isDarkMode = theme === 'dark'
     const [roles, setRoles] = useState<RoleAssignment[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -439,7 +444,7 @@ const GroupRolesView: React.FC<{
             <Heading size="small">{group?.name}</Heading>
 
             {Object.entries(roleGroups).map(([roleTitle, members]) => (
-                <Box key={roleTitle} style={{ background: '#f3f4f6', borderRadius: '8px', padding: '1rem' }}>
+                <Box key={roleTitle} style={{ background: isDarkMode ? '#2a2a2a' : '#f3f4f6', borderRadius: '8px', padding: '1rem' }}>
                     <HStack gap="space-2" align="center" style={{ marginBottom: '0.5rem' }}>
                         <Tag variant={roleTitle === 'leveranseleder' ? 'warning' : roleTitle === 'vaktsjef' ? 'success' : 'info'}>{roleTitle}</Tag>
                         <BodyShort size="small">({members.length} medlemmer)</BodyShort>
