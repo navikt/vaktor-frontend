@@ -26,11 +26,6 @@ export enum RouterLedergodkjenning {
     PATH = '/ledergodkjenning',
 }
 
-export enum RouterLeveranseleder {
-    NAME = 'Leveranseleder',
-    PATH = '/leveranseleder',
-}
-
 export enum RouterAvstemmingOkonomi {
     NAME = 'Avstemming',
     PATH = '/avstemming',
@@ -41,7 +36,7 @@ export enum RouterUnfinished {
 }
 
 export enum RouterVaktlagAdmin {
-    NAME = 'Vaktlag Admin',
+    NAME = 'Vaktlag',
     PATH = '/vaktlag_admin',
 }
 
@@ -58,11 +53,6 @@ export enum RouterBrukerAdmin {
 export enum RouterAudit {
     NAME = 'Audit-logg',
     PATH = '/audit',
-}
-
-export enum RouterVaktlagOpprett {
-    NAME = 'Opprett Vaktlag',
-    PATH = '/vaktlag_opprett',
 }
 
 // ---

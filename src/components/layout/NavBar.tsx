@@ -40,14 +40,12 @@ const Navbar: React.FC = () => {
         { route: Routes.RouterVaktperioder, roles: ['vaktsjef', 'admin'] },
         { route: Routes.RouterDineVakter, roles: ['vakthaver', 'vaktsjef', 'leveranseleder', 'admin'] },
         { route: Routes.RouterLedergodkjenning, roles: ['vaktsjef', 'leveranseleder', 'personalleder', 'admin', 'bdm'] },
-        { route: Routes.RouterLeveranseleder, roles: ['leveranseleder', 'admin'] },
         { route: Routes.RouterAvstemmingOkonomi, roles: ['okonomi', 'admin'] },
         { route: Routes.RouterUnfinished, roles: ['admin'] },
-        { route: Routes.RouterVaktlagAdmin, roles: ['admin'] },
+        { route: Routes.RouterVaktlagAdmin, roles: ['admin', 'leveranseleder'] },
         { route: Routes.RouterBrukerAdmin, roles: ['admin'] },
         { route: Routes.RouterAdmin, roles: ['admin'] },
         { route: Routes.RouterAudit, roles: ['admin', 'okonomi'] },
-        { route: Routes.RouterVaktlagOpprett, roles: ['admin'] },
     ]
 
     // Filter routes based on user roles
