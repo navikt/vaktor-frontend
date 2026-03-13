@@ -5,6 +5,7 @@ interface GroupRequestBody {
     phone: string
     description: string
     type: string
+    koststed?: string
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,17 +15,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    const groupName = encodeURIComponent(req.query.name as string)
-    const groupPhone = encodeURIComponent(req.query.phone as string)
-    const description = encodeURIComponent(req.query.description as string)
-    const groupType = encodeURIComponent(req.query.type as string)
-    const teamkatalog = encodeURIComponent(req.query.teamkatalog as string)
+    const koststed = req.query.koststed as string | undefined
 
     const requestBody: GroupRequestBody = {
-        name: groupName,
-        phone: groupPhone,
-        description: description,
-        type: groupType,
+        name: req.query.name as string,
+        phone: req.query.phone as string,
+        description: req.query.description as string,
+        type: req.query.type as string,
+        ...(koststed ? { koststed } : {}),
     }
 
     const path = `${process.env.BACKEND_URL}/api/v1/groups/`
