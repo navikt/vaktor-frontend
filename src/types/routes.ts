@@ -52,6 +52,11 @@ export enum RouterAudit {
 
 // ---
 
+export enum RouterDocs {
+    NAME = 'Dokumentasjon',
+    PATH = '/docs',
+}
+
 // Error
 export enum RouterError {
     NAME = 'Error side',
