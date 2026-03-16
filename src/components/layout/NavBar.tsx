@@ -45,6 +45,7 @@ const Navbar: React.FC = () => {
         { route: Routes.RouterVaktlagAdmin, roles: ['admin', 'leveranseleder'] },
         { route: Routes.RouterBrukerAdmin, roles: ['admin'] },
         { route: Routes.RouterAudit, roles: ['admin', 'okonomi'] },
+        { route: Routes.RouterDocs, roles: ['vakthaver', 'vaktsjef', 'leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'] },
     ]
 
     // Filter routes based on user roles
