@@ -42,15 +42,19 @@ const DocsSidebar = ({ sections }: DocsSidebarProps) => {
     return (
         <>
             {/* Desktop sidebar */}
-            <nav
-                className="hidden lg:block shrink-0 sticky top-24 self-start"
-                style={{ width: '14rem', maxHeight: 'calc(100vh - 8rem)' }}
+            <div
+                role="navigation"
                 aria-label="Dokumentasjonsnavigasjon"
+                className="hidden lg:block shrink-0"
+                style={{
+                    width: '14rem',
+                    maxHeight: 'calc(100vh - 8rem)',
+                    position: 'sticky',
+                    top: '6rem',
+                    alignSelf: 'flex-start',
+                }}
             >
-                <ul
-                    className="list-none p-0 m-0"
-                    style={{ maxHeight: 'calc(100vh - 9rem)', overflowY: 'auto' }}
-                >
+                <ul className="list-none p-0 m-0" style={{ maxHeight: 'calc(100vh - 9rem)', overflowY: 'auto' }}>
                     {sections.map(({ id, title }) => (
                         <li key={id} style={{ marginBottom: '2px' }}>
                             <button
@@ -74,10 +78,12 @@ const DocsSidebar = ({ sections }: DocsSidebarProps) => {
                         </li>
                     ))}
                 </ul>
-            </nav>
+            </div>
 
             {/* Mobile horizontal scroll */}
-            <nav
+            <div
+                role="navigation"
+                aria-label="Dokumentasjonsnavigasjon"
                 className="lg:hidden"
                 style={{
                     position: 'sticky',
@@ -87,7 +93,6 @@ const DocsSidebar = ({ sections }: DocsSidebarProps) => {
                     borderBottom: '1px solid var(--ax-border-neutral-subtle)',
                     overflowX: 'auto',
                 }}
-                aria-label="Dokumentasjonsnavigasjon"
             >
                 <div style={{ display: 'flex', gap: '4px', padding: '8px 16px', minWidth: 'max-content' }}>
                     {sections.map(({ id, title }) => (
@@ -110,7 +115,7 @@ const DocsSidebar = ({ sections }: DocsSidebarProps) => {
                         </button>
                     ))}
                 </div>
-            </nav>
+            </div>
         </>
     )
 }
