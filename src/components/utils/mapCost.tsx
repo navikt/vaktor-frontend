@@ -159,13 +159,9 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                     fontSize: '0.8em',
                 }}
             >
-                <div style={{ fontWeight: 700, marginBottom: '6px', color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}>
-                    Endring fra forrige beregning
-                </div>
+                <div style={{ fontWeight: 700, marginBottom: '6px', color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}>Endring fra forrige beregning</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                    <span style={{ color: neutralColor }}>
-                        {Number(prev.total_cost).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
-                    </span>
+                    <span style={{ color: neutralColor }}>{Number(prev.total_cost).toLocaleString('no-NO', { minimumFractionDigits: 2 })}</span>
                     <span style={{ color: neutralColor }}>→</span>
                     <span style={{ fontWeight: 700, color: neutralColor }}>
                         {Number(latest.total_cost).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
@@ -176,7 +172,18 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                             fontWeight: 700,
                             padding: '1px 6px',
                             borderRadius: '4px',
-                            backgroundColor: totalDiff === 0 ? (isDarkMode ? '#333' : '#e0e0e0') : totalDiff > 0 ? (isDarkMode ? '#1e3a28' : '#d4edda') : (isDarkMode ? '#3a1e1e' : '#fde8e8'),
+                            backgroundColor:
+                                totalDiff === 0
+                                    ? isDarkMode
+                                        ? '#333'
+                                        : '#e0e0e0'
+                                    : totalDiff > 0
+                                      ? isDarkMode
+                                          ? '#1e3a28'
+                                          : '#d4edda'
+                                      : isDarkMode
+                                        ? '#3a1e1e'
+                                        : '#fde8e8',
                             color: totalDiff === 0 ? neutralColor : totalDiff > 0 ? posColor : negColor,
                         }}
                     >
@@ -201,7 +208,8 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                     <span>→</span>
                                     <span>{latSum.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</span>
                                     <span style={{ fontWeight: 700, color: sumDiff > 0 ? posColor : negColor }}>
-                                        ({sumDiff > 0 ? '+' : ''}{sumDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })})
+                                        ({sumDiff > 0 ? '+' : ''}
+                                        {sumDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })})
                                     </span>
                                 </div>
                             )}
@@ -212,7 +220,8 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                     <span>→</span>
                                     <span>{latHours}</span>
                                     <span style={{ fontWeight: 700, color: hoursDiff > 0 ? posColor : negColor }}>
-                                        ({hoursDiff > 0 ? '+' : ''}{hoursDiff})
+                                        ({hoursDiff > 0 ? '+' : ''}
+                                        {hoursDiff})
                                     </span>
                                 </div>
                             )}
