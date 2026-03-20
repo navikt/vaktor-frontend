@@ -56,6 +56,10 @@ const AvstemmingOkonomi = () => {
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExternal, setFilterExternal] = useState(false)
 
+    const [idSearchResults, setIdSearchResults] = useState<Schedules[] | null>(null)
+    const [idSearchLoading, setIdSearchLoading] = useState(false)
+    const [idSearchError, setIdSearchError] = useState<string | null>(null)
+
     // Admin-only state
     const [selectedSchedule, setSchedule] = useState<Schedules>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -291,6 +295,45 @@ const AvstemmingOkonomi = () => {
         }
     }
 
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+    const searchByIds = async (input: string) => {
+        const ids = input
+            .split(/[\s,]+/)
+            .map((s) => s.trim())
+            .filter((s) => UUID_REGEX.test(s))
+
+        if (ids.length === 0) {
+            setIdSearchResults(null)
+            setIdSearchError(null)
+            return
+        }
+
+        setIdSearchLoading(true)
+        setIdSearchError(null)
+
+        try {
+            const r = await fetch('/api/schedules_by_ids', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ids),
+            })
+            if (!r.ok) {
+                const err = await r.json()
+                setIdSearchError(err.message || 'Fant ingen vakter')
+                setIdSearchResults([])
+            } else {
+                const data = await r.json()
+                setIdSearchResults(data)
+            }
+        } catch {
+            setIdSearchError('Nettverksfeil')
+            setIdSearchResults([])
+        } finally {
+            setIdSearchLoading(false)
+        }
+    }
+
     useEffect(() => {
         setLoading(true)
         const path = `/api/all_schedules_with_limit?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
@@ -355,8 +398,11 @@ const AvstemmingOkonomi = () => {
         return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isDoubleMatch && isExternalMatch
     })
 
+    // Bruk ID-søk-resultater hvis de finnes, ellers vanlig månedsfilter
+    const displayedVakter = idSearchResults !== null ? idSearchResults : filteredVakter
+
     let listeAvVakter = mapVakterAdmin({
-        vaktliste: filteredVakter,
+        vaktliste: displayedVakter,
         isDarkMode,
         loading,
         setLoading,
@@ -373,7 +419,7 @@ const AvstemmingOkonomi = () => {
         renderGroupHeader: (groupName, schedules) => <TimeLine schedules={schedules} />,
     })
 
-    const { totalCost, totalCostDiff } = filteredVakter.reduce(
+    const { totalCost, totalCostDiff } = displayedVakter.reduce(
         (acc, schedule) => {
             if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length === 0) return acc
             const costs = schedule.cost
@@ -391,7 +437,7 @@ const AvstemmingOkonomi = () => {
         <>
             {isAdmin && <ErrorModal errorMessage={errorMessage} onClose={() => setErrorMessage(null)} />}
             {isAdmin && varsleModalOpen && (
-                <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={selectedMonth || new Date()} />
+                <VarsleModal listeAvVakter={displayedVakter} handleClose={() => setVarsleModalOpen(false)} month={selectedMonth || new Date()} />
             )}
             {isAdmin && isAuditOpen && selectedSchedule && (
                 <AuditModal open={isAuditOpen} onClose={() => setIsAuditOpen(false)} scheduleId={selectedSchedule.id} />
@@ -426,7 +472,7 @@ const AvstemmingOkonomi = () => {
                 <div>
                     <div style={{ fontSize: '1.1em', fontWeight: 700 }}>Avstemming ØT</div>
                     <div style={{ fontSize: '0.85em', color: isDarkMode ? '#b0b0b0' : '#666', marginTop: '2px' }}>
-                        {filteredVakter.length} vakter &nbsp;·&nbsp; Kostnad: <b>{totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                        {displayedVakter.length} vakter &nbsp;·&nbsp; Kostnad: <b>{totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                         {totalCostDiff !== 0 && (
                             <span
                                 style={{
@@ -443,7 +489,7 @@ const AvstemmingOkonomi = () => {
 
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {isAdmin && (
-                        <Button variant="secondary" size="medium" disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
+                        <Button variant="secondary" size="medium" disabled={displayedVakter.length <= 0} onClick={() => setVarsleModalOpen(true)}>
                             Send påminnelse
                         </Button>
                     )}
@@ -478,7 +524,7 @@ const AvstemmingOkonomi = () => {
                                             </Alert>
                                         )}
                                         <p>
-                                            Er du sikker på at du vil reberegne <b>{filteredVakter.length} perioder</b> i{' '}
+                                            Er du sikker på at du vil reberegne <b>{displayedVakter.length} perioder</b> i{' '}
                                             <b>{selectedMonth ? selectedMonth.toLocaleString('no-NO', { month: 'long' }) : ''}</b>?
                                         </p>
                                         <div
@@ -491,7 +537,7 @@ const AvstemmingOkonomi = () => {
                                                 overflowY: 'auto',
                                             }}
                                         >
-                                            {filteredVakter.map((s, i) => (
+                                            {displayedVakter.map((s, i) => (
                                                 <div
                                                     key={i}
                                                     style={{
@@ -516,7 +562,7 @@ const AvstemmingOkonomi = () => {
                                                 if (selectedMonth) {
                                                     setIsLoading(true)
                                                     recalculateSchedules(
-                                                        filteredVakter.map((s) => s.id),
+                                                        displayedVakter.map((s) => s.id),
                                                         actionReason
                                                     ).then((ok) => {
                                                         if (ok) setOpenState(false)
@@ -556,8 +602,25 @@ const AvstemmingOkonomi = () => {
                         <MonthPicker.Input {...inputProps} label="Måned" />
                     </div>
                 </MonthPicker>
-                <div style={{ width: '220px' }}>
-                    <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text.toLowerCase())} />
+                <div style={{ width: '280px' }}>
+                    <Search
+                        label="Søk etter person eller vakt-ID"
+                        hideLabel={false}
+                        variant="simple"
+                        onChange={(text) => {
+                            setSearchFilter(text.toLowerCase())
+                            if (!text.trim()) {
+                                setIdSearchResults(null)
+                                setIdSearchError(null)
+                            }
+                        }}
+                        onSearchClick={() => searchByIds(searchFilter)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') searchByIds(searchFilter)
+                        }}
+                    />
+                    {idSearchLoading && <span style={{ fontSize: '0.8em' }}>Søker...</span>}
+                    {idSearchError && <span style={{ fontSize: '0.8em', color: '#c00' }}>{idSearchError}</span>}
                 </div>
                 <div style={{ width: '180px' }}>
                     <Select label="Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
