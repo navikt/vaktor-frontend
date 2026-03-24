@@ -25,6 +25,10 @@ const AvstemmingMangler = () => {
     const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
     const [limit300, setLimit300] = useState(false)
 
+    const [idSearchResults, setIdSearchResults] = useState<Schedules[] | null>(null)
+    const [idSearchLoading, setIdSearchLoading] = useState(false)
+    const [idSearchError, setIdSearchError] = useState<string | null>(null)
+
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
@@ -91,6 +95,45 @@ const AvstemmingMangler = () => {
                 console.error(error.name, error.message)
                 setIsLoading(false)
             })
+    }
+
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+    const searchByIds = async (input: string) => {
+        const ids = input
+            .split(/[\s,]+/)
+            .map((s) => s.trim())
+            .filter((s) => UUID_REGEX.test(s))
+
+        if (ids.length === 0) {
+            setIdSearchResults(null)
+            setIdSearchError(null)
+            return
+        }
+
+        setIdSearchLoading(true)
+        setIdSearchError(null)
+
+        try {
+            const r = await fetch('/api/schedules_by_ids', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ids),
+            })
+            if (!r.ok) {
+                const err = await r.json()
+                setIdSearchError(err.message || 'Fant ingen vakter')
+                setIdSearchResults([])
+            } else {
+                const data = await r.json()
+                setIdSearchResults(data)
+            }
+        } catch {
+            setIdSearchError('Nettverksfeil')
+            setIdSearchResults([])
+        } finally {
+            setIdSearchLoading(false)
+        }
     }
 
     useEffect(() => {
@@ -186,12 +229,15 @@ const AvstemmingMangler = () => {
     if (limit300 && filteredVakter.length > 500) {
         filteredVakter = filteredVakter.slice(0, 500)
     }
+
+    const displayedVakter = idSearchResults !== null ? idSearchResults : filteredVakter
+
     let listeAvVakter = mapVakter({
-        vaktliste: filteredVakter,
+        vaktliste: displayedVakter,
         isDarkMode,
     })
 
-    const { totalCost, totalCostDiff } = filteredVakter.reduce(
+    const { totalCost, totalCostDiff } = displayedVakter.reduce(
         (acc, schedule) => {
             if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length === 0) return acc
             const costs = schedule.cost
@@ -231,7 +277,7 @@ const AvstemmingMangler = () => {
                         <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                     </div>
                     <div>
-                        <b>Antall vakter: {filteredVakter.length}</b>
+                        <b>Antall vakter: {displayedVakter.length}</b>
                     </div>
                 </div>
 
@@ -282,9 +328,9 @@ const AvstemmingMangler = () => {
                                             <Button
                                                 variant="danger"
                                                 onClick={() => {
-                                                    if (filteredVakter) {
+                                                    if (displayedVakter) {
                                                         generateFile(
-                                                            filteredVakter.map((s) => s.id),
+                                                            displayedVakter.map((s) => s.id),
                                                             fileType,
                                                             setResponse,
                                                             setResponseError
@@ -298,13 +344,13 @@ const AvstemmingMangler = () => {
                                             >
                                                 {isLoading ? <Loader /> : 'Generer fil nå!'}
                                             </Button>
-                                            <b>{filteredVakter ? filteredVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
+                                            <b>{displayedVakter ? displayedVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
                                             <Button
                                                 variant="danger"
                                                 onClick={() => {
-                                                    if (filteredVakter) {
+                                                    if (displayedVakter) {
                                                         generateFile(
-                                                            filteredVakter.map((s) => s.id),
+                                                            displayedVakter.map((s) => s.id),
                                                             fileType,
                                                             setResponse,
                                                             setResponseError
@@ -329,14 +375,31 @@ const AvstemmingMangler = () => {
 
             <div>
                 {varsleModalOpen && (
-                    <VarsleModal listeAvVakter={filteredVakter} handleClose={() => setVarsleModalOpen(false)} month={currentDate || new Date()} />
+                    <VarsleModal listeAvVakter={displayedVakter} handleClose={() => setVarsleModalOpen(false)} month={currentDate || new Date()} />
                 )}
             </div>
 
             <div style={{ display: 'flex', marginBottom: '20px' }}>
-                <form style={{ width: '300px', marginLeft: '15px' }}>
-                    <Search label="Søk etter person" hideLabel={false} variant="simple" onChange={(text) => setSearchFilter(text)} />
-                </form>
+                <div style={{ width: '300px', marginLeft: '15px' }}>
+                    <Search
+                        label="Søk etter person eller vakt-ID"
+                        hideLabel={false}
+                        variant="simple"
+                        onChange={(text) => {
+                            setSearchFilter(text)
+                            if (!text.trim()) {
+                                setIdSearchResults(null)
+                                setIdSearchError(null)
+                            }
+                        }}
+                        onSearchClick={() => searchByIds(searchFilter)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') searchByIds(searchFilter)
+                        }}
+                    />
+                    {idSearchLoading && <span style={{ fontSize: '0.8em' }}>Søker...</span>}
+                    {idSearchError && <span style={{ fontSize: '0.8em', color: '#c00' }}>{idSearchError}</span>}
+                </div>
                 <div style={{ width: '200px', marginLeft: '15px' }}>
                     <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
                         <option value="">Alle</option>
@@ -389,7 +452,7 @@ const AvstemmingMangler = () => {
                     </CheckboxGroup>
                 </div>
                 <div style={{ width: '200px', marginLeft: '15px', marginTop: '30px' }}>
-                    <Button disabled={filteredVakter.length <= 0} onClick={() => setVarsleModalOpen(true)} variant="secondary">
+                    <Button disabled={displayedVakter.length <= 0} onClick={() => setVarsleModalOpen(true)} variant="secondary">
                         Send påminnelse
                     </Button>
                 </div>
