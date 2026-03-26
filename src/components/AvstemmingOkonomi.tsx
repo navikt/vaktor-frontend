@@ -14,6 +14,7 @@ import {
     TimelinePeriodProps,
     Alert,
     UNSAFE_Combobox,
+    TextField,
 } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useState } from 'react'
@@ -72,6 +73,7 @@ const AvstemmingOkonomi = () => {
     const [sortBy, setSortBy] = useState<'dato' | 'koststed' | 'gruppe'>('dato')
     const [searchFilterKoststed, setSearchFilterKoststed] = useState('')
     const [showFilters, setShowFilters] = useState(false)
+    const [minDiffFilter, setMinDiffFilter] = useState<number | ''>('')
 
     const [idSearchResults, setIdSearchResults] = useState<Schedules[] | null>(null)
     const [idSearchLoading, setIdSearchLoading] = useState(false)
@@ -424,6 +426,13 @@ const AvstemmingOkonomi = () => {
                     ? value.cost.length === 0 || !value.cost[value.cost.length - 1].koststed
                     : value.cost.length > 0 && value.cost[value.cost.length - 1].koststed === searchFilterKoststed)
 
+            const isDiffMatch = minDiffFilter === '' || (() => {
+                const costs = value.cost
+                if (costs.length < 2) return false
+                const diff = Math.abs((Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0))
+                return diff >= minDiffFilter
+            })()
+
             return (
                 isMonthMatch &&
                 isNameMatch &&
@@ -432,7 +441,8 @@ const AvstemmingOkonomi = () => {
                 isFilenameMatch &&
                 isDoubleMatch &&
                 isExternalMatch &&
-                isKoststedMatch
+                isKoststedMatch &&
+                isDiffMatch
             )
         })
         .sort((a, b) => {
@@ -452,6 +462,7 @@ const AvstemmingOkonomi = () => {
         FilterOnDoubleSchedules,
         FilterExternal,
         sortBy !== 'dato',
+        minDiffFilter !== '',
     ].filter(Boolean).length
 
     const resetFilters = () => {
@@ -462,6 +473,7 @@ const AvstemmingOkonomi = () => {
         setFilterOnDoubleSchedules(false)
         setFilterExternal(false)
         setSortBy('dato')
+        setMinDiffFilter('')
     }
 
     // Bruk ID-søk-resultater hvis de finnes, ellers vanlig månedsfilter
@@ -764,6 +776,16 @@ const AvstemmingOkonomi = () => {
                                 onToggleSelected={(option, isSelected) =>
                                     setSearchFilterActions((prev) => (isSelected ? [...prev, option] : prev.filter((o) => o !== option)))
                                 }
+                            />
+                        </div>
+                        <div style={{ width: '160px' }}>
+                            <TextField
+                                label="Min. diff (kr)"
+                                type="number"
+                                min={0}
+                                placeholder="f.eks. 1000"
+                                value={minDiffFilter}
+                                onChange={(e) => setMinDiffFilter(e.target.value === '' ? '' : Number(e.target.value))}
                             />
                         </div>
                         <CheckboxGroup
