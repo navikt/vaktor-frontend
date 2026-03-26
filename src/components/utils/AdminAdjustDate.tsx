@@ -10,9 +10,10 @@ interface Props {
     setIsOpen: Dispatch<any>
     update_schedule: (schedule: Schedules, setResponse: Dispatch<any>, setResponseError: Dispatch<any>) => Promise<void>
     setLoading: Dispatch<boolean>
+    isAdmin?: boolean
 }
 
-const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setResponseError, update_schedule, setIsOpen, setLoading }) => {
+const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setResponseError, update_schedule, setIsOpen, setLoading, isAdmin = false }) => {
     const ref = useRef<HTMLDialogElement>(null)
     const [startTimestamp, setStartTimestamp] = useState<number>(vakt.start_timestamp)
     const [endTimestamp, setEndTimestamp] = useState<number>(vakt.end_timestamp)
@@ -59,7 +60,7 @@ const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setRespon
         })
     }, [vakt])
 
-    const isDisabled = vakt.approve_level > 0
+    const isDisabled = !isAdmin && vakt.approve_level > 0
 
     return (
         <>
