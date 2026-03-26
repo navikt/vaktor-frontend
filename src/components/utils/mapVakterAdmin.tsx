@@ -119,12 +119,15 @@ export const mapVakterAdmin = ({
     // Build grouped map based on groupBy prop
     const buildGrouped = (): Record<string, Schedules[]> => {
         if (groupKeyFn) {
-            return vaktliste.reduce((acc, s) => {
-                const key = groupKeyFn(s)
-                if (!acc[key]) acc[key] = []
-                acc[key].push(s)
-                return acc
-            }, {} as Record<string, Schedules[]>)
+            return vaktliste.reduce(
+                (acc, s) => {
+                    const key = groupKeyFn(s)
+                    if (!acc[key]) acc[key] = []
+                    acc[key].push(s)
+                    return acc
+                },
+                {} as Record<string, Schedules[]>
+            )
         }
         if (groupBy === 'none') {
             return { '': [...vaktliste] }

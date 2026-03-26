@@ -17,23 +17,19 @@ const getSystemTheme = (): Theme => {
 }
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-    const [preference, setPreference] = useState<ThemePreference>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('vaktor-theme-preference') as ThemePreference | null
-            return saved || 'system'
-        }
-        return 'system'
-    })
+    const [preference, setPreference] = useState<ThemePreference>('system')
+    const [theme, setTheme] = useState<Theme>('dark')
 
-    const [theme, setTheme] = useState<Theme>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('vaktor-theme-preference') as ThemePreference | null
-            if (saved === 'dark' || saved === 'light') {
-                return saved
-            }
-        }
-        return getSystemTheme()
-    })
+    useEffect(() => {
+        const saved = localStorage.getItem('vaktor-theme-preference') as ThemePreference | null
+        const resolvedPreference = saved || 'system'
+        const resolvedTheme = resolvedPreference === 'dark' || resolvedPreference === 'light' ? resolvedPreference : getSystemTheme()
+        // Batch both updates together to avoid double render
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPreference(resolvedPreference)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTheme(resolvedTheme)
+    }, [])
 
     useEffect(() => {
         // Oppdater DOM når theme endres
