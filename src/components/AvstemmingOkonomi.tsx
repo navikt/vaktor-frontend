@@ -88,6 +88,91 @@ const AvstemmingOkonomi = () => {
 
     const showErrorModal = (message: string) => setErrorMessage(message)
 
+    const DoubleOverlapTimeline = ({ schedules }: { schedules: Schedules[] }) => {
+        const sorted = [...schedules].sort((a, b) => {
+            if (a.start_timestamp !== b.start_timestamp) return a.start_timestamp - b.start_timestamp
+            const durDiff = (b.end_timestamp - b.start_timestamp) - (a.end_timestamp - a.start_timestamp)
+            if (durDiff !== 0) return durDiff
+            const aHasCost = a.cost.length > 0 && Number(a.cost[a.cost.length - 1].total_cost) > 0
+            return aHasCost ? -1 : 1
+        })
+
+        const clusterMin = Math.min(...sorted.map((s) => s.start_timestamp))
+        const clusterMax = Math.max(...sorted.map((s) => s.end_timestamp))
+        const duration = clusterMax - clusterMin || 1
+
+        const pct = (ts: number) => `${((ts - clusterMin) / duration) * 100}%`
+        const wPct = (s: number, e: number) => `${Math.max(((e - s) / duration) * 100, 0.3)}%`
+        const fmt = (ts: number) =>
+            new Date(ts * 1000)
+                .toLocaleString('no-NB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                .replace(',', '')
+        const fmtH = (sec: number) => {
+            const h = sec / 3600
+            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+        }
+
+        const primary = sorted[0]
+
+        return (
+            <div style={{ marginTop: '12px', marginBottom: '4px', minWidth: '600px', paddingBottom: '4px' }}>
+                {sorted.map((s, i) => {
+                    const isPrimary = i === 0
+                    const overlapEnd = isPrimary
+                        ? s.end_timestamp
+                        : Math.min(primary.end_timestamp, s.end_timestamp)
+                    const overlapStart = isPrimary
+                        ? s.start_timestamp
+                        : Math.max(primary.start_timestamp, s.start_timestamp)
+                    const compStart = isPrimary ? s.start_timestamp : overlapEnd
+                    const compEnd = s.end_timestamp
+                    const hasComp = compEnd > compStart
+                    const compHours = fmtH(Math.max(0, compEnd - compStart))
+                    const totalHours = fmtH(s.end_timestamp - s.start_timestamp)
+                    const barColor = isPrimary
+                        ? isDarkMode ? '#2d7a4f' : '#287d44'
+                        : isDarkMode ? '#2d5f7a' : '#1a6b8a'
+
+                    return (
+                        <div key={s.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '14px', gap: '10px' }}>
+                            <div style={{ width: '130px', flexShrink: 0 }}>
+                                <div style={{ fontSize: '0.8em', fontWeight: 700, color: isPrimary ? (isDarkMode ? '#7ecf9a' : '#1a5c2e') : (isDarkMode ? '#66cbec' : '#1a6b8a') }}>
+                                    {isPrimary ? 'Primær' : 'Sekundær'}
+                                </div>
+                                <div style={{ fontSize: '0.72em', color: isDarkMode ? '#b0b0b0' : '#444', marginTop: '1px', fontWeight: 600 }}>
+                                    {isPrimary ? `${totalHours} kompensert` : hasComp ? `${compHours} kompensert` : 'ingen kompensasjon'}
+                                </div>
+                            </div>
+                            <div style={{ flex: 1, position: 'relative', height: '18px' }}>
+                                {/* Track */}
+                                <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)', height: '2px', backgroundColor: isDarkMode ? '#333' : '#e0e0e0', borderRadius: '2px' }} />
+                                {/* Ghost: full period */}
+                                <div style={{ position: 'absolute', left: pct(s.start_timestamp), width: wPct(s.start_timestamp, s.end_timestamp), height: '100%', backgroundColor: isDarkMode ? '#2a2a2a' : '#efefef', border: `1px solid ${isDarkMode ? '#555' : '#ccc'}`, borderRadius: '3px', boxSizing: 'border-box' as const }} />
+                                {/* Overlap zone (non-compensated) — only for secondary */}
+                                {!isPrimary && overlapEnd > overlapStart && (
+                                    <div style={{ position: 'absolute', left: pct(overlapStart), width: wPct(overlapStart, overlapEnd), height: '100%', backgroundColor: isDarkMode ? '#5a1e1e' : '#f5c6cb', borderRadius: '3px 0 0 3px', boxSizing: 'border-box' as const }} />
+                                )}
+                                {/* Compensated portion */}
+                                {hasComp && (
+                                    <div style={{ position: 'absolute', left: pct(compStart), width: wPct(compStart, compEnd), height: '100%', backgroundColor: barColor, borderRadius: isPrimary ? '3px' : '0 3px 3px 0', boxSizing: 'border-box' as const }} />
+                                )}
+                                {/* Start label */}
+                                <div style={{ position: 'absolute', left: pct(s.start_timestamp), top: '100%', marginTop: '2px', fontSize: '0.65em', color: isDarkMode ? '#777' : '#888', whiteSpace: 'nowrap' }}>
+                                    {fmt(s.start_timestamp)}
+                                </div>
+                                {/* End label */}
+                                <div style={{ position: 'absolute', left: pct(s.end_timestamp), top: '100%', marginTop: '2px', fontSize: '0.65em', color: isDarkMode ? '#777' : '#888', whiteSpace: 'nowrap', transform: 'translateX(-100%)' }}>
+                                    {fmt(s.end_timestamp)}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+
+            </div>
+        )
+    }
+
     const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
         const vakter: TimelinePeriodProps[] = schedules
             .filter((s) => s.type === 'ordinær vakt')
@@ -481,6 +566,31 @@ const AvstemmingOkonomi = () => {
     // Bruk ID-søk-resultater hvis de finnes, ellers vanlig månedsfilter
     const displayedVakter = idSearchResults !== null ? idSearchResults : filteredVakter
 
+    // Cluster overlapping double shifts for visualization
+    const doubleClusterMap = (() => {
+        if (!FilterOnDoubleSchedules) return null
+        const doubles = displayedVakter.filter((s) => s.is_double)
+        const sorted = [...doubles].sort((a, b) => a.start_timestamp - b.start_timestamp)
+        const clusters: { ids: string[]; maxEnd: number; names: Set<string> }[] = []
+        for (const s of sorted) {
+            let merged = false
+            for (const cluster of clusters) {
+                if (s.start_timestamp < cluster.maxEnd) {
+                    cluster.ids.push(s.id)
+                    cluster.maxEnd = Math.max(cluster.maxEnd, s.end_timestamp)
+                    cluster.names.add(s.user.name)
+                    merged = true
+                    break
+                }
+            }
+            if (!merged) clusters.push({ ids: [s.id], maxEnd: s.end_timestamp, names: new Set([s.user.name]) })
+        }
+        const map = new Map<string, number>()
+        clusters.forEach((cluster, i) => cluster.ids.forEach((id) => map.set(id, i)))
+        const clusterNames = clusters.map((c) => Array.from(c.names).join(' & '))
+        return { map, clusterNames }
+    })()
+
     let listeAvVakter = mapVakterAdmin({
         vaktliste: displayedVakter,
         isDarkMode,
@@ -496,8 +606,18 @@ const AvstemmingOkonomi = () => {
         delete_schedule,
         showErrorModal,
         showActions: isAdmin,
-        groupBy: sortBy === 'dato' ? 'none' : sortBy === 'gruppe' ? 'group' : 'koststed',
-        renderGroupHeader: sortBy === 'gruppe' ? (_, schedules) => <TimeLine schedules={schedules} /> : undefined,
+        groupBy: FilterOnDoubleSchedules ? 'none' : sortBy === 'dato' ? 'none' : sortBy === 'gruppe' ? 'group' : 'koststed',
+        groupKeyFn: doubleClusterMap
+            ? (s: Schedules) => {
+                  const i = doubleClusterMap.map.get(s.id) ?? 0
+                  return `Dobbeltvakt #${i + 1} — ${doubleClusterMap.clusterNames[i] ?? ''}`
+              }
+            : undefined,
+        renderGroupHeader: doubleClusterMap
+            ? (_: string, schedules: Schedules[]) => <DoubleOverlapTimeline schedules={schedules} />
+            : sortBy === 'gruppe'
+            ? (_: string, schedules: Schedules[]) => <TimeLine schedules={schedules} />
+            : undefined,
     })
 
     const { totalCost, totalCostDiff } = displayedVakter.reduce(
