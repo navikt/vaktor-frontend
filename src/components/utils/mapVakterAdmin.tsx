@@ -360,7 +360,10 @@ export const mapVakterAdmin = ({
                                                         const isLonger =
                                                             vakter.end_timestamp - vakter.start_timestamp >=
                                                             other.end_timestamp - other.start_timestamp
-                                                        const isPrimary = startsFirst || (startsEqual && isLonger)
+                                                        const isIdentical = startsEqual && vakter.end_timestamp === other.end_timestamp
+                                                        const vakterHasCost =
+                                                            vakter.cost.length > 0 && Number(vakter.cost[vakter.cost.length - 1].total_cost) > 0
+                                                        const isPrimary = isIdentical ? vakterHasCost : startsFirst || (startsEqual && isLonger)
                                                         return (
                                                             <div
                                                                 key={idx}
