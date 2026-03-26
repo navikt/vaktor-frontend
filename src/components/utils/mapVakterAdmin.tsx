@@ -57,6 +57,7 @@ export const mapVakterAdmin = ({
             6: '#FFB366',
             7: '#99DEAD',
             8: '#E18071',
+            99: '#CCCCCC',
             default: '#FFFFFF',
         }
 
@@ -70,6 +71,7 @@ export const mapVakterAdmin = ({
             6: '#6b4a2a',
             7: '#3d5a47',
             8: '#6b3a35',
+            99: '#4a4a4a',
             default: '#333333',
         }
 
@@ -314,6 +316,9 @@ export const mapVakterAdmin = ({
                                         </option>
                                         <option value={8} disabled={!isAdmin}>
                                             8 - Overført etter rekjøring
+                                        </option>
+                                        <option value={99} disabled={!isAdmin}>
+                                            99 - Nullvakt
                                         </option>
                                     </Select>
                                     <Button
