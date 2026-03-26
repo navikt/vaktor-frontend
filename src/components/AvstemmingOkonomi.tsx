@@ -13,6 +13,7 @@ import {
     Timeline,
     TimelinePeriodProps,
     Alert,
+    UNSAFE_Combobox,
 } from '@navikt/ds-react'
 import moment from 'moment'
 import { Dispatch, useEffect, useState } from 'react'
@@ -25,7 +26,20 @@ import VarsleModal from './VarsleModal'
 import ErrorModal from './utils/ErrorModal'
 import AuditModal from './AuditModal'
 import { hasAnyRole } from '../utils/roles'
-import { FirstAidKitIcon, RecycleIcon, Buildings3Icon, WaitingRoomIcon } from '@navikt/aksel-icons'
+import { FirstAidKitIcon, RecycleIcon, Buildings3Icon, WaitingRoomIcon, FunnelIcon } from '@navikt/aksel-icons'
+
+const STATUS_OPTIONS = [
+    { value: 0, label: 'Trenger godkjenning' },
+    { value: 1, label: 'Godkjent av ansatt' },
+    { value: 2, label: 'Venter på utregning' },
+    { value: 3, label: 'Godkjent av vaktsjef' },
+    { value: 4, label: 'Godkjent av BDM' },
+    { value: 5, label: 'Overført til lønn' },
+    { value: 6, label: 'Venter på utregning av diff' },
+    { value: 7, label: 'Utregning fullført med diff' },
+    { value: 8, label: 'Overført til lønn etter rekjøring' },
+    { value: -1, label: 'Ikke overført lønn' },
+]
 
 const AvstemmingOkonomi = () => {
     const { user } = useAuth()
@@ -51,12 +65,13 @@ const AvstemmingOkonomi = () => {
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
-    const [searchFilterAction, setSearchFilterAction] = useState(9)
+    const [searchFilterActions, setSearchFilterActions] = useState<string[]>([])
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExternal, setFilterExternal] = useState(false)
     const [sortBy, setSortBy] = useState<'dato' | 'koststed' | 'gruppe'>('dato')
     const [searchFilterKoststed, setSearchFilterKoststed] = useState('')
+    const [showFilters, setShowFilters] = useState(false)
 
     const [idSearchResults, setIdSearchResults] = useState<Schedules[] | null>(null)
     const [idSearchLoading, setIdSearchLoading] = useState(false)
@@ -386,39 +401,68 @@ const AvstemmingOkonomi = () => {
     if (selectedMonth === undefined) setSelected(new Date())
 
     const distinctKoststeder = Array.from(
-        new Set(
-            itemData
-                .flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : []))
-                .filter(Boolean)
-        )
+        new Set(itemData.flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : [])).filter(Boolean))
     ).sort()
 
-    const filteredVakter = itemData.filter((value: Schedules) => {
-        const isMonthMatch =
-            new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
-            new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
+    const filteredVakter = itemData
+        .filter((value: Schedules) => {
+            const isMonthMatch =
+                new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
+                new Date(value.start_timestamp * 1000).getFullYear() === selectedMonth!.getFullYear()
 
-        const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
-        const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-        const isApproveLevelMatch = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
-        const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
-        const isDoubleMatch = !FilterOnDoubleSchedules || value.is_double === true
-        const isExternalMatch = isAdmin ? !FilterExternal || !value.user.ekstern : !value.user.ekstern
-        const isKoststedMatch =
-            searchFilterKoststed === '' ||
-            (searchFilterKoststed === 'ukjent'
-                ? value.cost.length === 0 || !value.cost[value.cost.length - 1].koststed
-                : value.cost.length > 0 && value.cost[value.cost.length - 1].koststed === searchFilterKoststed)
+            const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
+            const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
+            const isApproveLevelMatch =
+                searchFilterActions.length === 0 ||
+                STATUS_OPTIONS.some((s) => searchFilterActions.includes(s.label) && s.value === value.approve_level)
+            const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
+            const isDoubleMatch = !FilterOnDoubleSchedules || value.is_double === true
+            const isExternalMatch = isAdmin ? !FilterExternal || !value.user.ekstern : !value.user.ekstern
+            const isKoststedMatch =
+                searchFilterKoststed === '' ||
+                (searchFilterKoststed === 'ukjent'
+                    ? value.cost.length === 0 || !value.cost[value.cost.length - 1].koststed
+                    : value.cost.length > 0 && value.cost[value.cost.length - 1].koststed === searchFilterKoststed)
 
-        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isDoubleMatch && isExternalMatch && isKoststedMatch
-    }).sort((a, b) => {
-        if (sortBy === 'koststed') {
-            const kA = a.cost.length > 0 ? a.cost[a.cost.length - 1].koststed ?? '' : ''
-            const kB = b.cost.length > 0 ? b.cost[b.cost.length - 1].koststed ?? '' : ''
-            return kA.localeCompare(kB) || a.start_timestamp - b.start_timestamp
-        }
-        return a.start_timestamp - b.start_timestamp
-    })
+            return (
+                isMonthMatch &&
+                isNameMatch &&
+                isGroupMatch &&
+                isApproveLevelMatch &&
+                isFilenameMatch &&
+                isDoubleMatch &&
+                isExternalMatch &&
+                isKoststedMatch
+            )
+        })
+        .sort((a, b) => {
+            if (sortBy === 'koststed') {
+                const kA = a.cost.length > 0 ? (a.cost[a.cost.length - 1].koststed ?? '') : ''
+                const kB = b.cost.length > 0 ? (b.cost[b.cost.length - 1].koststed ?? '') : ''
+                return kA.localeCompare(kB) || a.start_timestamp - b.start_timestamp
+            }
+            return a.start_timestamp - b.start_timestamp
+        })
+
+    const activeFilterCount = [
+        searchFilterGroup !== '',
+        searchFilterKoststed !== '',
+        selectedFilename !== '',
+        searchFilterActions.length > 0,
+        FilterOnDoubleSchedules,
+        FilterExternal,
+        sortBy !== 'dato',
+    ].filter(Boolean).length
+
+    const resetFilters = () => {
+        setSearchFilterGroup('')
+        setSearchFilterKoststed('')
+        setSelectedFilename('')
+        setSearchFilterActions([])
+        setFilterOnDoubleSchedules(false)
+        setFilterExternal(false)
+        setSortBy('dato')
+    }
 
     // Bruk ID-søk-resultater hvis de finnes, ellers vanlig månedsfilter
     const displayedVakter = idSearchResults !== null ? idSearchResults : filteredVakter
@@ -496,7 +540,8 @@ const AvstemmingOkonomi = () => {
                 <div>
                     <div style={{ fontSize: '1.1em', fontWeight: 700 }}>Avstemming ØT</div>
                     <div style={{ fontSize: '0.85em', color: isDarkMode ? '#b0b0b0' : '#666', marginTop: '2px' }}>
-                        {displayedVakter.length} vakter &nbsp;·&nbsp; Kostnad: <b>{totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                        {displayedVakter.length} vakter &nbsp;·&nbsp; Kostnad:{' '}
+                        <b>{totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                         {totalCostDiff !== 0 && (
                             <span
                                 style={{
@@ -610,10 +655,6 @@ const AvstemmingOkonomi = () => {
             {/* Filter section */}
             <div
                 style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '12px',
-                    alignItems: 'flex-end',
                     padding: '12px 16px',
                     backgroundColor: isDarkMode ? '#1f1f1f' : '#fff',
                     border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
@@ -621,93 +662,124 @@ const AvstemmingOkonomi = () => {
                     marginBottom: '16px',
                 }}
             >
-                <MonthPicker {...monthpickerProps}>
-                    <div className="grid gap-4">
-                        <MonthPicker.Input {...inputProps} label="Måned" />
+                {/* Primary row - always visible */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+                    <MonthPicker {...monthpickerProps}>
+                        <div className="grid gap-4">
+                            <MonthPicker.Input {...inputProps} label="Måned" />
+                        </div>
+                    </MonthPicker>
+                    <div style={{ width: '280px' }}>
+                        <Search
+                            label="Søk etter person eller vakt-ID"
+                            hideLabel={false}
+                            variant="simple"
+                            onChange={(text) => {
+                                setSearchFilter(text.toLowerCase())
+                                if (!text.trim()) {
+                                    setIdSearchResults(null)
+                                    setIdSearchError(null)
+                                }
+                            }}
+                            onSearchClick={() => searchByIds(searchFilter)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') searchByIds(searchFilter)
+                            }}
+                        />
+                        {idSearchLoading && <span style={{ fontSize: '0.8em' }}>Søker...</span>}
+                        {idSearchError && <span style={{ fontSize: '0.8em', color: '#c00' }}>{idSearchError}</span>}
                     </div>
-                </MonthPicker>
-                <div style={{ width: '280px' }}>
-                    <Search
-                        label="Søk etter person eller vakt-ID"
-                        hideLabel={false}
-                        variant="simple"
-                        onChange={(text) => {
-                            setSearchFilter(text.toLowerCase())
-                            if (!text.trim()) {
-                                setIdSearchResults(null)
-                                setIdSearchError(null)
-                            }
+                    <Button
+                        variant={activeFilterCount > 0 ? 'primary' : 'secondary'}
+                        size="medium"
+                        icon={<FunnelIcon aria-hidden />}
+                        onClick={() => setShowFilters((v) => !v)}
+                    >
+                        Filtre{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                    </Button>
+                    {activeFilterCount > 0 && (
+                        <Button variant="tertiary" size="medium" onClick={resetFilters}>
+                            Nullstill filtre
+                        </Button>
+                    )}
+                    <div style={{ width: '160px', marginLeft: 'auto' }}>
+                        <Select label="Sortering" value={sortBy} onChange={(e) => setSortBy(e.target.value as 'dato' | 'koststed' | 'gruppe')}>
+                            <option value="dato">Dato</option>
+                            <option value="koststed">Koststed</option>
+                            <option value="gruppe">Gruppe</option>
+                        </Select>
+                    </div>
+                </div>
+
+                {/* Secondary row - expandable */}
+                {showFilters && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '12px',
+                            alignItems: 'flex-end',
+                            marginTop: '12px',
+                            paddingTop: '12px',
+                            borderTop: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
                         }}
-                        onSearchClick={() => searchByIds(searchFilter)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') searchByIds(searchFilter)
-                        }}
-                    />
-                    {idSearchLoading && <span style={{ fontSize: '0.8em' }}>Søker...</span>}
-                    {idSearchError && <span style={{ fontSize: '0.8em', color: '#c00' }}>{idSearchError}</span>}
-                </div>
-                <div style={{ width: '180px' }}>
-                    <Select label="Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
-                        <option value="">Alle</option>
-                        {groupNames.map((groupName) => (
-                            <option key={groupName} value={groupName}>
-                                {groupName}
-                            </option>
-                        ))}
-                    </Select>
-                </div>
-                <div style={{ width: '180px' }}>
-                    <Select label="Koststed" onChange={(e) => setSearchFilterKoststed(e.target.value)}>
-                        <option value="">Alle</option>
-                        <option value="ukjent">Ukjent</option>
-                        {distinctKoststeder.map((k) => (
-                            <option key={k} value={k}>{k}</option>
-                        ))}
-                    </Select>
-                </div>
-                <div style={{ width: '180px' }}>
-                    <Select label="Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
-                        <option value="">Alle</option>
-                        {distinctFilenames.map((filename) => (
-                            <option key={filename} value={filename}>
-                                {filename}
-                            </option>
-                        ))}
-                    </Select>
-                </div>
-                <div style={{ width: '220px' }}>
-                    <Select label="Status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                        <option value={9}>Alle</option>
-                        <option value={0}>Trenger godkjenning</option>
-                        <option value={1}>Godkjent av ansatt</option>
-                        <option value={2}>Venter på utregning</option>
-                        <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Godkjent av BDM</option>
-                        <option value={5}>Overført til lønn</option>
-                        <option value={6}>Venter på utregning av diff</option>
-                        <option value={7}>Utregning fullført med diff</option>
-                        <option value={8}>Overført til lønn etter rekjøring</option>
-                        <option value={-1}>Ikke overført lønn</option>
-                    </Select>
-                </div>
-                <div style={{ width: '160px' }}>
-                    <Select label="Sortering" value={sortBy} onChange={(e) => setSortBy(e.target.value as 'dato' | 'koststed' | 'gruppe')}>
-                        <option value="dato">Dato</option>
-                        <option value="koststed">Koststed</option>
-                        <option value="gruppe">Gruppe</option>
-                    </Select>
-                </div>
-                <CheckboxGroup
-                    legend=""
-                    hideLegend
-                    onChange={(val: string[]) => {
-                        setFilterOnDoubleSchedules(val.includes('double'))
-                        if (isAdmin) setFilterExternal(val.includes('hideExternal'))
-                    }}
-                >
-                    <Checkbox value="double">Kun dobbeltvakter</Checkbox>
-                    {isAdmin && <Checkbox value="hideExternal">Skjul eksterne</Checkbox>}
-                </CheckboxGroup>
+                    >
+                        <div style={{ width: '180px' }}>
+                            <Select label="Gruppe" value={searchFilterGroup} onChange={(e) => setSearchFilterGroup(e.target.value)}>
+                                <option value="">Alle</option>
+                                {groupNames.map((groupName) => (
+                                    <option key={groupName} value={groupName}>
+                                        {groupName}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                        <div style={{ width: '180px' }}>
+                            <Select label="Koststed" value={searchFilterKoststed} onChange={(e) => setSearchFilterKoststed(e.target.value)}>
+                                <option value="">Alle</option>
+                                <option value="ukjent">Ukjent</option>
+                                {distinctKoststeder.map((k) => (
+                                    <option key={k} value={k}>
+                                        {k}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                        <div style={{ width: '180px' }}>
+                            <Select label="Utbetaling" value={selectedFilename} onChange={(e) => setSelectedFilename(e.target.value)}>
+                                <option value="">Alle</option>
+                                {distinctFilenames.map((filename) => (
+                                    <option key={filename} value={filename}>
+                                        {filename}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                        <div style={{ width: '260px' }}>
+                            <UNSAFE_Combobox
+                                label="Status"
+                                options={STATUS_OPTIONS.map((s) => s.label)}
+                                isMultiSelect
+                                selectedOptions={searchFilterActions}
+                                onToggleSelected={(option, isSelected) =>
+                                    setSearchFilterActions((prev) => (isSelected ? [...prev, option] : prev.filter((o) => o !== option)))
+                                }
+                            />
+                        </div>
+                        <CheckboxGroup
+                            legend=""
+                            hideLegend
+                            value={[...(FilterOnDoubleSchedules ? ['double'] : []), ...(FilterExternal ? ['hideExternal'] : [])]}
+                            onChange={(val: string[]) => {
+                                setFilterOnDoubleSchedules(val.includes('double'))
+                                if (isAdmin) setFilterExternal(val.includes('hideExternal'))
+                            }}
+                        >
+                            <Checkbox value="double">Kun dobbeltvakter</Checkbox>
+                            {isAdmin && <Checkbox value="hideExternal">Skjul eksterne</Checkbox>}
+                        </CheckboxGroup>
+                    </div>
+                )}
             </div>
             <div>
                 <Table
