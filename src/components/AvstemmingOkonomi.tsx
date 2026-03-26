@@ -426,12 +426,14 @@ const AvstemmingOkonomi = () => {
                     ? value.cost.length === 0 || !value.cost[value.cost.length - 1].koststed
                     : value.cost.length > 0 && value.cost[value.cost.length - 1].koststed === searchFilterKoststed)
 
-            const isDiffMatch = minDiffFilter === '' || (() => {
-                const costs = value.cost
-                if (costs.length < 2) return false
-                const diff = Math.abs((Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0))
-                return diff >= minDiffFilter
-            })()
+            const isDiffMatch =
+                minDiffFilter === '' ||
+                (() => {
+                    const costs = value.cost
+                    if (costs.length < 2) return false
+                    const diff = Math.abs((Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0))
+                    return diff >= minDiffFilter
+                })()
 
             return (
                 isMonthMatch &&
