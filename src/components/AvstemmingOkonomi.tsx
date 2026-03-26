@@ -55,6 +55,8 @@ const AvstemmingOkonomi = () => {
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExternal, setFilterExternal] = useState(false)
+    const [sortBy, setSortBy] = useState<'dato' | 'koststed' | 'gruppe'>('dato')
+    const [searchFilterKoststed, setSearchFilterKoststed] = useState('')
 
     // Admin-only state
     const [selectedSchedule, setSchedule] = useState<Schedules>()
@@ -340,6 +342,14 @@ const AvstemmingOkonomi = () => {
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
 
+    const distinctKoststeder = Array.from(
+        new Set(
+            itemData
+                .flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : []))
+                .filter(Boolean)
+        )
+    ).sort()
+
     const filteredVakter = itemData.filter((value: Schedules) => {
         const isMonthMatch =
             new Date(value.start_timestamp * 1000).getMonth() === selectedMonth!.getMonth() &&
@@ -351,8 +361,20 @@ const AvstemmingOkonomi = () => {
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
         const isDoubleMatch = !FilterOnDoubleSchedules || value.is_double === true
         const isExternalMatch = isAdmin ? !FilterExternal || !value.user.ekstern : !value.user.ekstern
+        const isKoststedMatch =
+            searchFilterKoststed === '' ||
+            (searchFilterKoststed === 'ukjent'
+                ? value.cost.length === 0 || !value.cost[value.cost.length - 1].koststed
+                : value.cost.length > 0 && value.cost[value.cost.length - 1].koststed === searchFilterKoststed)
 
-        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isDoubleMatch && isExternalMatch
+        return isMonthMatch && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isDoubleMatch && isExternalMatch && isKoststedMatch
+    }).sort((a, b) => {
+        if (sortBy === 'koststed') {
+            const kA = a.cost.length > 0 ? a.cost[a.cost.length - 1].koststed ?? '' : ''
+            const kB = b.cost.length > 0 ? b.cost[b.cost.length - 1].koststed ?? '' : ''
+            return kA.localeCompare(kB) || a.start_timestamp - b.start_timestamp
+        }
+        return a.start_timestamp - b.start_timestamp
     })
 
     let listeAvVakter = mapVakterAdmin({
@@ -370,7 +392,8 @@ const AvstemmingOkonomi = () => {
         delete_schedule,
         showErrorModal,
         showActions: isAdmin,
-        renderGroupHeader: (groupName, schedules) => <TimeLine schedules={schedules} />,
+        groupBy: sortBy === 'dato' ? 'none' : sortBy === 'gruppe' ? 'group' : 'koststed',
+        renderGroupHeader: sortBy === 'gruppe' ? (_, schedules) => <TimeLine schedules={schedules} /> : undefined,
     })
 
     const { totalCost, totalCostDiff } = filteredVakter.reduce(
@@ -570,6 +593,15 @@ const AvstemmingOkonomi = () => {
                     </Select>
                 </div>
                 <div style={{ width: '180px' }}>
+                    <Select label="Koststed" onChange={(e) => setSearchFilterKoststed(e.target.value)}>
+                        <option value="">Alle</option>
+                        <option value="ukjent">Ukjent</option>
+                        {distinctKoststeder.map((k) => (
+                            <option key={k} value={k}>{k}</option>
+                        ))}
+                    </Select>
+                </div>
+                <div style={{ width: '180px' }}>
                     <Select label="Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
                         <option value="">Alle</option>
                         {distinctFilenames.map((filename) => (
@@ -592,6 +624,13 @@ const AvstemmingOkonomi = () => {
                         <option value={7}>Utregning fullført med diff</option>
                         <option value={8}>Overført til lønn etter rekjøring</option>
                         <option value={-1}>Ikke overført lønn</option>
+                    </Select>
+                </div>
+                <div style={{ width: '160px' }}>
+                    <Select label="Sortering" value={sortBy} onChange={(e) => setSortBy(e.target.value as 'dato' | 'koststed' | 'gruppe')}>
+                        <option value="dato">Dato</option>
+                        <option value="koststed">Koststed</option>
+                        <option value="gruppe">Gruppe</option>
                     </Select>
                 </div>
                 <CheckboxGroup

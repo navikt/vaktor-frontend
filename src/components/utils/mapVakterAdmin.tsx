@@ -25,6 +25,7 @@ interface MapVakterAdminProps {
     showErrorModal: (message: string) => void
     showActions?: boolean
     renderGroupHeader?: (groupName: string, schedules: Schedules[]) => ReactNode
+    groupBy?: 'group' | 'koststed' | 'none'
 }
 
 export const mapVakterAdmin = ({
@@ -43,6 +44,7 @@ export const mapVakterAdmin = ({
     showErrorModal,
     showActions = true,
     renderGroupHeader,
+    groupBy = 'group',
 }: MapVakterAdminProps) => {
     const getStatusColor = (approveLevel: number) => {
         const lightColors = {
@@ -110,19 +112,53 @@ export const mapVakterAdmin = ({
         groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
     })
 
+    // Build grouped map based on groupBy prop
+    const buildGrouped = (): Record<string, Schedules[]> => {
+        if (groupBy === 'none') {
+            return { '': [...vaktliste] }
+        }
+        if (groupBy === 'koststed') {
+            return vaktliste.reduce((acc, s) => {
+                const k = (s.cost.length > 0 ? s.cost[s.cost.length - 1].koststed : '') || 'Ukjent koststed'
+                if (!acc[k]) acc[k] = []
+                acc[k].push(s)
+                return acc
+            }, {} as Record<string, Schedules[]>)
+        }
+        return groupedByGroupName
+    }
+    const grouped = buildGrouped()
+
+    // Build overlap map: for each schedule that is_double, find other schedules that overlap it time-wise
+    const overlapMap = new Map<string, Schedules[]>()
+    const doubleSchedules = vaktliste.filter((s) => s.is_double)
+    for (const s of doubleSchedules) {
+        const overlapping = vaktliste.filter(
+            (other) =>
+                other.id !== s.id &&
+                other.is_double &&
+                other.start_timestamp < s.end_timestamp &&
+                other.end_timestamp > s.start_timestamp
+        )
+        if (overlapping.length > 0) {
+            overlapMap.set(s.id, overlapping)
+        }
+    }
+
     let rowCount = 0
     const totalCols = showActions ? 7 : 5
-    const groupedRows = Object.entries(groupedByGroupName).flatMap(([groupName, schedules]) => {
+    const groupedRows = Object.entries(grouped).flatMap(([groupKey, schedules]) => {
         const kostseder = Array.from(
             new Set(schedules.flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : [])).filter(Boolean))
         )
+        const showHeader = groupBy !== 'none'
         return [
             // This is the row for the group header
-            <Table.Row key={`header-${groupName}`}>
+            ...(showHeader ? [<Table.Row key={`header-${groupKey}`}>
                 <Table.DataCell colSpan={totalCols}>
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                        <b style={{ fontSize: '1.05em' }}>{groupName}</b>
-                        {kostseder.map((k) => (
+                        <b style={{ fontSize: '1.05em' }}>{groupKey}</b>
+                        {groupBy === 'group' && kostseder.map((k) => (
                             <span
                                 key={k}
                                 style={{
@@ -141,10 +177,9 @@ export const mapVakterAdmin = ({
                             </span>
                         ))}
                     </div>
-                    {renderGroupHeader && renderGroupHeader(groupName, schedules)}
+                    {renderGroupHeader && renderGroupHeader(groupKey, schedules)}
                 </Table.DataCell>
-            </Table.Row>,
-            // These are the individual rows for the schedules
+            </Table.Row>] : []),
             ...schedules.map((vakter: Schedules, i: number) => {
                 rowCount++
                 return (
@@ -222,60 +257,210 @@ export const mapVakterAdmin = ({
                         </Table.DataCell>
                         {showActions && (
                             <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
-                                {vakter.vakter.length > 0 ? (
-                                    <div style={{ lineHeight: '1.5' }}>
-                                        {vakter.vakter.map((endringer, idx: number) => {
-                                            const endringType = endringer.type === 'bakvakt' ? 'bistand' : endringer.type
-                                            const endringBgColor = getBistandBytteColor(endringType)
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    style={{
-                                                        marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                        paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                        borderBottom:
-                                                            idx < vakter.vakter.length - 1
-                                                                ? isDarkMode
-                                                                    ? '1px solid #444'
-                                                                    : '1px solid #e0e0e0'
-                                                                : 'none',
-                                                        backgroundColor: endringBgColor,
-                                                        padding: endringBgColor !== 'transparent' ? '8px' : '0',
-                                                        borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
-                                                    }}
-                                                >
-                                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '2px' }}>
-                                                        <b>ID:</b> {endringer.id}
+                                {(() => {
+                                    const overlapping = overlapMap.get(vakter.id) ?? []
+                                    const hasEndringer = vakter.vakter.length > 0
+                                    const hasOverlap = overlapping.length > 0
+
+                                    if (!hasEndringer && !hasOverlap) {
+                                        return <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
+                                    }
+
+                                    return (
+                                        <div style={{ lineHeight: '1.5' }}>
+                                            {vakter.vakter.map((endringer, idx: number) => {
+                                                const endringType = endringer.type === 'bakvakt' ? 'bistand' : endringer.type
+                                                const endringBgColor = getBistandBytteColor(endringType)
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        style={{
+                                                            marginBottom: '8px',
+                                                            backgroundColor: endringBgColor,
+                                                            padding: endringBgColor !== 'transparent' ? '8px' : '0',
+                                                            borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
+                                                        }}
+                                                    >
+                                                        <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginBottom: '2px' }}>
+                                                            <b>ID:</b> {endringer.id}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>
+                                                            {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
+                                                        <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
+                                                            {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            })}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
+                                                            {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            })}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>
-                                                        {endringer.type === 'bakvakt' ? 'bistand' : endringer.type}
+                                                )
+                                            })}
+                                            {hasOverlap && (
+                                                <div>
+                                                    {hasEndringer && (
+                                                        <div
+                                                            style={{
+                                                                borderTop: isDarkMode ? '1px solid #555' : '1px solid #ccc',
+                                                                margin: '6px 0',
+                                                            }}
+                                                        />
+                                                    )}
+                                                    <div
+                                                        style={{
+                                                            fontSize: '0.75em',
+                                                            fontWeight: 700,
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.04em',
+                                                            color: isDarkMode ? '#f08080' : '#b00',
+                                                            marginBottom: '6px',
+                                                        }}
+                                                    >
+                                                        Dobbeltvakt
                                                     </div>
-                                                    <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
-                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                        {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                                            day: '2-digit',
-                                                            month: '2-digit',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        })}
-                                                    </div>
-                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                        {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                                            day: '2-digit',
-                                                            month: '2-digit',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        })}
-                                                    </div>
+                                                    {overlapping.map((other, idx) => {
+                                                        const overlapStart = Math.max(vakter.start_timestamp, other.start_timestamp)
+                                                        const overlapEnd = Math.min(vakter.end_timestamp, other.end_timestamp)
+                                                        const fmtDate = (ts: number) =>
+                                                            new Date(ts * 1000).toLocaleString('no-NB', {
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            }).replace(',', '')
+                                                        const totalHours = (vakter.end_timestamp - vakter.start_timestamp) / 3600
+                                                        const overlapHours = (overlapEnd - overlapStart) / 3600
+                                                        const uniqueHours = totalHours - overlapHours
+                                                        const fmtH = (h: number) =>
+                                                            Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+                                                        const isPrimary = vakter.start_timestamp <= other.start_timestamp
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                style={{
+                                                                    marginBottom: idx < overlapping.length - 1 ? '8px' : '0',
+                                                                    padding: '6px 8px',
+                                                                    borderRadius: '4px',
+                                                                    border: `1px solid ${isDarkMode ? '#6b3a35' : '#f5c6cb'}`,
+                                                                    backgroundColor: isDarkMode ? '#3a1e1e' : '#fff5f5',
+                                                                    fontSize: '0.8em',
+                                                                }}
+                                                            >
+                                                                <div
+                                                                    style={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '4px',
+                                                                        color: getTextColor('subtle'),
+                                                                        marginBottom: '4px',
+                                                                        cursor: 'pointer',
+                                                                        border: `1px solid ${isDarkMode ? '#444' : '#ddd'}`,
+                                                                        borderRadius: '3px',
+                                                                        padding: '1px 5px',
+                                                                        fontFamily: 'monospace',
+                                                                        fontSize: '0.85em',
+                                                                    }}
+                                                                    title="Klikk for å kopiere ID"
+                                                                    onClick={() => navigator.clipboard.writeText(other.id)}
+                                                                >
+                                                                    {other.id.slice(0, 8)}…
+                                                                </div>
+                                                                <div style={{ color: getTextColor('secondary'), marginBottom: '6px' }}>
+                                                                    <b>{other.group.name}</b>
+                                                                </div>
+
+                                                                {isPrimary ? (
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                        <div
+                                                                            style={{
+                                                                                color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
+                                                                                fontWeight: 600,
+                                                                                marginBottom: '2px',
+                                                                            }}
+                                                                        >
+                                                                            Starter først — dekker overlappet
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                            <span style={{ color: getTextColor('subtle') }}>Kompensert</span>
+                                                                            <span style={{ fontWeight: 700 }}>{fmtH(totalHours)} (100%)</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                        <div
+                                                                            style={{
+                                                                                color: isDarkMode ? '#f08080' : '#b00',
+                                                                                fontWeight: 600,
+                                                                                marginBottom: '2px',
+                                                                            }}
+                                                                        >
+                                                                            Andre vakt starter først — dekker overlappet
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
+                                                                            <span style={{ color: getTextColor('subtle') }}>Overlapp (ingen komp.)</span>
+                                                                            <span style={{ color: isDarkMode ? '#f08080' : '#b00', fontWeight: 600 }}>
+                                                                                {fmtH(overlapHours)}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
+                                                                            <span style={{ color: getTextColor('subtle') }}>Unik del (komp.)</span>
+                                                                            <span style={{ fontWeight: 600, color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}>
+                                                                                {fmtH(uniqueHours)}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div
+                                                                            style={{
+                                                                                borderTop: `1px solid ${isDarkMode ? '#555' : '#ddd'}`,
+                                                                                paddingTop: '3px',
+                                                                                display: 'flex',
+                                                                                justifyContent: 'space-between',
+                                                                                gap: '6px',
+                                                                            }}
+                                                                        >
+                                                                            <span style={{ color: getTextColor('subtle') }}>Effektiv kompensasjon</span>
+                                                                            <span style={{ fontWeight: 700 }}>{fmtH(uniqueHours)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                <div
+                                                                    style={{
+                                                                        marginTop: '6px',
+                                                                        paddingTop: '5px',
+                                                                        borderTop: `1px solid ${isDarkMode ? '#555' : '#eee'}`,
+                                                                        color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
+                                                                        fontWeight: 600,
+                                                                    }}
+                                                                >
+                                                                    <div style={{ fontSize: '0.75em', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>
+                                                                        Effektiv vakt
+                                                                    </div>
+                                                                    {isPrimary
+                                                                        ? `${fmtDate(vakter.start_timestamp)} – ${fmtDate(vakter.end_timestamp)}`
+                                                                        : `${fmtDate(overlapEnd)} – ${fmtDate(vakter.end_timestamp)}`}
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
                                                 </div>
-                                            )
-                                        })}
-                                    </div>
-                                ) : (
-                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
-                                )}
+                                            )}
+                                        </div>
+                                    )
+                                })()}
                             </Table.DataCell>
                         )}
                         {showActions && (

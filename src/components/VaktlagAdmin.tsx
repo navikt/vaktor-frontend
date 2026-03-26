@@ -254,8 +254,10 @@ const VaktlagAdmin: React.FC = () => {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    id: editingGroup.id,
                     name: editForm.name,
                     phone: editForm.phone,
+                    slack: editingGroup.slack || '',
                     description: editForm.description,
                     type: editForm.type,
                     koststed: editForm.koststed,
