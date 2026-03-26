@@ -9,9 +9,10 @@ interface Props {
     loading: boolean
     setLoading: Dispatch<React.SetStateAction<boolean>>
     onError: (errorMessage: string) => void
+    isAdmin?: boolean
 }
 
-const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule, loading, setLoading, onError }) => {
+const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule, loading, setLoading, onError, isAdmin = false }) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
@@ -32,9 +33,9 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule,
         }
     }
 
-    const isDisabled = vakt.approve_level > 0
+    const isDisabled = !isAdmin && vakt.approve_level > 0
 
-    if (vakt.approve_level === 0) {
+    if (isAdmin || vakt.approve_level === 0) {
         return (
             <>
                 <Button

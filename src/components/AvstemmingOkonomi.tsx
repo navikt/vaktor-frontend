@@ -416,6 +416,7 @@ const AvstemmingOkonomi = () => {
         delete_schedule,
         showErrorModal,
         showActions: isAdmin,
+        isAdmin,
         renderGroupHeader: (groupName, schedules) => <TimeLine schedules={schedules} />,
     })
 
@@ -451,6 +452,7 @@ const AvstemmingOkonomi = () => {
                     setIsOpen={setIsOpen}
                     update_schedule={update_schedule}
                     setLoading={setLoading}
+                    isAdmin={isAdmin}
                 />
             )}
 
