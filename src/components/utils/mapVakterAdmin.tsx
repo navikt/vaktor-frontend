@@ -24,6 +24,7 @@ interface MapVakterAdminProps {
     delete_schedule: (scheduleId: string, setResponse: any, setResponseError: any) => Promise<void>
     showErrorModal: (message: string) => void
     showActions?: boolean
+    isAdmin?: boolean
     renderGroupHeader?: (groupName: string, schedules: Schedules[]) => ReactNode
 }
 
@@ -42,6 +43,7 @@ export const mapVakterAdmin = ({
     delete_schedule,
     showErrorModal,
     showActions = true,
+    isAdmin = false,
     renderGroupHeader,
 }: MapVakterAdminProps) => {
     const getStatusColor = (approveLevel: number) => {
@@ -285,7 +287,7 @@ export const mapVakterAdmin = ({
                                         label="Sett status"
                                         size="small"
                                         value={vakter.approve_level}
-                                        disabled={vakter.approve_level >= 5}
+                                        disabled={!isAdmin && vakter.approve_level >= 5}
                                         onChange={async (e) => {
                                             const newLevel = Number(e.target.value)
                                             const updatedSchedule = {
@@ -301,16 +303,16 @@ export const mapVakterAdmin = ({
                                         <option value={2}>2 - Venter på utregning</option>
                                         <option value={3}>3 - Godkjent av vaktsjef</option>
                                         <option value={4}>4 - Godkjent av BDM</option>
-                                        <option value={5} disabled>
+                                        <option value={5} disabled={!isAdmin}>
                                             5 - Overført til lønn
                                         </option>
-                                        <option value={6} disabled>
+                                        <option value={6} disabled={!isAdmin}>
                                             6 - Venter på diff-utregning
                                         </option>
-                                        <option value={7} disabled>
+                                        <option value={7} disabled={!isAdmin}>
                                             7 - Diff utregnet
                                         </option>
-                                        <option value={8} disabled>
+                                        <option value={8} disabled={!isAdmin}>
                                             8 - Overført etter rekjøring
                                         </option>
                                     </Select>
@@ -325,7 +327,7 @@ export const mapVakterAdmin = ({
                                             setSchedule(vakter)
                                             setIsOpen(true)
                                         }}
-                                        disabled={vakter.approve_level > 0}
+                                        disabled={!isAdmin && vakter.approve_level > 0}
                                     >
                                         Gjør endringer
                                     </Button>
@@ -337,6 +339,7 @@ export const mapVakterAdmin = ({
                                         setResponse={setResponse}
                                         onError={showErrorModal}
                                         delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
+                                        isAdmin={isAdmin}
                                     ></DeleteVaktButton>
                                 </div>
                             </Table.DataCell>
