@@ -13,7 +13,16 @@ interface Props {
     isAdmin?: boolean
 }
 
-const EndreVaktButton: React.FC<Props> = ({ vakt, isOpen, setResponse, setResponseError, update_schedule, setIsOpen, setLoading, isAdmin = false }) => {
+const EndreVaktButton: React.FC<Props> = ({
+    vakt,
+    isOpen,
+    setResponse,
+    setResponseError,
+    update_schedule,
+    setIsOpen,
+    setLoading,
+    isAdmin = false,
+}) => {
     const ref = useRef<HTMLDialogElement>(null)
     const [startTimestamp, setStartTimestamp] = useState<number>(vakt.start_timestamp)
     const [endTimestamp, setEndTimestamp] = useState<number>(vakt.end_timestamp)

@@ -474,7 +474,8 @@ const AvstemmingOkonomi = () => {
                 <div>
                     <div style={{ fontSize: '1.1em', fontWeight: 700 }}>Avstemming ØT</div>
                     <div style={{ fontSize: '0.85em', color: isDarkMode ? '#b0b0b0' : '#666', marginTop: '2px' }}>
-                        {displayedVakter.length} vakter &nbsp;·&nbsp; Kostnad: <b>{totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                        {displayedVakter.length} vakter &nbsp;·&nbsp; Kostnad:{' '}
+                        <b>{totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                         {totalCostDiff !== 0 && (
                             <span
                                 style={{
