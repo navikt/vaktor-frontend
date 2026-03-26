@@ -29,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             },
             body: JSON.stringify(req.body),
         })
+        console.log('[update_vaktlag] payload:', JSON.stringify(req.body, null, 2))
 
         if (backendResponse.ok) {
             const body = await backendResponse.json()
