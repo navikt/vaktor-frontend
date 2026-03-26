@@ -120,12 +120,15 @@ export const mapVakterAdmin = ({
             return { '': [...vaktliste] }
         }
         if (groupBy === 'koststed') {
-            return vaktliste.reduce((acc, s) => {
-                const k = (s.cost.length > 0 ? s.cost[s.cost.length - 1].koststed : '') || 'Ukjent koststed'
-                if (!acc[k]) acc[k] = []
-                acc[k].push(s)
-                return acc
-            }, {} as Record<string, Schedules[]>)
+            return vaktliste.reduce(
+                (acc, s) => {
+                    const k = (s.cost.length > 0 ? s.cost[s.cost.length - 1].koststed : '') || 'Ukjent koststed'
+                    if (!acc[k]) acc[k] = []
+                    acc[k].push(s)
+                    return acc
+                },
+                {} as Record<string, Schedules[]>
+            )
         }
         return groupedByGroupName
     }
@@ -136,11 +139,7 @@ export const mapVakterAdmin = ({
     const doubleSchedules = vaktliste.filter((s) => s.is_double)
     for (const s of doubleSchedules) {
         const overlapping = vaktliste.filter(
-            (other) =>
-                other.id !== s.id &&
-                other.is_double &&
-                other.start_timestamp < s.end_timestamp &&
-                other.end_timestamp > s.start_timestamp
+            (other) => other.id !== s.id && other.is_double && other.start_timestamp < s.end_timestamp && other.end_timestamp > s.start_timestamp
         )
         if (overlapping.length > 0) {
             overlapMap.set(s.id, overlapping)
@@ -156,32 +155,37 @@ export const mapVakterAdmin = ({
         const showHeader = groupBy !== 'none'
         return [
             // This is the row for the group header
-            ...(showHeader ? [<Table.Row key={`header-${groupKey}`}>
-                <Table.DataCell colSpan={totalCols}>
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                        <b style={{ fontSize: '1.05em' }}>{groupKey}</b>
-                        {groupBy === 'group' && kostseder.map((k) => (
-                            <span
-                                key={k}
-                                style={{
-                                    fontSize: '0.78em',
-                                    fontWeight: 600,
-                                    letterSpacing: '0.03em',
-                                    textTransform: 'uppercase',
-                                    padding: '2px 8px',
-                                    borderRadius: '4px',
-                                    backgroundColor: isDarkMode ? '#1e3a28' : '#d4edda',
-                                    color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
-                                    border: isDarkMode ? '1px solid #3a6b4a' : '1px solid #a8d5b5',
-                                }}
-                            >
-                                Koststed: {k}
-                            </span>
-                        ))}
-                    </div>
-                    {renderGroupHeader && renderGroupHeader(groupKey, schedules)}
-                </Table.DataCell>
-            </Table.Row>] : []),
+            ...(showHeader
+                ? [
+                      <Table.Row key={`header-${groupKey}`}>
+                          <Table.DataCell colSpan={totalCols}>
+                              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                                  <b style={{ fontSize: '1.05em' }}>{groupKey}</b>
+                                  {groupBy === 'group' &&
+                                      kostseder.map((k) => (
+                                          <span
+                                              key={k}
+                                              style={{
+                                                  fontSize: '0.78em',
+                                                  fontWeight: 600,
+                                                  letterSpacing: '0.03em',
+                                                  textTransform: 'uppercase',
+                                                  padding: '2px 8px',
+                                                  borderRadius: '4px',
+                                                  backgroundColor: isDarkMode ? '#1e3a28' : '#d4edda',
+                                                  color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
+                                                  border: isDarkMode ? '1px solid #3a6b4a' : '1px solid #a8d5b5',
+                                              }}
+                                          >
+                                              Koststed: {k}
+                                          </span>
+                                      ))}
+                              </div>
+                              {renderGroupHeader && renderGroupHeader(groupKey, schedules)}
+                          </Table.DataCell>
+                      </Table.Row>,
+                  ]
+                : []),
             ...schedules.map((vakter: Schedules, i: number) => {
                 rowCount++
                 return (
@@ -337,19 +341,26 @@ export const mapVakterAdmin = ({
                                                         const overlapStart = Math.max(vakter.start_timestamp, other.start_timestamp)
                                                         const overlapEnd = Math.min(vakter.end_timestamp, other.end_timestamp)
                                                         const fmtDate = (ts: number) =>
-                                                            new Date(ts * 1000).toLocaleString('no-NB', {
-                                                                day: '2-digit',
-                                                                month: '2-digit',
-                                                                year: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit',
-                                                            }).replace(',', '')
+                                                            new Date(ts * 1000)
+                                                                .toLocaleString('no-NB', {
+                                                                    day: '2-digit',
+                                                                    month: '2-digit',
+                                                                    year: 'numeric',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit',
+                                                                })
+                                                                .replace(',', '')
                                                         const totalHours = (vakter.end_timestamp - vakter.start_timestamp) / 3600
                                                         const overlapHours = (overlapEnd - overlapStart) / 3600
                                                         const uniqueHours = totalHours - overlapHours
                                                         const fmtH = (h: number) =>
                                                             Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
-                                                        const isPrimary = vakter.start_timestamp <= other.start_timestamp
+                                                        const startsFirst = vakter.start_timestamp < other.start_timestamp
+                                                        const startsEqual = vakter.start_timestamp === other.start_timestamp
+                                                        const isLonger =
+                                                            vakter.end_timestamp - vakter.start_timestamp >=
+                                                            other.end_timestamp - other.start_timestamp
+                                                        const isPrimary = startsFirst || (startsEqual && isLonger)
                                                         return (
                                                             <div
                                                                 key={idx}
@@ -413,14 +424,18 @@ export const mapVakterAdmin = ({
                                                                             Andre vakt starter først — dekker overlappet
                                                                         </div>
                                                                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
-                                                                            <span style={{ color: getTextColor('subtle') }}>Overlapp (ingen komp.)</span>
+                                                                            <span style={{ color: getTextColor('subtle') }}>
+                                                                                Overlapp (ingen komp.)
+                                                                            </span>
                                                                             <span style={{ color: isDarkMode ? '#f08080' : '#b00', fontWeight: 600 }}>
                                                                                 {fmtH(overlapHours)}
                                                                             </span>
                                                                         </div>
                                                                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
                                                                             <span style={{ color: getTextColor('subtle') }}>Unik del (komp.)</span>
-                                                                            <span style={{ fontWeight: 600, color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}>
+                                                                            <span
+                                                                                style={{ fontWeight: 600, color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}
+                                                                            >
                                                                                 {fmtH(uniqueHours)}
                                                                             </span>
                                                                         </div>
@@ -433,7 +448,9 @@ export const mapVakterAdmin = ({
                                                                                 gap: '6px',
                                                                             }}
                                                                         >
-                                                                            <span style={{ color: getTextColor('subtle') }}>Effektiv kompensasjon</span>
+                                                                            <span style={{ color: getTextColor('subtle') }}>
+                                                                                Effektiv kompensasjon
+                                                                            </span>
                                                                             <span style={{ fontWeight: 700 }}>{fmtH(uniqueHours)}</span>
                                                                         </div>
                                                                     </div>
@@ -448,7 +465,15 @@ export const mapVakterAdmin = ({
                                                                         fontWeight: 600,
                                                                     }}
                                                                 >
-                                                                    <div style={{ fontSize: '0.75em', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>
+                                                                    <div
+                                                                        style={{
+                                                                            fontSize: '0.75em',
+                                                                            fontWeight: 700,
+                                                                            textTransform: 'uppercase',
+                                                                            letterSpacing: '0.04em',
+                                                                            marginBottom: '2px',
+                                                                        }}
+                                                                    >
                                                                         Effektiv vakt
                                                                     </div>
                                                                     {isPrimary
