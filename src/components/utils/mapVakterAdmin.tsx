@@ -27,6 +27,7 @@ interface MapVakterAdminProps {
     isAdmin?: boolean
     renderGroupHeader?: (groupName: string, schedules: Schedules[]) => ReactNode
     groupBy?: 'group' | 'koststed' | 'none'
+    groupKeyFn?: (s: Schedules) => string
 }
 
 export const mapVakterAdmin = ({
@@ -47,6 +48,7 @@ export const mapVakterAdmin = ({
     isAdmin = false,
     renderGroupHeader,
     groupBy = 'group',
+    groupKeyFn,
 }: MapVakterAdminProps) => {
     const getStatusColor = (approveLevel: number) => {
         const lightColors = {
@@ -116,6 +118,14 @@ export const mapVakterAdmin = ({
 
     // Build grouped map based on groupBy prop
     const buildGrouped = (): Record<string, Schedules[]> => {
+        if (groupKeyFn) {
+            return vaktliste.reduce((acc, s) => {
+                const key = groupKeyFn(s)
+                if (!acc[key]) acc[key] = []
+                acc[key].push(s)
+                return acc
+            }, {} as Record<string, Schedules[]>)
+        }
         if (groupBy === 'none') {
             return { '': [...vaktliste] }
         }
@@ -152,7 +162,7 @@ export const mapVakterAdmin = ({
         const kostseder = Array.from(
             new Set(schedules.flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : [])).filter(Boolean))
         )
-        const showHeader = groupBy !== 'none'
+        const showHeader = groupBy !== 'none' || groupKeyFn !== undefined
         return [
             // This is the row for the group header
             ...(showHeader
