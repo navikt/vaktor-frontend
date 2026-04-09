@@ -1,6 +1,5 @@
 import type { NextPage } from 'next'
 import moment from 'moment'
-import 'moment/locale/nb'
 import { useAuth } from '../context/AuthContext'
 import AvstemmingMangler from '../components/AvstemmingMangler'
 import { hasAnyRole } from '../utils/roles'
