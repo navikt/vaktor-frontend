@@ -24,6 +24,9 @@ const AvstemmingMangler = () => {
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
     const [limit300, setLimit300] = useState(false)
+    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+
+    const yearOptions = Array.from({ length: new Date().getFullYear() - 2022 + 1 }, (_, i) => 2022 + i).reverse()
 
     const [idSearchResults, setIdSearchResults] = useState<Schedules[] | null>(null)
     const [idSearchLoading, setIdSearchLoading] = useState(false)
@@ -139,7 +142,7 @@ const AvstemmingMangler = () => {
     useEffect(() => {
         const fetchSchedules = async () => {
             setLoading(true)
-            const path = `/api/unfinished_schedules`
+            const path = `/api/unfinished_schedules?year=${selectedYear}`
             try {
                 const scheduleRes = await fetch(path)
                 const itemData = await scheduleRes.json()
@@ -193,7 +196,7 @@ const AvstemmingMangler = () => {
         }
 
         fetchSchedules()
-    }, [response, FilterOnDoubleSchedules])
+    }, [response, FilterOnDoubleSchedules, selectedYear])
 
     if (itemData === undefined) return <></>
 
@@ -379,7 +382,16 @@ const AvstemmingMangler = () => {
                 )}
             </div>
 
-            <div style={{ display: 'flex', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', marginBottom: '20px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ width: '120px' }}>
+                    <Select label="År" value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
+                        {yearOptions.map((y) => (
+                            <option key={y} value={y}>
+                                {y}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
                 <div style={{ width: '300px', marginLeft: '15px' }}>
                     <Search
                         label="Søk etter person eller vakt-ID"

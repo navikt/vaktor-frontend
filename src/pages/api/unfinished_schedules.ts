@@ -7,7 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         authorizationHeader = process.env.FAKE_TOKEN
     }
 
-    const path = `${process.env.BACKEND_URL}/api/v1/admin/unfinished_schedules`
+    const year = req.query.year ? `?year=${req.query.year}` : ''
+    const path = `${process.env.BACKEND_URL}/api/v1/admin/unfinished_schedules${year}`
 
     try {
         console.log('Path: ', path)
