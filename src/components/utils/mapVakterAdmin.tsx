@@ -7,6 +7,7 @@ import MapApproveStatus from './MapApproveStatus'
 import MapCost from './mapCost'
 import MapAudit from './mapAudit'
 import DeleteVaktButton from './DeleteVaktButton'
+import ConfirmStatusSelect from './ConfirmStatusSelect'
 import { ReactNode } from 'react'
 
 interface MapVakterAdminProps {
@@ -220,16 +221,6 @@ export const mapVakterAdmin = ({
                                 </div>
                                 <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.user.id.toUpperCase()}</div>
                                 <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.group.name}</div>
-                                {vakter.user.roles && vakter.user.roles.length > 0 && (
-                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginTop: '4px' }}>
-                                        Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
-                                    </div>
-                                )}
-                                {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
-                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>
-                                        Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
-                                    </div>
-                                )}
                                 <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
                                     {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
                                 </div>
@@ -506,39 +497,14 @@ export const mapVakterAdmin = ({
                         {showActions && (
                             <Table.DataCell style={{ minWidth: '180px', padding: '8px' }}>
                                 <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
-                                    <Select
-                                        label="Sett status"
-                                        size="small"
-                                        value={vakter.approve_level}
-                                        disabled={!isAdmin && vakter.approve_level >= 5}
-                                        onChange={async (e) => {
-                                            const newLevel = Number(e.target.value)
-                                            const updatedSchedule = {
-                                                ...vakter,
-                                                approve_level: newLevel,
-                                            }
-                                            setIsLoading(true)
-                                            await update_schedule(updatedSchedule, setResponse, setResponseError)
-                                        }}
-                                    >
-                                        <option value={0}>0 - Trenger godkjenning</option>
-                                        <option value={1}>1 - Godkjent av ansatt</option>
-                                        <option value={2}>2 - Venter på utregning</option>
-                                        <option value={3}>3 - Godkjent av vaktsjef</option>
-                                        <option value={4}>4 - Godkjent av BDM</option>
-                                        <option value={5} disabled={!isAdmin}>
-                                            5 - Overført til lønn
-                                        </option>
-                                        <option value={6} disabled={!isAdmin}>
-                                            6 - Venter på diff-utregning
-                                        </option>
-                                        <option value={7} disabled={!isAdmin}>
-                                            7 - Diff utregnet
-                                        </option>
-                                        <option value={8} disabled={!isAdmin}>
-                                            8 - Overført etter rekjøring
-                                        </option>
-                                    </Select>
+                                    <ConfirmStatusSelect
+                                        vakt={vakter}
+                                        isDarkMode={isDarkMode}
+                                        setIsLoading={setIsLoading}
+                                        update_schedule={update_schedule}
+                                        setResponse={setResponse}
+                                        setResponseError={setResponseError}
+                                    />
                                     <Button
                                         size="xsmall"
                                         style={{
@@ -561,9 +527,10 @@ export const mapVakterAdmin = ({
                                         setLoading={setLoading}
                                         setResponse={setResponse}
                                         onError={showErrorModal}
+                                        isDarkMode={isDarkMode}
                                         delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
                                         isAdmin={isAdmin}
-                                    ></DeleteVaktButton>
+                                    />
                                 </div>
                             </Table.DataCell>
                         )}
