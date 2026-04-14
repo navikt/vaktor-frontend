@@ -20,7 +20,7 @@ import moment from 'moment'
 import { Dispatch, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { Schedules } from '../types/types'
+import { Schedules, OverlappingSchedule } from '../types/types'
 import { mapVakterAdmin } from './utils/mapVakterAdmin'
 import EndreVaktButton from './utils/AdminAdjustDate'
 import VarsleModal from './VarsleModal'
@@ -89,12 +89,32 @@ const AvstemmingOkonomi = () => {
     const showErrorModal = (message: string) => setErrorMessage(message)
 
     const DoubleOverlapTimeline = ({ schedules }: { schedules: Schedules[] }) => {
-        const sorted = [...schedules].sort((a, b) => {
+        type Entry = { id: string; start_timestamp: number; end_timestamp: number; hasCost: boolean }
+
+        const seenIds = new Set(schedules.map((s) => s.id))
+        const fromSchedules: Entry[] = schedules.map((s) => ({
+            id: s.id,
+            start_timestamp: s.start_timestamp,
+            end_timestamp: s.end_timestamp,
+            hasCost: s.cost.length > 0 && Number(s.cost[s.cost.length - 1].total_cost) > 0,
+        }))
+        // Add any overlapping entries not already in the cluster (e.g. from a different month)
+        const extraById = new Map<string, Entry>()
+        for (const s of schedules) {
+            for (const o of s.overlapping_schedules ?? []) {
+                if (!seenIds.has(o.id) && !extraById.has(o.id)) {
+                    extraById.set(o.id, { id: o.id, start_timestamp: o.start_timestamp, end_timestamp: o.end_timestamp, hasCost: false })
+                }
+            }
+        }
+
+        const all: Entry[] = [...fromSchedules, ...Array.from(extraById.values())]
+        const sorted = all.sort((a, b) => {
             if (a.start_timestamp !== b.start_timestamp) return a.start_timestamp - b.start_timestamp
-            const durDiff = (b.end_timestamp - b.start_timestamp) - (a.end_timestamp - a.start_timestamp)
+            const durDiff = b.end_timestamp - b.start_timestamp - (a.end_timestamp - a.start_timestamp)
             if (durDiff !== 0) return durDiff
-            const aHasCost = a.cost.length > 0 && Number(a.cost[a.cost.length - 1].total_cost) > 0
-            return aHasCost ? -1 : 1
+            if (a.hasCost !== b.hasCost) return a.hasCost ? -1 : 1
+            return 0
         })
 
         const clusterMin = Math.min(...sorted.map((s) => s.start_timestamp))
@@ -118,25 +138,25 @@ const AvstemmingOkonomi = () => {
             <div style={{ marginTop: '12px', marginBottom: '4px', minWidth: '600px', paddingBottom: '4px' }}>
                 {sorted.map((s, i) => {
                     const isPrimary = i === 0
-                    const overlapEnd = isPrimary
-                        ? s.end_timestamp
-                        : Math.min(primary.end_timestamp, s.end_timestamp)
-                    const overlapStart = isPrimary
-                        ? s.start_timestamp
-                        : Math.max(primary.start_timestamp, s.start_timestamp)
+                    const overlapEnd = isPrimary ? s.end_timestamp : Math.min(primary.end_timestamp, s.end_timestamp)
+                    const overlapStart = isPrimary ? s.start_timestamp : Math.max(primary.start_timestamp, s.start_timestamp)
                     const compStart = isPrimary ? s.start_timestamp : overlapEnd
                     const compEnd = s.end_timestamp
                     const hasComp = compEnd > compStart
                     const compHours = fmtH(Math.max(0, compEnd - compStart))
                     const totalHours = fmtH(s.end_timestamp - s.start_timestamp)
-                    const barColor = isPrimary
-                        ? isDarkMode ? '#2d7a4f' : '#287d44'
-                        : isDarkMode ? '#2d5f7a' : '#1a6b8a'
+                    const barColor = isPrimary ? (isDarkMode ? '#2d7a4f' : '#287d44') : isDarkMode ? '#2d5f7a' : '#1a6b8a'
 
                     return (
                         <div key={s.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '14px', gap: '10px' }}>
                             <div style={{ width: '130px', flexShrink: 0 }}>
-                                <div style={{ fontSize: '0.8em', fontWeight: 700, color: isPrimary ? (isDarkMode ? '#7ecf9a' : '#1a5c2e') : (isDarkMode ? '#66cbec' : '#1a6b8a') }}>
+                                <div
+                                    style={{
+                                        fontSize: '0.8em',
+                                        fontWeight: 700,
+                                        color: isPrimary ? (isDarkMode ? '#7ecf9a' : '#1a5c2e') : isDarkMode ? '#66cbec' : '#1a6b8a',
+                                    }}
+                                >
                                     {isPrimary ? 'Primær' : 'Sekundær'}
                                 </div>
                                 <div style={{ fontSize: '0.72em', color: isDarkMode ? '#b0b0b0' : '#444', marginTop: '1px', fontWeight: 600 }}>
@@ -145,30 +165,92 @@ const AvstemmingOkonomi = () => {
                             </div>
                             <div style={{ flex: 1, position: 'relative', height: '18px' }}>
                                 {/* Track */}
-                                <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)', height: '2px', backgroundColor: isDarkMode ? '#333' : '#e0e0e0', borderRadius: '2px' }} />
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: 0,
+                                        right: 0,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        height: '2px',
+                                        backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+                                        borderRadius: '2px',
+                                    }}
+                                />
                                 {/* Ghost: full period */}
-                                <div style={{ position: 'absolute', left: pct(s.start_timestamp), width: wPct(s.start_timestamp, s.end_timestamp), height: '100%', backgroundColor: isDarkMode ? '#2a2a2a' : '#efefef', border: `1px solid ${isDarkMode ? '#555' : '#ccc'}`, borderRadius: '3px', boxSizing: 'border-box' as const }} />
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.start_timestamp),
+                                        width: wPct(s.start_timestamp, s.end_timestamp),
+                                        height: '100%',
+                                        backgroundColor: isDarkMode ? '#2a2a2a' : '#efefef',
+                                        border: `1px solid ${isDarkMode ? '#555' : '#ccc'}`,
+                                        borderRadius: '3px',
+                                        boxSizing: 'border-box' as const,
+                                    }}
+                                />
                                 {/* Overlap zone (non-compensated) — only for secondary */}
                                 {!isPrimary && overlapEnd > overlapStart && (
-                                    <div style={{ position: 'absolute', left: pct(overlapStart), width: wPct(overlapStart, overlapEnd), height: '100%', backgroundColor: isDarkMode ? '#5a1e1e' : '#f5c6cb', borderRadius: '3px 0 0 3px', boxSizing: 'border-box' as const }} />
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            left: pct(overlapStart),
+                                            width: wPct(overlapStart, overlapEnd),
+                                            height: '100%',
+                                            backgroundColor: isDarkMode ? '#5a1e1e' : '#f5c6cb',
+                                            borderRadius: '3px 0 0 3px',
+                                            boxSizing: 'border-box' as const,
+                                        }}
+                                    />
                                 )}
                                 {/* Compensated portion */}
                                 {hasComp && (
-                                    <div style={{ position: 'absolute', left: pct(compStart), width: wPct(compStart, compEnd), height: '100%', backgroundColor: barColor, borderRadius: isPrimary ? '3px' : '0 3px 3px 0', boxSizing: 'border-box' as const }} />
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            left: pct(compStart),
+                                            width: wPct(compStart, compEnd),
+                                            height: '100%',
+                                            backgroundColor: barColor,
+                                            borderRadius: isPrimary ? '3px' : '0 3px 3px 0',
+                                            boxSizing: 'border-box' as const,
+                                        }}
+                                    />
                                 )}
                                 {/* Start label */}
-                                <div style={{ position: 'absolute', left: pct(s.start_timestamp), top: '100%', marginTop: '2px', fontSize: '0.65em', color: isDarkMode ? '#777' : '#888', whiteSpace: 'nowrap' }}>
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.start_timestamp),
+                                        top: '100%',
+                                        marginTop: '2px',
+                                        fontSize: '0.65em',
+                                        color: isDarkMode ? '#777' : '#888',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
                                     {fmt(s.start_timestamp)}
                                 </div>
                                 {/* End label */}
-                                <div style={{ position: 'absolute', left: pct(s.end_timestamp), top: '100%', marginTop: '2px', fontSize: '0.65em', color: isDarkMode ? '#777' : '#888', whiteSpace: 'nowrap', transform: 'translateX(-100%)' }}>
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.end_timestamp),
+                                        top: '100%',
+                                        marginTop: '2px',
+                                        fontSize: '0.65em',
+                                        color: isDarkMode ? '#777' : '#888',
+                                        whiteSpace: 'nowrap',
+                                        transform: 'translateX(-100%)',
+                                    }}
+                                >
                                     {fmt(s.end_timestamp)}
                                 </div>
                             </div>
                         </div>
                     )
                 })}
-
             </div>
         )
     }
@@ -566,28 +648,37 @@ const AvstemmingOkonomi = () => {
     // Bruk ID-søk-resultater hvis de finnes, ellers vanlig månedsfilter
     const displayedVakter = idSearchResults !== null ? idSearchResults : filteredVakter
 
-    // Cluster overlapping double shifts for visualization
+    // Cluster overlapping double shifts using overlapping_schedules from backend (BFS)
     const doubleClusterMap = (() => {
         if (!FilterOnDoubleSchedules) return null
         const doubles = displayedVakter.filter((s) => s.is_double)
-        const sorted = [...doubles].sort((a, b) => a.start_timestamp - b.start_timestamp)
-        const clusters: { ids: string[]; maxEnd: number; names: Set<string> }[] = []
-        for (const s of sorted) {
-            let merged = false
-            for (const cluster of clusters) {
-                if (s.start_timestamp < cluster.maxEnd) {
-                    cluster.ids.push(s.id)
-                    cluster.maxEnd = Math.max(cluster.maxEnd, s.end_timestamp)
-                    cluster.names.add(s.user.name)
-                    merged = true
-                    break
+        const doubleById = new Map(doubles.map((s) => [s.id, s]))
+        const visited = new Set<string>()
+        const clusters: string[][] = []
+        for (const s of doubles) {
+            if (visited.has(s.id)) continue
+            const clusterIds = new Set<string>()
+            const queue: string[] = [s.id]
+            while (queue.length > 0) {
+                const id = queue.shift()!
+                if (clusterIds.has(id)) continue
+                clusterIds.add(id)
+                const node = doubleById.get(id)
+                if (node) {
+                    for (const overlap of node.overlapping_schedules ?? []) {
+                        if (!clusterIds.has(overlap.id)) queue.push(overlap.id)
+                    }
                 }
             }
-            if (!merged) clusters.push({ ids: [s.id], maxEnd: s.end_timestamp, names: new Set([s.user.name]) })
+            clusterIds.forEach((id) => visited.add(id))
+            clusters.push(Array.from(clusterIds))
         }
         const map = new Map<string, number>()
-        clusters.forEach((cluster, i) => cluster.ids.forEach((id) => map.set(id, i)))
-        const clusterNames = clusters.map((c) => Array.from(c.names).join(' & '))
+        clusters.forEach((cluster, i) => cluster.forEach((id) => map.set(id, i)))
+        const clusterNames = clusters.map((ids) => {
+            const names = new Set(ids.map((id) => displayedVakter.find((s) => s.id === id)?.user?.name).filter(Boolean))
+            return Array.from(names).join(' & ')
+        })
         return { map, clusterNames }
     })()
 
@@ -616,8 +707,8 @@ const AvstemmingOkonomi = () => {
         renderGroupHeader: doubleClusterMap
             ? (_: string, schedules: Schedules[]) => <DoubleOverlapTimeline schedules={schedules} />
             : sortBy === 'gruppe'
-            ? (_: string, schedules: Schedules[]) => <TimeLine schedules={schedules} />
-            : undefined,
+              ? (_: string, schedules: Schedules[]) => <TimeLine schedules={schedules} />
+              : undefined,
     })
 
     const { totalCost, totalCostDiff } = displayedVakter.reduce(
