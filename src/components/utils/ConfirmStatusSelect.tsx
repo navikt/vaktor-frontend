@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<number, string> = {
     6: '6 - Venter på diff-utregning',
     7: '7 - Diff utregnet',
     8: '8 - Overført etter rekjøring',
+    99: '99 - Ingen tid',
 }
 
 interface Props {

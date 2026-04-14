@@ -1,7 +1,39 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Cost, Artskoder, Schedules } from '../../types/types'
-import { ReadMore } from '@navikt/ds-react'
+import { ReadMore, HelpText } from '@navikt/ds-react'
 import { useTheme } from '../../context/ThemeContext'
+
+const ARTSKODE_INFO = [
+    { kode: '2680', navn: 'Morgen', tidsrom: 'Kl. 00–06' },
+    { kode: '2681', navn: 'Kveld', tidsrom: 'Kl. 20–00' },
+    { kode: '2682', navn: 'Dag', tidsrom: 'Kl. 06–20' },
+    { kode: '2683', navn: 'Helg', tidsrom: 'Kl. 00–00 (helg)' },
+    { kode: '2684', navn: 'Skifttillegg', tidsrom: 'Kl. 06–07 og 17–20' },
+    { kode: '2685', navn: 'Utrykning', tidsrom: 'Kronetillegg for utrykning' },
+]
+
+const ArtskodeInfo = ({ isDarkMode }: { isDarkMode: boolean }) => (
+    <HelpText title="Artskodeoversikt">
+        <table style={{ borderCollapse: 'collapse', fontSize: '0.85em' }}>
+            <thead>
+                <tr style={{ borderBottom: `1px solid ${isDarkMode ? '#555' : '#ddd'}` }}>
+                    <th style={{ textAlign: 'left', paddingRight: '16px', paddingBottom: '4px' }}>Kode</th>
+                    <th style={{ textAlign: 'left', paddingRight: '16px', paddingBottom: '4px' }}>Navn</th>
+                    <th style={{ textAlign: 'left', paddingBottom: '4px' }}>Tidsrom</th>
+                </tr>
+            </thead>
+            <tbody>
+                {ARTSKODE_INFO.map((a) => (
+                    <tr key={a.kode}>
+                        <td style={{ paddingRight: '16px', paddingTop: '4px' }}><b>{a.kode}</b></td>
+                        <td style={{ paddingRight: '16px', paddingTop: '4px' }}>{a.navn}</td>
+                        <td style={{ paddingTop: '4px' }}>{a.tidsrom}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </HelpText>
+)
 
 const mapCostStatus = (status: number, isDarkMode: boolean) => {
     let statusText = ''
@@ -93,12 +125,15 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                             </div>
                             <div className="flex gap-4 mt-3">
                                 <div>
-                                    <b>Artskoder</b>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                                        <b style={{ lineHeight: 1 }}>Artskoder</b> <ArtskodeInfo isDarkMode={isDarkMode} />
+                                    </div>
                                     {cost.artskoder
                                         .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
                                         .map((artskode, index) => (
                                             <div key={index}>
-                                                <b>{artskode.type}:</b> {Number(artskode.sum).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                                <b>{artskode.type}:</b>{' '}
+                                                {Number(artskode.sum).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
                                             </div>
                                         ))}
                                 </div>
