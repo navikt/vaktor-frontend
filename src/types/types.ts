@@ -47,6 +47,18 @@ export interface Vaktlag {
     koststed: string[]
 }
 
+export interface OverlappingSchedule {
+    id: string
+    group_id: string
+    user_id: string
+    start_timestamp: number
+    end_timestamp: number
+    type: string
+    approve_level: number
+    is_double: boolean
+    is_zero_time: boolean
+}
+
 export interface Schedules {
     id: string
     start_timestamp: number
@@ -62,6 +74,7 @@ export interface Schedules {
     audits: Audit[]
     error_messages: Error_messages[]
     is_double: boolean
+    overlapping_schedules?: OverlappingSchedule[]
 }
 
 export interface User {

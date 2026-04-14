@@ -2,7 +2,7 @@ import { Table, Select, Button } from '@navikt/ds-react'
 import { FirstAidKitIcon, RecycleIcon } from '@navikt/aksel-icons'
 import moment from 'moment'
 import { Dispatch, SetStateAction } from 'react'
-import { Schedules } from '../../types/types'
+import { Schedules, OverlappingSchedule } from '../../types/types'
 import MapApproveStatus from './MapApproveStatus'
 import MapCost from './mapCost'
 import MapAudit from './mapAudit'
@@ -119,12 +119,15 @@ export const mapVakterAdmin = ({
     // Build grouped map based on groupBy prop
     const buildGrouped = (): Record<string, Schedules[]> => {
         if (groupKeyFn) {
-            return vaktliste.reduce((acc, s) => {
-                const key = groupKeyFn(s)
-                if (!acc[key]) acc[key] = []
-                acc[key].push(s)
-                return acc
-            }, {} as Record<string, Schedules[]>)
+            return vaktliste.reduce(
+                (acc, s) => {
+                    const key = groupKeyFn(s)
+                    if (!acc[key]) acc[key] = []
+                    acc[key].push(s)
+                    return acc
+                },
+                {} as Record<string, Schedules[]>
+            )
         }
         if (groupBy === 'none') {
             return { '': [...vaktliste] }
@@ -144,15 +147,12 @@ export const mapVakterAdmin = ({
     }
     const grouped = buildGrouped()
 
-    // Build overlap map: for each schedule that is_double, find other schedules that overlap it time-wise
-    const overlapMap = new Map<string, Schedules[]>()
-    const doubleSchedules = vaktliste.filter((s) => s.is_double)
-    for (const s of doubleSchedules) {
-        const overlapping = vaktliste.filter(
-            (other) => other.id !== s.id && other.is_double && other.start_timestamp < s.end_timestamp && other.end_timestamp > s.start_timestamp
-        )
-        if (overlapping.length > 0) {
-            overlapMap.set(s.id, overlapping)
+    // Build overlap map from backend-provided overlapping_schedules
+    const groupNameByGroupId = new Map<string, string>(vaktliste.map((s) => [s.group_id, s.group.name]))
+    const overlapMap = new Map<string, OverlappingSchedule[]>()
+    for (const s of vaktliste) {
+        if (s.overlapping_schedules && s.overlapping_schedules.length > 0) {
+            overlapMap.set(s.id, s.overlapping_schedules)
         }
     }
 
@@ -274,7 +274,7 @@ export const mapVakterAdmin = ({
                         {showActions && (
                             <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
                                 {(() => {
-                                    const overlapping = overlapMap.get(vakter.id) ?? []
+                                    const overlapping: OverlappingSchedule[] = overlapMap.get(vakter.id) ?? []
                                     const hasEndringer = vakter.vakter.length > 0
                                     const hasOverlap = overlapping.length > 0
 
@@ -406,7 +406,7 @@ export const mapVakterAdmin = ({
                                                                     {other.id.slice(0, 8)}…
                                                                 </div>
                                                                 <div style={{ color: getTextColor('secondary'), marginBottom: '6px' }}>
-                                                                    <b>{other.group.name}</b>
+                                                                    <b>{groupNameByGroupId.get(other.group_id) ?? other.group_id}</b>
                                                                 </div>
 
                                                                 {isPrimary ? (
