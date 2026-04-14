@@ -70,6 +70,11 @@ const MapApproveStatus: React.FC<ApproveStatusProps> = ({ status, error }) => {
             bgColorClass = isDarkMode ? 'bg-orange-900/40' : 'bg-orange-100'
             textColorClass = isDarkMode ? 'text-orange-100' : 'text-orange-900'
             break
+        case 99:
+            statusText = 'Ingen tid'
+            bgColorClass = isDarkMode ? 'bg-gray-700/60' : 'bg-gray-200'
+            textColorClass = isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            break
         default:
             statusText = 'Trenger godkjenning'
             bgColorClass = isDarkMode ? 'bg-yellow-900/40' : 'bg-yellow-50'

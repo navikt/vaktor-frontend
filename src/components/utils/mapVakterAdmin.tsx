@@ -62,6 +62,7 @@ export const mapVakterAdmin = ({
             6: '#FFB366',
             7: '#99DEAD',
             8: '#E18071',
+            99: '#D3D3D3',
             default: '#FFFFFF',
         }
 
@@ -75,6 +76,7 @@ export const mapVakterAdmin = ({
             6: '#6b4a2a',
             7: '#3d5a47',
             8: '#6b3a35',
+            99: '#4a4a4a',
             default: '#333333',
         }
 
