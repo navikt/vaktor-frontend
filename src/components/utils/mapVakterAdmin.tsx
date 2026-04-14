@@ -7,6 +7,7 @@ import MapApproveStatus from './MapApproveStatus'
 import MapCost from './mapCost'
 import MapAudit from './mapAudit'
 import DeleteVaktButton from './DeleteVaktButton'
+import ConfirmStatusSelect from './ConfirmStatusSelect'
 import { ReactNode } from 'react'
 
 interface MapVakterAdminProps {
@@ -220,16 +221,6 @@ export const mapVakterAdmin = ({
                                 </div>
                                 <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.user.id.toUpperCase()}</div>
                                 <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.group.name}</div>
-                                {vakter.user.roles && vakter.user.roles.length > 0 && (
-                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary'), marginTop: '4px' }}>
-                                        Roller: {vakter.user.roles.map((r) => r.title).join(', ')}
-                                    </div>
-                                )}
-                                {vakter.user.group_roles && vakter.user.group_roles.length > 0 && (
-                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>
-                                        Grupperoller: {vakter.user.group_roles.map((gr) => `${gr.role.title} (${gr.group_name})`).join(', ')}
-                                    </div>
-                                )}
                                 <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
                                     {vakter.type === 'bakvakt' ? 'bistand' : vakter.type}
                                 </div>
@@ -348,8 +339,84 @@ export const mapVakterAdmin = ({
                                                         Dobbeltvakt
                                                     </div>
                                                     {overlapping.map((other, idx) => {
-                                                        const overlapStart = Math.max(vakter.start_timestamp, other.start_timestamp)
-                                                        const overlapEnd = Math.min(vakter.end_timestamp, other.end_timestamp)
+                                                        // Build full cluster: this vakt + all overlapping entries, apply cumulative interval logic
+                                                        type CEntry = { id: string; start: number; end: number; hasCost: boolean }
+                                                        const unionIvs = (ivs: Array<[number, number]>): Array<[number, number]> => {
+                                                            if (!ivs.length) return []
+                                                            const s = [...ivs].sort((a, b) => a[0] - b[0])
+                                                            const r: Array<[number, number]> = [[s[0][0], s[0][1]]]
+                                                            for (let i = 1; i < s.length; i++) {
+                                                                const l = r[r.length - 1]
+                                                                if (s[i][0] <= l[1]) l[1] = Math.max(l[1], s[i][1])
+                                                                else r.push([s[i][0], s[i][1]])
+                                                            }
+                                                            return r
+                                                        }
+                                                        const subtractIvs = (
+                                                            range: [number, number],
+                                                            blocked: Array<[number, number]>
+                                                        ): Array<[number, number]> => {
+                                                            let rem: Array<[number, number]> = [[range[0], range[1]]]
+                                                            for (const [bs, be] of blocked) {
+                                                                const next: Array<[number, number]> = []
+                                                                for (const [rs, re] of rem) {
+                                                                    if (be <= rs || bs >= re) next.push([rs, re])
+                                                                    else {
+                                                                        if (rs < bs) next.push([rs, bs])
+                                                                        if (be < re) next.push([be, re])
+                                                                    }
+                                                                }
+                                                                rem = next
+                                                            }
+                                                            return rem
+                                                        }
+
+                                                        const allEntries: CEntry[] = [
+                                                            {
+                                                                id: vakter.id,
+                                                                start: vakter.start_timestamp,
+                                                                end: vakter.end_timestamp,
+                                                                hasCost:
+                                                                    vakter.cost.length > 0 &&
+                                                                    Number(vakter.cost[vakter.cost.length - 1].total_cost) > 0,
+                                                            },
+                                                            ...overlapping.map((o) => ({
+                                                                id: o.id,
+                                                                start: o.start_timestamp,
+                                                                end: o.end_timestamp,
+                                                                hasCost: false,
+                                                            })),
+                                                        ].sort((a, b) => {
+                                                            if (a.start !== b.start) return a.start - b.start
+                                                            const dd = b.end - b.start - (a.end - a.start)
+                                                            if (dd !== 0) return dd
+                                                            if (a.hasCost !== b.hasCost) return a.hasCost ? -1 : 1
+                                                            return 0
+                                                        })
+
+                                                        const claimed: Array<[number, number]> = []
+                                                        const entryResults = allEntries.map((e, ei) => {
+                                                            let compensated: Array<[number, number]>
+                                                            if (ei === 0) {
+                                                                compensated = [[e.start, e.end]]
+                                                            } else {
+                                                                compensated = subtractIvs([e.start, e.end], unionIvs([...claimed]))
+                                                            }
+                                                            for (const iv of compensated) claimed.push(iv)
+                                                            const dur = compensated.reduce((s, [a, b]) => s + (b - a), 0)
+                                                            return { ...e, compensated, compensatedDuration: dur }
+                                                        })
+
+                                                        const thisEntry = entryResults.find((e) => e.id === vakter.id)!
+                                                        const isPrimary = entryResults[0].id === vakter.id
+
+                                                        const totalSec = vakter.end_timestamp - vakter.start_timestamp
+                                                        const compSec = thisEntry.compensatedDuration
+                                                        const blockedSec = totalSec - compSec
+                                                        const fmtH = (s: number) => {
+                                                            const h = s / 3600
+                                                            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+                                                        }
                                                         const fmtDate = (ts: number) =>
                                                             new Date(ts * 1000)
                                                                 .toLocaleString('no-NB', {
@@ -360,20 +427,14 @@ export const mapVakterAdmin = ({
                                                                     minute: '2-digit',
                                                                 })
                                                                 .replace(',', '')
-                                                        const totalHours = (vakter.end_timestamp - vakter.start_timestamp) / 3600
-                                                        const overlapHours = (overlapEnd - overlapStart) / 3600
-                                                        const uniqueHours = totalHours - overlapHours
-                                                        const fmtH = (h: number) =>
-                                                            Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
-                                                        const startsFirst = vakter.start_timestamp < other.start_timestamp
-                                                        const startsEqual = vakter.start_timestamp === other.start_timestamp
-                                                        const isLonger =
-                                                            vakter.end_timestamp - vakter.start_timestamp >=
-                                                            other.end_timestamp - other.start_timestamp
-                                                        const isIdentical = startsEqual && vakter.end_timestamp === other.end_timestamp
-                                                        const vakterHasCost =
-                                                            vakter.cost.length > 0 && Number(vakter.cost[vakter.cost.length - 1].total_cost) > 0
-                                                        const isPrimary = isIdentical ? vakterHasCost : startsFirst || (startsEqual && isLonger)
+
+                                                        const effectiveStart =
+                                                            thisEntry.compensated.length > 0 ? thisEntry.compensated[0][0] : vakter.start_timestamp
+                                                        const effectiveEnd =
+                                                            thisEntry.compensated.length > 0
+                                                                ? thisEntry.compensated[thisEntry.compensated.length - 1][1]
+                                                                : vakter.end_timestamp
+
                                                         return (
                                                             <div
                                                                 key={idx}
@@ -408,9 +469,8 @@ export const mapVakterAdmin = ({
                                                                 <div style={{ color: getTextColor('secondary'), marginBottom: '6px' }}>
                                                                     <b>{groupNameByGroupId.get(other.group_id) ?? other.group_id}</b>
                                                                 </div>
-
-                                                                {isPrimary ? (
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                    {isPrimary ? (
                                                                         <div
                                                                             style={{
                                                                                 color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
@@ -420,13 +480,7 @@ export const mapVakterAdmin = ({
                                                                         >
                                                                             Starter først — dekker overlappet
                                                                         </div>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                            <span style={{ color: getTextColor('subtle') }}>Kompensert</span>
-                                                                            <span style={{ fontWeight: 700 }}>{fmtH(totalHours)} (100%)</span>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                    ) : (
                                                                         <div
                                                                             style={{
                                                                                 color: isDarkMode ? '#f08080' : '#b00',
@@ -434,65 +488,50 @@ export const mapVakterAdmin = ({
                                                                                 marginBottom: '2px',
                                                                             }}
                                                                         >
-                                                                            Andre vakt starter først — dekker overlappet
+                                                                            Andre vakt starter først
                                                                         </div>
+                                                                    )}
+                                                                    {blockedSec > 0 && (
                                                                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
                                                                             <span style={{ color: getTextColor('subtle') }}>
-                                                                                Overlapp (ingen komp.)
+                                                                                Blokkert (ingen komp.)
                                                                             </span>
                                                                             <span style={{ color: isDarkMode ? '#f08080' : '#b00', fontWeight: 600 }}>
-                                                                                {fmtH(overlapHours)}
+                                                                                {fmtH(blockedSec)}
                                                                             </span>
                                                                         </div>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
-                                                                            <span style={{ color: getTextColor('subtle') }}>Unik del (komp.)</span>
-                                                                            <span
-                                                                                style={{ fontWeight: 600, color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}
-                                                                            >
-                                                                                {fmtH(uniqueHours)}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div
-                                                                            style={{
-                                                                                borderTop: `1px solid ${isDarkMode ? '#555' : '#ddd'}`,
-                                                                                paddingTop: '3px',
-                                                                                display: 'flex',
-                                                                                justifyContent: 'space-between',
-                                                                                gap: '6px',
-                                                                            }}
-                                                                        >
-                                                                            <span style={{ color: getTextColor('subtle') }}>
-                                                                                Effektiv kompensasjon
-                                                                            </span>
-                                                                            <span style={{ fontWeight: 700 }}>{fmtH(uniqueHours)}</span>
-                                                                        </div>
+                                                                    )}
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
+                                                                        <span style={{ color: getTextColor('subtle') }}>Kompensert</span>
+                                                                        <span style={{ fontWeight: 700, color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}>
+                                                                            {compSec > 0 ? fmtH(compSec) : 'Ingen'}
+                                                                        </span>
                                                                     </div>
-                                                                )}
-
-                                                                <div
-                                                                    style={{
-                                                                        marginTop: '6px',
-                                                                        paddingTop: '5px',
-                                                                        borderTop: `1px solid ${isDarkMode ? '#555' : '#eee'}`,
-                                                                        color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
-                                                                        fontWeight: 600,
-                                                                    }}
-                                                                >
+                                                                </div>
+                                                                {compSec > 0 && (
                                                                     <div
                                                                         style={{
-                                                                            fontSize: '0.75em',
-                                                                            fontWeight: 700,
-                                                                            textTransform: 'uppercase',
-                                                                            letterSpacing: '0.04em',
-                                                                            marginBottom: '2px',
+                                                                            marginTop: '6px',
+                                                                            paddingTop: '5px',
+                                                                            borderTop: `1px solid ${isDarkMode ? '#555' : '#eee'}`,
+                                                                            color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
+                                                                            fontWeight: 600,
                                                                         }}
                                                                     >
-                                                                        Effektiv vakt
+                                                                        <div
+                                                                            style={{
+                                                                                fontSize: '0.75em',
+                                                                                fontWeight: 700,
+                                                                                textTransform: 'uppercase',
+                                                                                letterSpacing: '0.04em',
+                                                                                marginBottom: '2px',
+                                                                            }}
+                                                                        >
+                                                                            Effektiv vakt
+                                                                        </div>
+                                                                        {`${fmtDate(effectiveStart)} – ${fmtDate(effectiveEnd)}`}
                                                                     </div>
-                                                                    {isPrimary
-                                                                        ? `${fmtDate(vakter.start_timestamp)} – ${fmtDate(vakter.end_timestamp)}`
-                                                                        : `${fmtDate(overlapEnd)} – ${fmtDate(vakter.end_timestamp)}`}
-                                                                </div>
+                                                                )}
                                                             </div>
                                                         )
                                                     })}
@@ -506,39 +545,14 @@ export const mapVakterAdmin = ({
                         {showActions && (
                             <Table.DataCell style={{ minWidth: '180px', padding: '8px' }}>
                                 <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
-                                    <Select
-                                        label="Sett status"
-                                        size="small"
-                                        value={vakter.approve_level}
-                                        disabled={!isAdmin && vakter.approve_level >= 5}
-                                        onChange={async (e) => {
-                                            const newLevel = Number(e.target.value)
-                                            const updatedSchedule = {
-                                                ...vakter,
-                                                approve_level: newLevel,
-                                            }
-                                            setIsLoading(true)
-                                            await update_schedule(updatedSchedule, setResponse, setResponseError)
-                                        }}
-                                    >
-                                        <option value={0}>0 - Trenger godkjenning</option>
-                                        <option value={1}>1 - Godkjent av ansatt</option>
-                                        <option value={2}>2 - Venter på utregning</option>
-                                        <option value={3}>3 - Godkjent av vaktsjef</option>
-                                        <option value={4}>4 - Godkjent av BDM</option>
-                                        <option value={5} disabled={!isAdmin}>
-                                            5 - Overført til lønn
-                                        </option>
-                                        <option value={6} disabled={!isAdmin}>
-                                            6 - Venter på diff-utregning
-                                        </option>
-                                        <option value={7} disabled={!isAdmin}>
-                                            7 - Diff utregnet
-                                        </option>
-                                        <option value={8} disabled={!isAdmin}>
-                                            8 - Overført etter rekjøring
-                                        </option>
-                                    </Select>
+                                    <ConfirmStatusSelect
+                                        vakt={vakter}
+                                        isDarkMode={isDarkMode}
+                                        setIsLoading={setIsLoading}
+                                        update_schedule={update_schedule}
+                                        setResponse={setResponse}
+                                        setResponseError={setResponseError}
+                                    />
                                     <Button
                                         size="xsmall"
                                         style={{
@@ -561,9 +575,10 @@ export const mapVakterAdmin = ({
                                         setLoading={setLoading}
                                         setResponse={setResponse}
                                         onError={showErrorModal}
+                                        isDarkMode={isDarkMode}
                                         delete_schedule={(scheduleId, setResponse) => delete_schedule(scheduleId, setResponse, setResponseError)}
                                         isAdmin={isAdmin}
-                                    ></DeleteVaktButton>
+                                    />
                                 </div>
                             </Table.DataCell>
                         )}

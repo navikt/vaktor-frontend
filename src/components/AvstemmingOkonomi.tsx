@@ -91,6 +91,34 @@ const AvstemmingOkonomi = () => {
     const DoubleOverlapTimeline = ({ schedules }: { schedules: Schedules[] }) => {
         type Entry = { id: string; start_timestamp: number; end_timestamp: number; hasCost: boolean }
 
+        const unionIntervals = (intervals: Array<[number, number]>): Array<[number, number]> => {
+            if (intervals.length === 0) return []
+            const s = [...intervals].sort((a, b) => a[0] - b[0])
+            const res: Array<[number, number]> = [[s[0][0], s[0][1]]]
+            for (let i = 1; i < s.length; i++) {
+                const last = res[res.length - 1]
+                if (s[i][0] <= last[1]) last[1] = Math.max(last[1], s[i][1])
+                else res.push([s[i][0], s[i][1]])
+            }
+            return res
+        }
+
+        const subtractIntervals = (range: [number, number], blocked: Array<[number, number]>): Array<[number, number]> => {
+            let rem: Array<[number, number]> = [[range[0], range[1]]]
+            for (const [bs, be] of blocked) {
+                const next: Array<[number, number]> = []
+                for (const [rs, re] of rem) {
+                    if (be <= rs || bs >= re) next.push([rs, re])
+                    else {
+                        if (rs < bs) next.push([rs, bs])
+                        if (be < re) next.push([be, re])
+                    }
+                }
+                rem = next
+            }
+            return rem
+        }
+
         const seenIds = new Set(schedules.map((s) => s.id))
         const fromSchedules: Entry[] = schedules.map((s) => ({
             id: s.id,
@@ -98,7 +126,6 @@ const AvstemmingOkonomi = () => {
             end_timestamp: s.end_timestamp,
             hasCost: s.cost.length > 0 && Number(s.cost[s.cost.length - 1].total_cost) > 0,
         }))
-        // Add any overlapping entries not already in the cluster (e.g. from a different month)
         const extraById = new Map<string, Entry>()
         for (const s of schedules) {
             for (const o of s.overlapping_schedules ?? []) {
@@ -132,20 +159,41 @@ const AvstemmingOkonomi = () => {
             return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
         }
 
-        const primary = sorted[0]
+        // Cumulative interval calculation: each entry can only claim time not already claimed by higher-priority entries
+        const claimedSoFar: Array<[number, number]> = []
+        const entryData = sorted.map((entry, i) => {
+            const range: [number, number] = [entry.start_timestamp, entry.end_timestamp]
+            let compensated: Array<[number, number]>
+            let blocked: Array<[number, number]>
+
+            if (i === 0) {
+                compensated = [range]
+                blocked = []
+            } else {
+                const allClaimed = unionIntervals([...claimedSoFar])
+                blocked = unionIntervals(
+                    allClaimed
+                        .map(([cs, ce]): [number, number] => [Math.max(entry.start_timestamp, cs), Math.min(entry.end_timestamp, ce)])
+                        .filter(([bs, be]) => be > bs)
+                )
+                compensated = subtractIntervals(range, blocked)
+            }
+
+            const compensatedDuration = compensated.reduce((sum, [a, b]) => sum + (b - a), 0)
+            for (const iv of compensated) claimedSoFar.push(iv)
+
+            return { ...entry, isPrimary: i === 0, compensated, blocked, totalDuration: range[1] - range[0], compensatedDuration }
+        })
+
+        const greenColor = isDarkMode ? '#2d7a4f' : '#287d44'
+        const redColor = isDarkMode ? '#5a1e1e' : '#f5c6cb'
 
         return (
             <div style={{ marginTop: '12px', marginBottom: '4px', minWidth: '600px', paddingBottom: '4px' }}>
-                {sorted.map((s, i) => {
-                    const isPrimary = i === 0
-                    const overlapEnd = isPrimary ? s.end_timestamp : Math.min(primary.end_timestamp, s.end_timestamp)
-                    const overlapStart = isPrimary ? s.start_timestamp : Math.max(primary.start_timestamp, s.start_timestamp)
-                    const compStart = isPrimary ? s.start_timestamp : overlapEnd
-                    const compEnd = s.end_timestamp
-                    const hasComp = compEnd > compStart
-                    const compHours = fmtH(Math.max(0, compEnd - compStart))
-                    const totalHours = fmtH(s.end_timestamp - s.start_timestamp)
-                    const barColor = isPrimary ? (isDarkMode ? '#2d7a4f' : '#287d44') : isDarkMode ? '#2d5f7a' : '#1a6b8a'
+                {entryData.map((s) => {
+                    const hasComp = s.compensatedDuration > 0
+                    const compHours = fmtH(s.compensatedDuration)
+                    const totalHours = fmtH(s.totalDuration)
 
                     return (
                         <div key={s.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '14px', gap: '10px' }}>
@@ -154,13 +202,13 @@ const AvstemmingOkonomi = () => {
                                     style={{
                                         fontSize: '0.8em',
                                         fontWeight: 700,
-                                        color: isPrimary ? (isDarkMode ? '#7ecf9a' : '#1a5c2e') : isDarkMode ? '#66cbec' : '#1a6b8a',
+                                        color: s.isPrimary ? (isDarkMode ? '#7ecf9a' : '#1a5c2e') : isDarkMode ? '#b0b0b0' : '#555',
                                     }}
                                 >
-                                    {isPrimary ? 'Primær' : 'Sekundær'}
+                                    {s.isPrimary ? 'Primær' : 'Sekundær'}
                                 </div>
                                 <div style={{ fontSize: '0.72em', color: isDarkMode ? '#b0b0b0' : '#444', marginTop: '1px', fontWeight: 600 }}>
-                                    {isPrimary ? `${totalHours} kompensert` : hasComp ? `${compHours} kompensert` : 'ingen kompensasjon'}
+                                    {s.isPrimary ? `${totalHours} kompensert` : hasComp ? `${compHours} kompensert` : 'ingen kompensasjon'}
                                 </div>
                             </div>
                             <div style={{ flex: 1, position: 'relative', height: '18px' }}>
@@ -190,34 +238,36 @@ const AvstemmingOkonomi = () => {
                                         boxSizing: 'border-box' as const,
                                     }}
                                 />
-                                {/* Overlap zone (non-compensated) — only for secondary */}
-                                {!isPrimary && overlapEnd > overlapStart && (
+                                {/* Blocked segments (red) */}
+                                {s.blocked.map(([bs, be], idx) => (
                                     <div
+                                        key={`b${idx}`}
                                         style={{
                                             position: 'absolute',
-                                            left: pct(overlapStart),
-                                            width: wPct(overlapStart, overlapEnd),
+                                            left: pct(bs),
+                                            width: wPct(bs, be),
                                             height: '100%',
-                                            backgroundColor: isDarkMode ? '#5a1e1e' : '#f5c6cb',
-                                            borderRadius: '3px 0 0 3px',
+                                            backgroundColor: redColor,
+                                            borderRadius: '2px',
                                             boxSizing: 'border-box' as const,
                                         }}
                                     />
-                                )}
-                                {/* Compensated portion */}
-                                {hasComp && (
+                                ))}
+                                {/* Compensated segments (green) */}
+                                {s.compensated.map(([cs, ce], idx) => (
                                     <div
+                                        key={`c${idx}`}
                                         style={{
                                             position: 'absolute',
-                                            left: pct(compStart),
-                                            width: wPct(compStart, compEnd),
+                                            left: pct(cs),
+                                            width: wPct(cs, ce),
                                             height: '100%',
-                                            backgroundColor: barColor,
-                                            borderRadius: isPrimary ? '3px' : '0 3px 3px 0',
+                                            backgroundColor: greenColor,
+                                            borderRadius: '2px',
                                             boxSizing: 'border-box' as const,
                                         }}
                                     />
-                                )}
+                                ))}
                                 {/* Start label */}
                                 <div
                                     style={{

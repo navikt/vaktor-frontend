@@ -10,9 +10,19 @@ interface Props {
     setLoading: Dispatch<React.SetStateAction<boolean>>
     onError: (errorMessage: string) => void
     isAdmin?: boolean
+    isDarkMode?: boolean
 }
 
-const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule, loading, setLoading, onError, isAdmin = false }) => {
+const DeleteVaktButton: React.FC<Props> = ({
+    vakt,
+    setResponse,
+    delete_schedule,
+    loading,
+    setLoading,
+    onError,
+    isAdmin = false,
+    isDarkMode = false,
+}) => {
     const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
 
@@ -55,7 +65,9 @@ const DeleteVaktButton: React.FC<Props> = ({ vakt, setResponse, delete_schedule,
                 <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={buttonRef.current}>
                     <Popover.Content
                         style={{
-                            backgroundColor: 'rgba(241, 241, 241, 1)',
+                            backgroundColor: isDarkMode ? '#2a2a2a' : 'rgba(241, 241, 241, 1)',
+                            color: isDarkMode ? '#e0e0e0' : '#1a1a1a',
+                            border: isDarkMode ? '1px solid #444' : undefined,
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '10px',
