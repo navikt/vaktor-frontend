@@ -16,15 +16,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'DELETE') {
         const { user_id } = req.query
-        if (!user_id) {
+        if (!user_id || typeof user_id !== 'string') {
             res.status(400).json({ error: 'user_id er påkrevd' })
             return
         }
-        const path = `${process.env.BACKEND_URL}/api/v1/groups/${groupId}/members/${user_id}`
+        const path = `${process.env.BACKEND_URL}/api/v1/groups/${groupId}/members`
         try {
             const backendResponse = await fetch(path, {
                 method: 'DELETE',
-                headers: { Authorization: authorizationHeader },
+                headers: {
+                    Authorization: authorizationHeader,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify([user_id]),
             })
             if (backendResponse.ok) {
                 res.status(200).json({ success: true })
