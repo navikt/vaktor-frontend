@@ -25,7 +25,9 @@ const ArtskodeInfo = ({ isDarkMode }: { isDarkMode: boolean }) => (
             <tbody>
                 {ARTSKODE_INFO.map((a) => (
                     <tr key={a.kode}>
-                        <td style={{ paddingRight: '16px', paddingTop: '4px' }}><b>{a.kode}</b></td>
+                        <td style={{ paddingRight: '16px', paddingTop: '4px' }}>
+                            <b>{a.kode}</b>
+                        </td>
                         <td style={{ paddingRight: '16px', paddingTop: '4px' }}>{a.navn}</td>
                         <td style={{ paddingTop: '4px' }}>{a.tidsrom}</td>
                     </tr>
@@ -132,8 +134,7 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
                                         .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
                                         .map((artskode, index) => (
                                             <div key={index}>
-                                                <b>{artskode.type}:</b>{' '}
-                                                {Number(artskode.sum).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                                <b>{artskode.type}:</b> {Number(artskode.sum).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
                                             </div>
                                         ))}
                                 </div>
