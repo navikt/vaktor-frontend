@@ -25,7 +25,9 @@ const ArtskodeInfo = ({ isDarkMode }: { isDarkMode: boolean }) => (
             <tbody>
                 {ARTSKODE_INFO.map((a) => (
                     <tr key={a.kode}>
-                        <td style={{ paddingRight: '16px', paddingTop: '4px' }}><b>{a.kode}</b></td>
+                        <td style={{ paddingRight: '16px', paddingTop: '4px' }}>
+                            <b>{a.kode}</b>
+                        </td>
                         <td style={{ paddingRight: '16px', paddingTop: '4px' }}>{a.navn}</td>
                         <td style={{ paddingTop: '4px' }}>{a.tidsrom}</td>
                     </tr>
@@ -74,87 +76,83 @@ const MapCost = (props: { vakt: Schedules; avstemming?: boolean }) => {
     const isDarkMode = theme === 'dark'
     const [prevTotalCost, setPrevTotalCost] = useState<number | undefined>()
 
-    const elements = useMemo(
-        () =>
-            props.vakt.cost
-                .sort((a: Cost, b: Cost) => Number(a.order_id) - Number(b.order_id))
-                .map((cost: Cost, idx) => {
-                    const currentTotalCost = cost.total_cost
-                    const prevCost = idx > 0 ? props.vakt.cost[idx - 1] : null
-                    const prevTotalCost = prevCost ? prevCost.total_cost : undefined
-                    const diff = prevTotalCost !== undefined ? currentTotalCost - prevTotalCost : 0
-                    const element = (
-                        <div key={cost.id} className="mb-5 text-sm">
-                            {idx > 0 ? <hr className="my-3" /> : null}
-                            {props.avstemming === true ? (
-                                <div className="text-sm text-text-subtle mb-1">
-                                    <b>ID:</b>{' '}
-                                    <span
-                                        className="inline-block border border-border-default px-1.5 py-0.5 cursor-pointer bg-surface-subtle text-sm"
-                                        onClick={() => navigator.clipboard.writeText(cost.id)}
-                                        title="Click to copy"
-                                    >
-                                        {cost.id}
-                                    </span>
-                                </div>
-                            ) : (
-                                false
-                            )}
-                            <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
-                            <div className="mt-1.5">
-                                <div>
-                                    {mapCostStatus(Number(cost.type_id), isDarkMode)}
-                                    <div className="mt-1">
-                                        Total:{' '}
-                                        <b className={isDarkMode ? 'text-green-400' : 'text-green-700'}>
-                                            {Number(cost.total_cost).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
-                                        </b>
-                                    </div>
-                                    <div className="text-sm text-text-subtle">
-                                        Koststed: <b>{cost.koststed}</b>
-                                    </div>
-                                    {prevTotalCost !== undefined && cost.type_id >= 1 && idx > 0 && (
-                                        <div
-                                            className={`text-sm mt-1 ${diff < 0 ? (isDarkMode ? 'text-red-400' : 'text-red-600') : isDarkMode ? 'text-green-400' : 'text-green-700'}`}
-                                        >
-                                            Diff: ({diff < 0 ? '-' : '+'}
-                                            {Math.abs(diff).toLocaleString('no-NO', { minimumFractionDigits: 2 })})
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex gap-4 mt-3">
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-                                        <b style={{ lineHeight: 1 }}>Artskoder</b> <ArtskodeInfo isDarkMode={isDarkMode} />
-                                    </div>
-                                    {cost.artskoder
-                                        .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
-                                        .map((artskode, index) => (
-                                            <div key={index}>
-                                                <b>{artskode.type}:</b>{' '}
-                                                {Number(artskode.sum).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
-                                            </div>
-                                        ))}
-                                </div>
-                                <div>
-                                    <b>Antall timer</b>
-                                    {cost.artskoder
-                                        .sort((a: Artskoder, b: Artskoder) => Number(a.type)! - Number(b.type)!)
-                                        .map((artskode, index) => (
-                                            <div key={index}>
-                                                <b>{artskode.type}:</b> {artskode.hours}
-                                            </div>
-                                        ))}
-                                </div>
-                            </div>
-                        </div>
-                    )
-                    return element
-                }),
+    const elements = useMemo(() => {
+        const sortedCosts = [...props.vakt.cost].sort((a: Cost, b: Cost) => Number(a.order_id) - Number(b.order_id))
 
-        [isDarkMode, props.vakt.cost, props.avstemming, props.vakt.is_double]
-    )
+        return sortedCosts.map((cost: Cost, idx) => {
+            const currentTotalCost = cost.total_cost
+            const prevCost = idx > 0 ? sortedCosts[idx - 1] : null
+            const prevTotalCost = prevCost ? prevCost.total_cost : undefined
+            const diff = prevTotalCost !== undefined ? currentTotalCost - prevTotalCost : 0
+            const element = (
+                <div key={cost.id} className="mb-5 text-sm">
+                    {idx > 0 ? <hr className="my-3" /> : null}
+                    {props.avstemming === true ? (
+                        <div className="text-sm text-text-subtle mb-1">
+                            <b>ID:</b>{' '}
+                            <span
+                                className="inline-block border border-border-default px-1.5 py-0.5 cursor-pointer bg-surface-subtle text-sm"
+                                onClick={() => navigator.clipboard.writeText(cost.id)}
+                                title="Click to copy"
+                            >
+                                {cost.id}
+                            </span>
+                        </div>
+                    ) : (
+                        false
+                    )}
+                    <div>{props.vakt.is_double === true ? <b>Dobbeltvakt</b> : ''}</div>
+                    <div className="mt-1.5">
+                        <div>
+                            {mapCostStatus(Number(cost.type_id), isDarkMode)}
+                            <div className="mt-1">
+                                Total:{' '}
+                                <b className={isDarkMode ? 'text-green-400' : 'text-green-700'}>
+                                    {Number(cost.total_cost).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                </b>
+                            </div>
+                            <div className="text-sm text-text-subtle">
+                                Koststed: <b>{cost.koststed}</b>
+                            </div>
+                            {prevTotalCost !== undefined && cost.type_id >= 1 && idx > 0 && (
+                                <div
+                                    className={`text-sm mt-1 ${diff < 0 ? (isDarkMode ? 'text-red-400' : 'text-red-600') : isDarkMode ? 'text-green-400' : 'text-green-700'}`}
+                                >
+                                    Diff: ({diff < 0 ? '-' : '+'}
+                                    {Math.abs(diff).toLocaleString('no-NO', { minimumFractionDigits: 2 })})
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex gap-4 mt-3">
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                                <b style={{ lineHeight: 1 }}>Artskoder</b> <ArtskodeInfo isDarkMode={isDarkMode} />
+                            </div>
+                            {cost.artskoder
+                                .sort((a: Artskoder, b: Artskoder) => Number(a.type) - Number(b.type))
+                                .map((artskode, index) => (
+                                    <div key={index}>
+                                        <b>{artskode.type}:</b> {Number(artskode.sum).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                    </div>
+                                ))}
+                        </div>
+                        <div>
+                            <b>Antall timer</b>
+                            {cost.artskoder
+                                .sort((a: Artskoder, b: Artskoder) => Number(a.type)! - Number(b.type)!)
+                                .map((artskode, index) => (
+                                    <div key={index}>
+                                        <b>{artskode.type}:</b> {artskode.hours}
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+                </div>
+            )
+            return element
+        })
+    }, [isDarkMode, props.vakt.cost, props.avstemming, props.vakt.is_double])
 
     useEffect(() => {
         const updatePrevCost = () => {

@@ -101,6 +101,12 @@ export const mapVakterAdmin = ({
         return level === 'primary' ? '#e0e0e0' : level === 'secondary' ? '#b0b0b0' : '#888'
     }
 
+    const getLatestCost = (schedule: Schedules) => {
+        if (!schedule.cost || schedule.cost.length === 0) return undefined
+        const sorted = [...schedule.cost].sort((a, b) => Number(a.order_id) - Number(b.order_id))
+        return sorted[sorted.length - 1]
+    }
+
     // Group schedules by group name
     const groupedByGroupName = vaktliste.reduce(
         (acc, current) => {
@@ -138,7 +144,7 @@ export const mapVakterAdmin = ({
         if (groupBy === 'koststed') {
             return vaktliste.reduce(
                 (acc, s) => {
-                    const k = (s.cost.length > 0 ? s.cost[s.cost.length - 1].koststed : '') || 'Ukjent koststed'
+                    const k = getLatestCost(s)?.koststed || 'Ukjent koststed'
                     if (!acc[k]) acc[k] = []
                     acc[k].push(s)
                     return acc
@@ -163,7 +169,7 @@ export const mapVakterAdmin = ({
     const totalCols = showActions ? 7 : 5
     const groupedRows = Object.entries(grouped).flatMap(([groupKey, schedules]) => {
         const kostseder = Array.from(
-            new Set(schedules.flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : [])).filter(Boolean))
+            new Set(schedules.flatMap((s) => (getLatestCost(s)?.koststed ? [getLatestCost(s)!.koststed] : [])).filter(Boolean))
         )
         const showHeader = groupBy !== 'none' || groupKeyFn !== undefined
         return [

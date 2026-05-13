@@ -619,8 +619,24 @@ const AvstemmingOkonomi = () => {
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
 
+    const getSortedCosts = (schedule: Schedules) => [...schedule.cost].sort((a, b) => Number(a.order_id) - Number(b.order_id))
+
+    const getLatestCosts = (schedule: Schedules) => {
+        const sorted = getSortedCosts(schedule)
+        const latest = sorted.length > 0 ? sorted[sorted.length - 1] : undefined
+        const previous = sorted.length > 1 ? sorted[sorted.length - 2] : undefined
+        return { latest, previous }
+    }
+
     const distinctKoststeder = Array.from(
-        new Set(itemData.flatMap((s) => (s.cost.length > 0 ? [s.cost[s.cost.length - 1].koststed] : [])).filter(Boolean))
+        new Set(
+            itemData
+                .flatMap((s) => {
+                    const { latest } = getLatestCosts(s)
+                    return latest?.koststed ? [latest.koststed] : []
+                })
+                .filter(Boolean)
+        )
     ).sort()
 
     const filteredVakter = itemData
@@ -640,15 +656,15 @@ const AvstemmingOkonomi = () => {
             const isKoststedMatch =
                 searchFilterKoststed === '' ||
                 (searchFilterKoststed === 'ukjent'
-                    ? value.cost.length === 0 || !value.cost[value.cost.length - 1].koststed
-                    : value.cost.length > 0 && value.cost[value.cost.length - 1].koststed === searchFilterKoststed)
+                    ? !getLatestCosts(value).latest?.koststed
+                    : getLatestCosts(value).latest?.koststed === searchFilterKoststed)
 
             const isDiffMatch =
                 minDiffFilter === '' ||
                 (() => {
-                    const costs = value.cost
-                    if (costs.length < 2) return false
-                    const diff = Math.abs((Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0))
+                    const { latest, previous } = getLatestCosts(value)
+                    if (!latest || !previous) return false
+                    const diff = Math.abs((Number(latest.total_cost) || 0) - (Number(previous.total_cost) || 0))
                     return diff >= minDiffFilter
                 })()
 
@@ -666,8 +682,8 @@ const AvstemmingOkonomi = () => {
         })
         .sort((a, b) => {
             if (sortBy === 'koststed') {
-                const kA = a.cost.length > 0 ? (a.cost[a.cost.length - 1].koststed ?? '') : ''
-                const kB = b.cost.length > 0 ? (b.cost[b.cost.length - 1].koststed ?? '') : ''
+                const kA = getLatestCosts(a).latest?.koststed ?? ''
+                const kB = getLatestCosts(b).latest?.koststed ?? ''
                 return kA.localeCompare(kB) || a.start_timestamp - b.start_timestamp
             }
             return a.start_timestamp - b.start_timestamp
@@ -764,11 +780,10 @@ const AvstemmingOkonomi = () => {
     const { totalCost, totalCostDiff } = displayedVakter.reduce(
         (acc, schedule) => {
             if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length === 0) return acc
-            const costs = schedule.cost
-            acc.totalCost += Number(costs[costs.length - 1].total_cost) || 0
-            if (costs.length >= 2) {
-                // Diff: siste beregning minus nest siste (kun siste rekjøring)
-                acc.totalCostDiff += (Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0)
+            const { latest, previous } = getLatestCosts(schedule)
+            acc.totalCost += Number(latest?.total_cost) || 0
+            if (latest && previous) {
+                acc.totalCostDiff += (Number(latest.total_cost) || 0) - (Number(previous.total_cost) || 0)
             }
             return acc
         },
