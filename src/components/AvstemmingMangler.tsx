@@ -1,4 +1,17 @@
-import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Modal, Alert, ExpansionCard, GuidePanel, UNSAFE_Combobox } from '@navikt/ds-react'
+import {
+    Table,
+    Loader,
+    Search,
+    Select,
+    CheckboxGroup,
+    Checkbox,
+    Button,
+    Modal,
+    Alert,
+    ExpansionCard,
+    GuidePanel,
+    UNSAFE_Combobox,
+} from '@navikt/ds-react'
 import { FunnelIcon } from '@navikt/aksel-icons'
 import { Dispatch, useEffect, useState } from 'react'
 import { Schedules } from '../types/types'
@@ -305,8 +318,7 @@ const AvstemmingMangler = () => {
             searchFilterActions.length === 0 || STATUS_OPTIONS.some((s) => searchFilterActions.includes(s.label) && s.value === value.approve_level)
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
         const isLimit300Match = !limit300 || value.cost.length <= 500
-        const isSluttetMatch =
-            sluttetFilter === 'alle' || (sluttetFilter === 'sluttet' ? !!value.user.sluttet_dato : !value.user.sluttet_dato)
+        const isSluttetMatch = sluttetFilter === 'alle' || (sluttetFilter === 'sluttet' ? !!value.user.sluttet_dato : !value.user.sluttet_dato)
 
         return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isLimit300Match && isSluttetMatch
     })
@@ -325,10 +337,14 @@ const AvstemmingMangler = () => {
     const { totalCost, totalCostDiff } = displayedVakter.reduce(
         (acc, schedule) => {
             if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length === 0) return acc
-            const costs = schedule.cost
+            // Sorter på order_id slik at "siste/nest siste" er konsistent med
+            // backend (select_diff_costs), uavhengig av rekkefølgen API-et gir.
+            const costs = [...schedule.cost].sort((a, b) => Number(a.order_id) - Number(b.order_id))
             acc.totalCost += Number(costs[costs.length - 1].total_cost) || 0
-            if (costs.length >= 2) {
-                // Diff: siste beregning minus nest siste (kun siste rekjøring)
+            // Diff teller kun vakter som faktisk havner i diff-fila: status 7
+            // (Utregning fullført med diff) + minst to kostberegninger. Slik
+            // matcher denne summen preview-/fil-diffen, ikke hele utvalget.
+            if (costs.length >= 2 && schedule.approve_level === 7) {
                 acc.totalCostDiff += (Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0)
             }
             return acc
@@ -378,8 +394,8 @@ const AvstemmingMangler = () => {
                     <div>
                         <b>Total kostnad: {totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                     </div>
-                    <div>
-                        <b>Diff: {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
+                    <div title="Sum diff for vakter som havner i diff-fila (status 7). Samme tall som forhåndsvisningen.">
+                        <b>Diff (til fil): {totalCostDiff.toLocaleString('no-NO', { minimumFractionDigits: 2 })}</b>
                     </div>
                     <div>
                         <b>Antall vakter: {displayedVakter.length}</b>
@@ -450,8 +466,7 @@ const AvstemmingMangler = () => {
                                             <b>Hoppes over:</b> {diffPreview.skipped_count}
                                         </div>
                                         <div>
-                                            <b>Total diff:</b>{' '}
-                                            {Number(diffPreview.total_diff).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                            <b>Total diff:</b> {Number(diffPreview.total_diff).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
                                         </div>
                                     </div>
 
@@ -464,7 +479,14 @@ const AvstemmingMangler = () => {
                                     {diffPreview.included_count > 0 && (
                                         <div>
                                             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Blir med ({diffPreview.included_count})</div>
-                                            <div style={{ maxHeight: '200px', overflowY: 'auto', border: isDarkMode ? '1px solid #444' : '1px solid #ddd', borderRadius: '4px' }}>
+                                            <div
+                                                style={{
+                                                    maxHeight: '200px',
+                                                    overflowY: 'auto',
+                                                    border: isDarkMode ? '1px solid #444' : '1px solid #ddd',
+                                                    borderRadius: '4px',
+                                                }}
+                                            >
                                                 <Table size="small" zebraStripes>
                                                     <Table.Header>
                                                         <Table.Row>
@@ -492,7 +514,14 @@ const AvstemmingMangler = () => {
                                     {diffPreview.skipped_count > 0 && (
                                         <div>
                                             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Hoppes over ({diffPreview.skipped_count})</div>
-                                            <div style={{ maxHeight: '160px', overflowY: 'auto', border: isDarkMode ? '1px solid #444' : '1px solid #ddd', borderRadius: '4px' }}>
+                                            <div
+                                                style={{
+                                                    maxHeight: '160px',
+                                                    overflowY: 'auto',
+                                                    border: isDarkMode ? '1px solid #444' : '1px solid #ddd',
+                                                    borderRadius: '4px',
+                                                }}
+                                            >
                                                 <Table size="small" zebraStripes>
                                                     <Table.Header>
                                                         <Table.Row>
@@ -528,7 +557,9 @@ const AvstemmingMangler = () => {
                         variant="danger"
                         loading={isLoading}
                         disabled={
-                            isLoading || !fileType || (fileType === 2 && (previewLoading || !!previewError || !diffPreview || diffPreview.included_count === 0))
+                            isLoading ||
+                            !fileType ||
+                            (fileType === 2 && (previewLoading || !!previewError || !diffPreview || diffPreview.included_count === 0))
                         }
                         onClick={() => {
                             setIsLoading(true)
