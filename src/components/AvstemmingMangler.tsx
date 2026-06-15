@@ -1,10 +1,35 @@
-import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, GuidePanel, UNSAFE_Combobox } from '@navikt/ds-react'
+import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Modal, Alert, ExpansionCard, GuidePanel, UNSAFE_Combobox } from '@navikt/ds-react'
 import { FunnelIcon } from '@navikt/aksel-icons'
-import { Dispatch, useEffect, useRef, useState } from 'react'
+import { Dispatch, useEffect, useState } from 'react'
 import { Schedules } from '../types/types'
 import { mapVakter } from './utils/mapVakter'
 import VarsleModal from './VarsleModal'
 import { useTheme } from '../context/ThemeContext'
+
+const SKIP_REASON_LABELS: Record<string, string> = {
+    too_few_costs: 'Mangler diff (færre enn to kostberegninger)',
+    wrong_approve_level: 'Feil status (ikke "Utregning fullført med diff")',
+}
+
+interface DiffPreviewIncluded {
+    schedule_id: string
+    user_name: string
+    koststed: string
+    diff: string
+}
+
+interface DiffPreviewSkipped {
+    schedule_id: string
+    reason: string
+}
+
+interface DiffPreview {
+    included: DiffPreviewIncluded[]
+    skipped: DiffPreviewSkipped[]
+    total_diff: string
+    included_count: number
+    skipped_count: number
+}
 
 const STATUS_OPTIONS = [
     { value: 0, label: 'Trenger godkjenning' },
@@ -48,12 +73,15 @@ const AvstemmingMangler = () => {
     const [idSearchLoading, setIdSearchLoading] = useState(false)
     const [idSearchError, setIdSearchError] = useState<string | null>(null)
 
-    const buttonRef = useRef<HTMLButtonElement>(null)
     const [openState, setOpenState] = useState<boolean>(false)
-    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
     const [fileType, setFileType] = useState(Number)
     const [isLoading, setIsLoading] = useState(false)
     const [responseError, setResponseError] = useState('')
+
+    // Diff-forhåndsvisning før opplasting til ØT
+    const [diffPreview, setDiffPreview] = useState<DiffPreview | null>(null)
+    const [previewLoading, setPreviewLoading] = useState(false)
+    const [previewError, setPreviewError] = useState<string | null>(null)
 
     const [varsleModalOpen, setVarsleModalOpen] = useState(false)
 
@@ -75,7 +103,8 @@ const AvstemmingMangler = () => {
             .then(async (response) => {
                 if (!response.ok) {
                     const rText = await response.json()
-                    setResponseError(rText.detail)
+                    // 409: en annen pod/bruker kjører allerede en diff-kjøring
+                    setResponseError(rText.detail || rText.message || 'Noe gikk galt under generering av fil')
                     return null // Return null instead of [] to indicate an error
                 }
 
@@ -101,6 +130,10 @@ const AvstemmingMangler = () => {
                 link.remove()
                 window.URL.revokeObjectURL(url)
 
+                // Filen er lastet ned + lastet opp til ØT. Lukk modal og nullstill preview.
+                setOpenState(false)
+                setDiffPreview(null)
+
                 return response.json() // Continue with processing the response as JSON if needed
             })
             .then((data) => {
@@ -114,6 +147,41 @@ const AvstemmingMangler = () => {
                 console.error(error.name, error.message)
                 setIsLoading(false)
             })
+    }
+
+    // Hent forhåndsvisning av diff-fila (les-only, ingen opplasting) og åpne modal.
+    const openGenerateModal = async () => {
+        setResponseError('')
+        setOpenState(true)
+
+        // Forhåndsvisning gjelder kun diff-fil (fileType 2). Ordinær kjøring
+        // har ingen preview-endepunkt, så da viser vi bare bekreftelse.
+        if (fileType !== 2) {
+            setDiffPreview(null)
+            setPreviewError(null)
+            return
+        }
+
+        setPreviewLoading(true)
+        setPreviewError(null)
+        setDiffPreview(null)
+        try {
+            const r = await fetch('/api/preview_transactions_diff', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(displayedVakter.map((s) => s.id)),
+            })
+            if (!r.ok) {
+                const err = await r.json()
+                setPreviewError(err.message || 'Kunne ikke hente forhåndsvisning')
+            } else {
+                setDiffPreview(await r.json())
+            }
+        } catch {
+            setPreviewError('Nettverksfeil under forhåndsvisning')
+        } finally {
+            setPreviewLoading(false)
+        }
     }
 
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -334,81 +402,151 @@ const AvstemmingMangler = () => {
                                 </div>
 
                                 <Button
-                                    onClick={(e) => {
-                                        setAnchorEl(e.currentTarget)
-                                        setOpenState(true)
-                                    }}
+                                    onClick={openGenerateModal}
                                     style={{
                                         maxWidth: '210px',
                                         marginLeft: '30px',
                                         marginTop: '5px',
                                         marginBottom: '5px',
                                     }}
-                                    disabled={isLoading || !fileType}
-                                    ref={buttonRef}
+                                    disabled={isLoading || !fileType || displayedVakter.length === 0}
                                 >
-                                    Generer pr28-fil
+                                    {fileType === 2 ? 'Forhåndsvis diff' : 'Generer pr28-fil'}
                                 </Button>
-                                {openState && (
-                                    <Popover open={openState} onClose={() => setOpenState(false)} anchorEl={anchorEl}>
-                                        <Popover.Content
-                                            style={{
-                                                textAlign: 'center',
-                                                backgroundColor: 'rgba(241, 241, 241, 1)',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '10px',
-                                                maxWidth: '250px',
-                                            }}
-                                        >
-                                            Er du sikker på vil generere fil for for for{' '}
-                                            <Button
-                                                variant="danger"
-                                                onClick={() => {
-                                                    if (displayedVakter) {
-                                                        generateFile(
-                                                            displayedVakter.map((s) => s.id),
-                                                            fileType,
-                                                            setResponse,
-                                                            setResponseError
-                                                        )
-                                                        setIsLoading(true)
-                                                    } else {
-                                                        console.log('Noe gikk galt :shrug:')
-                                                    }
-                                                }}
-                                                disabled={isLoading || !fileType}
-                                            >
-                                                {isLoading ? <Loader /> : 'Generer fil nå!'}
-                                            </Button>
-                                            <b>{displayedVakter ? displayedVakter.map((s) => <div key={s.id}>{s.user.name}</div>) : ''} ? </b>
-                                            <Button
-                                                variant="danger"
-                                                onClick={() => {
-                                                    if (displayedVakter) {
-                                                        generateFile(
-                                                            displayedVakter.map((s) => s.id),
-                                                            fileType,
-                                                            setResponse,
-                                                            setResponseError
-                                                        )
-                                                        setIsLoading(true)
-                                                    } else {
-                                                        console.log('Noe gikk galt :shrug:')
-                                                    }
-                                                }}
-                                                disabled={isLoading || !fileType}
-                                            >
-                                                {isLoading ? <Loader /> : 'Generer fil nå!'}
-                                            </Button>
-                                        </Popover.Content>
-                                    </Popover>
-                                )}
                             </div>
                         </ExpansionCard.Content>
                     </ExpansionCard>
                 </div>
             </div>
+
+            <Modal
+                open={openState}
+                onClose={() => setOpenState(false)}
+                header={{ heading: fileType === 2 ? 'Forhåndsvis diff-fil' : 'Bekreft generering av pr28-fil' }}
+                width={fileType === 2 ? 700 : 450}
+            >
+                <Modal.Body>
+                    {responseError && (
+                        <Alert variant="error" style={{ marginBottom: '1rem' }}>
+                            {responseError}
+                        </Alert>
+                    )}
+
+                    {fileType === 2 ? (
+                        <>
+                            {previewLoading && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Loader size="small" /> Henter forhåndsvisning...
+                                </div>
+                            )}
+                            {previewError && <Alert variant="error">{previewError}</Alert>}
+                            {!previewLoading && !previewError && diffPreview && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                                        <div>
+                                            <b>Blir med i fila:</b> {diffPreview.included_count}
+                                        </div>
+                                        <div>
+                                            <b>Hoppes over:</b> {diffPreview.skipped_count}
+                                        </div>
+                                        <div>
+                                            <b>Total diff:</b>{' '}
+                                            {Number(diffPreview.total_diff).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                        </div>
+                                    </div>
+
+                                    {diffPreview.skipped_count > 0 && (
+                                        <Alert variant="warning" size="small">
+                                            {diffPreview.skipped_count} vakt(er) blir <b>ikke</b> med i fila. Se «Hoppes over» under.
+                                        </Alert>
+                                    )}
+
+                                    {diffPreview.included_count > 0 && (
+                                        <div>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Blir med ({diffPreview.included_count})</div>
+                                            <div style={{ maxHeight: '200px', overflowY: 'auto', border: isDarkMode ? '1px solid #444' : '1px solid #ddd', borderRadius: '4px' }}>
+                                                <Table size="small" zebraStripes>
+                                                    <Table.Header>
+                                                        <Table.Row>
+                                                            <Table.HeaderCell>Navn</Table.HeaderCell>
+                                                            <Table.HeaderCell>Koststed</Table.HeaderCell>
+                                                            <Table.HeaderCell align="right">Diff</Table.HeaderCell>
+                                                        </Table.Row>
+                                                    </Table.Header>
+                                                    <Table.Body>
+                                                        {diffPreview.included.map((row) => (
+                                                            <Table.Row key={row.schedule_id}>
+                                                                <Table.DataCell>{row.user_name}</Table.DataCell>
+                                                                <Table.DataCell>{row.koststed || '—'}</Table.DataCell>
+                                                                <Table.DataCell align="right">
+                                                                    {Number(row.diff).toLocaleString('no-NO', { minimumFractionDigits: 2 })}
+                                                                </Table.DataCell>
+                                                            </Table.Row>
+                                                        ))}
+                                                    </Table.Body>
+                                                </Table>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {diffPreview.skipped_count > 0 && (
+                                        <div>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Hoppes over ({diffPreview.skipped_count})</div>
+                                            <div style={{ maxHeight: '160px', overflowY: 'auto', border: isDarkMode ? '1px solid #444' : '1px solid #ddd', borderRadius: '4px' }}>
+                                                <Table size="small" zebraStripes>
+                                                    <Table.Header>
+                                                        <Table.Row>
+                                                            <Table.HeaderCell>Vakt-ID</Table.HeaderCell>
+                                                            <Table.HeaderCell>Grunn</Table.HeaderCell>
+                                                        </Table.Row>
+                                                    </Table.Header>
+                                                    <Table.Body>
+                                                        {diffPreview.skipped.map((row) => (
+                                                            <Table.Row key={row.schedule_id}>
+                                                                <Table.DataCell style={{ fontFamily: 'monospace', fontSize: '0.8em' }}>
+                                                                    {row.schedule_id}
+                                                                </Table.DataCell>
+                                                                <Table.DataCell>{SKIP_REASON_LABELS[row.reason] || row.reason}</Table.DataCell>
+                                                            </Table.Row>
+                                                        ))}
+                                                    </Table.Body>
+                                                </Table>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <p>
+                            Er du sikker på at du vil generere pr28-fil (ordinær kjøring) for <b>{displayedVakter.length}</b> vakt(er)?
+                        </p>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="danger"
+                        loading={isLoading}
+                        disabled={
+                            isLoading || !fileType || (fileType === 2 && (previewLoading || !!previewError || !diffPreview || diffPreview.included_count === 0))
+                        }
+                        onClick={() => {
+                            setIsLoading(true)
+                            generateFile(
+                                displayedVakter.map((s) => s.id),
+                                fileType,
+                                setResponse,
+                                setResponseError
+                            )
+                        }}
+                    >
+                        {fileType === 2 ? 'Last opp til ØT' : 'Generer fil nå!'}
+                    </Button>
+                    <Button variant="tertiary" onClick={() => setOpenState(false)} disabled={isLoading}>
+                        Avbryt
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             <div>
                 {varsleModalOpen && (
