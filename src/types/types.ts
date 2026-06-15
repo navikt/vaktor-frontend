@@ -93,6 +93,7 @@ export interface User {
     roles: Roles[]
     group_roles: GroupRole[]
     bdm_koststeder: string
+    sluttet_dato?: string | null
 }
 
 export interface GroupRole {
