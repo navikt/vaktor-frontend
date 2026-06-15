@@ -1,16 +1,4 @@
-import {
-    Table,
-    Loader,
-    Search,
-    Select,
-    CheckboxGroup,
-    Checkbox,
-    Button,
-    Popover,
-    ExpansionCard,
-    GuidePanel,
-    UNSAFE_Combobox,
-} from '@navikt/ds-react'
+import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, GuidePanel, UNSAFE_Combobox } from '@navikt/ds-react'
 import { FunnelIcon } from '@navikt/aksel-icons'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { Schedules } from '../types/types'
@@ -49,7 +37,7 @@ const AvstemmingMangler = () => {
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
-    const [FilterSluttet, setFilterSluttet] = useState(false)
+    const [sluttetFilter, setSluttetFilter] = useState<'alle' | 'sluttet' | 'ikke'>('alle')
     const [limit300, setLimit300] = useState(false)
     const [showFilters, setShowFilters] = useState(false)
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
@@ -246,11 +234,11 @@ const AvstemmingMangler = () => {
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatch =
-            searchFilterActions.length === 0 ||
-            STATUS_OPTIONS.some((s) => searchFilterActions.includes(s.label) && s.value === value.approve_level)
+            searchFilterActions.length === 0 || STATUS_OPTIONS.some((s) => searchFilterActions.includes(s.label) && s.value === value.approve_level)
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
         const isLimit300Match = !limit300 || value.cost.length <= 500
-        const isSluttetMatch = !FilterSluttet || !!value.user.sluttet_dato
+        const isSluttetMatch =
+            sluttetFilter === 'alle' || (sluttetFilter === 'sluttet' ? !!value.user.sluttet_dato : !value.user.sluttet_dato)
 
         return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isLimit300Match && isSluttetMatch
     })
@@ -286,7 +274,7 @@ const AvstemmingMangler = () => {
         searchFilterActions.length > 0,
         FilterOnDoubleSchedules,
         FilterExcludeCurrentMonth,
-        FilterSluttet,
+        sluttetFilter !== 'alle',
         limit300,
     ].filter(Boolean).length
 
@@ -296,7 +284,7 @@ const AvstemmingMangler = () => {
         setSearchFilterActions([])
         setFilterOnDoubleSchedules(false)
         setFilterExcludeCurrentMonth(false)
-        setFilterSluttet(false)
+        setSluttetFilter('alle')
         setLimit300(false)
     }
 
@@ -533,25 +521,33 @@ const AvstemmingMangler = () => {
                                 }
                             />
                         </div>
+                        <div style={{ width: '180px' }}>
+                            <Select
+                                label="Sluttet"
+                                value={sluttetFilter}
+                                onChange={(e) => setSluttetFilter(e.target.value as 'alle' | 'sluttet' | 'ikke')}
+                            >
+                                <option value="alle">Alle</option>
+                                <option value="sluttet">Har sluttet</option>
+                                <option value="ikke">Har ikke sluttet</option>
+                            </Select>
+                        </div>
                         <CheckboxGroup
                             legend=""
                             hideLegend
                             value={[
                                 ...(FilterOnDoubleSchedules ? ['double'] : []),
                                 ...(FilterExcludeCurrentMonth ? ['excludeCurrent'] : []),
-                                ...(FilterSluttet ? ['sluttet'] : []),
                                 ...(limit300 ? ['limit'] : []),
                             ]}
                             onChange={(val: string[]) => {
                                 setFilterOnDoubleSchedules(val.includes('double'))
                                 setFilterExcludeCurrentMonth(val.includes('excludeCurrent'))
-                                setFilterSluttet(val.includes('sluttet'))
                                 setLimit300(val.includes('limit'))
                             }}
                         >
                             <Checkbox value="double">Kun dobbeltvakter</Checkbox>
                             <Checkbox value="excludeCurrent">!= denne måned</Checkbox>
-                            <Checkbox value="sluttet">Har sluttet</Checkbox>
                             <Checkbox value="limit">Begrens til 500</Checkbox>
                         </CheckboxGroup>
                     </div>
