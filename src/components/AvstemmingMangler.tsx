@@ -22,6 +22,7 @@ import { useTheme } from '../context/ThemeContext'
 const SKIP_REASON_LABELS: Record<string, string> = {
     too_few_costs: 'Mangler diff (færre enn to kostberegninger)',
     wrong_approve_level: 'Feil status (ikke "Utregning fullført med diff")',
+    no_approver: 'Mangler godkjenning (ingen BDM-/vaktsjef-audit)',
 }
 
 interface DiffPreviewIncluded {
