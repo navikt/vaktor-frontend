@@ -1,9 +1,35 @@
-import { Table, Loader, Search, Select, CheckboxGroup, Checkbox, Button, Popover, ExpansionCard, GuidePanel } from '@navikt/ds-react'
+import {
+    Table,
+    Loader,
+    Search,
+    Select,
+    CheckboxGroup,
+    Checkbox,
+    Button,
+    Popover,
+    ExpansionCard,
+    GuidePanel,
+    UNSAFE_Combobox,
+} from '@navikt/ds-react'
+import { FunnelIcon } from '@navikt/aksel-icons'
 import { Dispatch, useEffect, useRef, useState } from 'react'
 import { Schedules } from '../types/types'
 import { mapVakter } from './utils/mapVakter'
 import VarsleModal from './VarsleModal'
 import { useTheme } from '../context/ThemeContext'
+
+const STATUS_OPTIONS = [
+    { value: 0, label: 'Trenger godkjenning' },
+    { value: 1, label: 'Godkjent av ansatt' },
+    { value: 2, label: 'Venter på utregning' },
+    { value: 3, label: 'Godkjent av vaktsjef' },
+    { value: 4, label: 'Godkjent av BDM' },
+    { value: 5, label: 'Overført til lønn' },
+    { value: 6, label: 'Venter på utregning av diff' },
+    { value: 7, label: 'Utregning fullført med diff' },
+    { value: 8, label: 'Overført til lønn etter rekjøring' },
+    { value: -1, label: 'Ikke overført lønn' },
+]
 
 const AvstemmingMangler = () => {
     const { theme } = useTheme()
@@ -19,11 +45,13 @@ const AvstemmingMangler = () => {
 
     const [searchFilter, setSearchFilter] = useState('')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
-    const [searchFilterAction, setSearchFilterAction] = useState(9)
+    const [searchFilterActions, setSearchFilterActions] = useState<string[]>([])
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
+    const [FilterSluttet, setFilterSluttet] = useState(false)
     const [limit300, setLimit300] = useState(false)
+    const [showFilters, setShowFilters] = useState(false)
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
 
     const yearOptions = Array.from({ length: new Date().getFullYear() - 2022 + 1 }, (_, i) => 2022 + i).reverse()
@@ -218,15 +246,13 @@ const AvstemmingMangler = () => {
         const isNameMatch = value.user.name.toLowerCase().includes(searchFilter)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
         const isApproveLevelMatch =
-            searchFilterAction === 9
-                ? true
-                : searchFilterAction === -1
-                  ? value.approve_level !== 5 && value.approve_level !== 8
-                  : value.approve_level === searchFilterAction
+            searchFilterActions.length === 0 ||
+            STATUS_OPTIONS.some((s) => searchFilterActions.includes(s.label) && s.value === value.approve_level)
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
         const isLimit300Match = !limit300 || value.cost.length <= 500
+        const isSluttetMatch = !FilterSluttet || !!value.user.sluttet_dato
 
-        return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isLimit300Match
+        return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isLimit300Match && isSluttetMatch
     })
     // Limit the filtered schedules to 300
     if (limit300 && filteredVakter.length > 500) {
@@ -253,6 +279,26 @@ const AvstemmingMangler = () => {
         },
         { totalCost: 0, totalCostDiff: 0 }
     )
+
+    const activeFilterCount = [
+        searchFilterGroup !== '',
+        selectedFilename !== '',
+        searchFilterActions.length > 0,
+        FilterOnDoubleSchedules,
+        FilterExcludeCurrentMonth,
+        FilterSluttet,
+        limit300,
+    ].filter(Boolean).length
+
+    const resetFilters = () => {
+        setSearchFilterGroup('')
+        setSelectedFilename('')
+        setSearchFilterActions([])
+        setFilterOnDoubleSchedules(false)
+        setFilterExcludeCurrentMonth(false)
+        setFilterSluttet(false)
+        setLimit300(false)
+    }
 
     return (
         <>
@@ -382,92 +428,134 @@ const AvstemmingMangler = () => {
                 )}
             </div>
 
-            <div style={{ display: 'flex', marginBottom: '20px', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ width: '120px' }}>
-                    <Select label="År" value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
-                        {yearOptions.map((y) => (
-                            <option key={y} value={y}>
-                                {y}
-                            </option>
-                        ))}
-                    </Select>
-                </div>
-                <div style={{ width: '300px', marginLeft: '15px' }}>
-                    <Search
-                        label="Søk etter person eller vakt-ID"
-                        hideLabel={false}
-                        variant="simple"
-                        onChange={(text) => {
-                            setSearchFilter(text)
-                            if (!text.trim()) {
-                                setIdSearchResults(null)
-                                setIdSearchError(null)
-                            }
-                        }}
-                        onSearchClick={() => searchByIds(searchFilter)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') searchByIds(searchFilter)
-                        }}
-                    />
-                    {idSearchLoading && <span style={{ fontSize: '0.8em' }}>Søker...</span>}
-                    {idSearchError && <span style={{ fontSize: '0.8em', color: '#c00' }}>{idSearchError}</span>}
-                </div>
-                <div style={{ width: '200px', marginLeft: '15px' }}>
-                    <Select label="Velg Gruppe" onChange={(e) => setSearchFilterGroup(e.target.value)}>
-                        <option value="">Alle</option>
-                        {groupNames.map((groupName) => (
-                            <option key={groupName} value={groupName}>
-                                {groupName}
-                            </option>
-                        ))}
-                    </Select>
-                </div>
-                <div style={{ width: '200px', marginLeft: '15px' }}>
-                    <Select label="Velg Utbetaling" onChange={(e) => setSelectedFilename(e.target.value)}>
-                        <option value="">Alle</option>
-                        {distinctFilenames.map((filename) => (
-                            <option key={filename} value={filename}>
-                                {filename}
-                            </option>
-                        ))}
-                    </Select>
+            {/* Filter section */}
+            <div
+                style={{
+                    padding: '12px 16px',
+                    backgroundColor: isDarkMode ? '#1f1f1f' : '#fff',
+                    border: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                    borderRadius: '6px',
+                    marginBottom: '16px',
+                }}
+            >
+                {/* Primary row - always visible */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+                    <div style={{ width: '120px' }}>
+                        <Select label="År" value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
+                            {yearOptions.map((y) => (
+                                <option key={y} value={y}>
+                                    {y}
+                                </option>
+                            ))}
+                        </Select>
+                    </div>
+                    <div style={{ width: '280px' }}>
+                        <Search
+                            label="Søk etter person eller vakt-ID"
+                            hideLabel={false}
+                            variant="simple"
+                            onChange={(text) => {
+                                setSearchFilter(text)
+                                if (!text.trim()) {
+                                    setIdSearchResults(null)
+                                    setIdSearchError(null)
+                                }
+                            }}
+                            onSearchClick={() => searchByIds(searchFilter)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') searchByIds(searchFilter)
+                            }}
+                        />
+                        {idSearchLoading && <span style={{ fontSize: '0.8em' }}>Søker...</span>}
+                        {idSearchError && <span style={{ fontSize: '0.8em', color: '#c00' }}>{idSearchError}</span>}
+                    </div>
+                    <Button
+                        variant={activeFilterCount > 0 ? 'primary' : 'secondary'}
+                        size="medium"
+                        icon={<FunnelIcon aria-hidden />}
+                        onClick={() => setShowFilters((v) => !v)}
+                    >
+                        Filtre{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                    </Button>
+                    {activeFilterCount > 0 && (
+                        <Button variant="tertiary" size="medium" onClick={resetFilters}>
+                            Nullstill filtre
+                        </Button>
+                    )}
+                    <div style={{ marginLeft: 'auto' }}>
+                        <Button disabled={displayedVakter.length <= 0} onClick={() => setVarsleModalOpen(true)} variant="secondary">
+                            Send påminnelse
+                        </Button>
+                    </div>
                 </div>
 
-                <div style={{ width: '200px', marginLeft: '15px' }}>
-                    <Select label="Filter på status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                        <option value={9}>Alle</option>
-                        <option value={0}>Trenger godkjenning</option>
-                        <option value={1}>Godkjent av ansatt</option>
-                        <option value={2}>Venter på utregning</option>
-                        <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Godkjent av BDM</option>
-                        <option value={5}>Overført til lønn</option>
-                        <option value={6}>Venter på utregning av diff</option>
-                        <option value={7}>Utregning fullført med diff</option>
-                        <option value={8}>Overført til lønn etter rekjøring</option>
-                        <option value={-1}>Ikke overført lønn</option>
-                    </Select>
-                </div>
-                <div style={{ width: '200px', marginLeft: '15px' }}>
-                    <CheckboxGroup legend="Begrens til 300" onChange={(val: string[]) => setLimit300(val.includes('true'))}>
-                        <Checkbox value="true">Begrens til 500</Checkbox>
-                    </CheckboxGroup>
-                </div>
-                <div style={{ width: '200px', marginLeft: '15px' }}>
-                    <CheckboxGroup legend="Dobbel vakt" onChange={(val: string[]) => setFilterOnDoubleSchedules(val.includes('true'))}>
-                        <Checkbox value="true">Er dobbeltvakt</Checkbox>
-                    </CheckboxGroup>
-                </div>
-                <div style={{ width: '200px', marginLeft: '15px' }}>
-                    <CheckboxGroup legend="!= denne måned" onChange={(val: string[]) => setFilterExcludeCurrentMonth(val.includes('true'))}>
-                        <Checkbox value="true">!= denne måned</Checkbox>
-                    </CheckboxGroup>
-                </div>
-                <div style={{ width: '200px', marginLeft: '15px', marginTop: '30px' }}>
-                    <Button disabled={displayedVakter.length <= 0} onClick={() => setVarsleModalOpen(true)} variant="secondary">
-                        Send påminnelse
-                    </Button>
-                </div>
+                {/* Secondary row - expandable */}
+                {showFilters && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '12px',
+                            alignItems: 'flex-end',
+                            marginTop: '12px',
+                            paddingTop: '12px',
+                            borderTop: isDarkMode ? '1px solid #333' : '1px solid #e0e0e0',
+                        }}
+                    >
+                        <div style={{ width: '180px' }}>
+                            <Select label="Gruppe" value={searchFilterGroup} onChange={(e) => setSearchFilterGroup(e.target.value)}>
+                                <option value="">Alle</option>
+                                {groupNames.map((groupName) => (
+                                    <option key={groupName} value={groupName}>
+                                        {groupName}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                        <div style={{ width: '180px' }}>
+                            <Select label="Utbetaling" value={selectedFilename} onChange={(e) => setSelectedFilename(e.target.value)}>
+                                <option value="">Alle</option>
+                                {distinctFilenames.map((filename) => (
+                                    <option key={filename} value={filename}>
+                                        {filename}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                        <div style={{ width: '260px' }}>
+                            <UNSAFE_Combobox
+                                label="Status"
+                                options={STATUS_OPTIONS.map((s) => s.label)}
+                                isMultiSelect
+                                selectedOptions={searchFilterActions}
+                                onToggleSelected={(option, isSelected) =>
+                                    setSearchFilterActions((prev) => (isSelected ? [...prev, option] : prev.filter((o) => o !== option)))
+                                }
+                            />
+                        </div>
+                        <CheckboxGroup
+                            legend=""
+                            hideLegend
+                            value={[
+                                ...(FilterOnDoubleSchedules ? ['double'] : []),
+                                ...(FilterExcludeCurrentMonth ? ['excludeCurrent'] : []),
+                                ...(FilterSluttet ? ['sluttet'] : []),
+                                ...(limit300 ? ['limit'] : []),
+                            ]}
+                            onChange={(val: string[]) => {
+                                setFilterOnDoubleSchedules(val.includes('double'))
+                                setFilterExcludeCurrentMonth(val.includes('excludeCurrent'))
+                                setFilterSluttet(val.includes('sluttet'))
+                                setLimit300(val.includes('limit'))
+                            }}
+                        >
+                            <Checkbox value="double">Kun dobbeltvakter</Checkbox>
+                            <Checkbox value="excludeCurrent">!= denne måned</Checkbox>
+                            <Checkbox value="sluttet">Har sluttet</Checkbox>
+                            <Checkbox value="limit">Begrens til 500</Checkbox>
+                        </CheckboxGroup>
+                    </div>
+                )}
             </div>
             <div>
                 <Table zebraStripes>
