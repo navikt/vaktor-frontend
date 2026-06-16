@@ -58,6 +58,17 @@ const STATUS_OPTIONS = [
     { value: -1, label: 'Ikke overført lønn' },
 ]
 
+// Diffen som havner i diff-fila: kun status-7-vakter med ≥2 kostberegninger,
+// (siste − nest siste) sortert på order_id. Returnerer null hvis vakten ikke
+// kvalifiserer (ingen diff). Brukes både til oppsummering og filtrering.
+const getFileDiff = (schedule: Schedules): number | null => {
+    if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length < 2 || schedule.approve_level !== 7) {
+        return null
+    }
+    const costs = [...schedule.cost].sort((a, b) => Number(a.order_id) - Number(b.order_id))
+    return (Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0)
+}
+
 const AvstemmingMangler = () => {
     const { theme } = useTheme()
     const isDarkMode = theme === 'dark'
@@ -76,6 +87,7 @@ const AvstemmingMangler = () => {
 
     const [FilterOnDoubleSchedules, setFilterOnDoubleSchedules] = useState(false)
     const [FilterExcludeCurrentMonth, setFilterExcludeCurrentMonth] = useState(false)
+    const [FilterNegativeDiff, setFilterNegativeDiff] = useState(false)
     const [sluttetFilter, setSluttetFilter] = useState<'alle' | 'sluttet' | 'ikke'>('alle')
     const [limit300, setLimit300] = useState(false)
     const [showFilters, setShowFilters] = useState(false)
@@ -320,8 +332,19 @@ const AvstemmingMangler = () => {
         const isFilenameMatch = selectedFilename === '' || value.audits.some((audit) => audit.action.includes(selectedFilename))
         const isLimit300Match = !limit300 || value.cost.length <= 500
         const isSluttetMatch = sluttetFilter === 'alle' || (sluttetFilter === 'sluttet' ? !!value.user.sluttet_dato : !value.user.sluttet_dato)
+        // Negativ diff (rødt): kun vakter der diffen til fil er under 0.
+        const isNegativeDiffMatch = !FilterNegativeDiff || (getFileDiff(value) ?? 0) < 0
 
-        return isNotCurrentMonth && isNameMatch && isGroupMatch && isApproveLevelMatch && isFilenameMatch && isLimit300Match && isSluttetMatch
+        return (
+            isNotCurrentMonth &&
+            isNameMatch &&
+            isGroupMatch &&
+            isApproveLevelMatch &&
+            isFilenameMatch &&
+            isLimit300Match &&
+            isSluttetMatch &&
+            isNegativeDiffMatch
+        )
     })
     // Limit the filtered schedules to 300
     if (limit300 && filteredVakter.length > 500) {
@@ -338,16 +361,11 @@ const AvstemmingMangler = () => {
     const { totalCost, totalCostDiff } = displayedVakter.reduce(
         (acc, schedule) => {
             if (!schedule || !Array.isArray(schedule.cost) || schedule.cost.length === 0) return acc
-            // Sorter på order_id slik at "siste/nest siste" er konsistent med
-            // backend (select_diff_costs), uavhengig av rekkefølgen API-et gir.
             const costs = [...schedule.cost].sort((a, b) => Number(a.order_id) - Number(b.order_id))
             acc.totalCost += Number(costs[costs.length - 1].total_cost) || 0
-            // Diff teller kun vakter som faktisk havner i diff-fila: status 7
-            // (Utregning fullført med diff) + minst to kostberegninger. Slik
-            // matcher denne summen preview-/fil-diffen, ikke hele utvalget.
-            if (costs.length >= 2 && schedule.approve_level === 7) {
-                acc.totalCostDiff += (Number(costs[costs.length - 1].total_cost) || 0) - (Number(costs[costs.length - 2].total_cost) || 0)
-            }
+            // Diff teller kun vakter som faktisk havner i diff-fila (status 7),
+            // slik at summen matcher preview-/fil-diffen, ikke hele utvalget.
+            acc.totalCostDiff += getFileDiff(schedule) ?? 0
             return acc
         },
         { totalCost: 0, totalCostDiff: 0 }
@@ -359,6 +377,7 @@ const AvstemmingMangler = () => {
         searchFilterActions.length > 0,
         FilterOnDoubleSchedules,
         FilterExcludeCurrentMonth,
+        FilterNegativeDiff,
         sluttetFilter !== 'alle',
         limit300,
     ].filter(Boolean).length
@@ -369,6 +388,7 @@ const AvstemmingMangler = () => {
         setSearchFilterActions([])
         setFilterOnDoubleSchedules(false)
         setFilterExcludeCurrentMonth(false)
+        setFilterNegativeDiff(false)
         setSluttetFilter('alle')
         setLimit300(false)
     }
@@ -708,16 +728,19 @@ const AvstemmingMangler = () => {
                             value={[
                                 ...(FilterOnDoubleSchedules ? ['double'] : []),
                                 ...(FilterExcludeCurrentMonth ? ['excludeCurrent'] : []),
+                                ...(FilterNegativeDiff ? ['negativeDiff'] : []),
                                 ...(limit300 ? ['limit'] : []),
                             ]}
                             onChange={(val: string[]) => {
                                 setFilterOnDoubleSchedules(val.includes('double'))
                                 setFilterExcludeCurrentMonth(val.includes('excludeCurrent'))
+                                setFilterNegativeDiff(val.includes('negativeDiff'))
                                 setLimit300(val.includes('limit'))
                             }}
                         >
                             <Checkbox value="double">Kun dobbeltvakter</Checkbox>
                             <Checkbox value="excludeCurrent">!= denne måned</Checkbox>
+                            <Checkbox value="negativeDiff">Kun negativ diff (rødt)</Checkbox>
                             <Checkbox value="limit">Begrens til 500</Checkbox>
                         </CheckboxGroup>
                     </div>
