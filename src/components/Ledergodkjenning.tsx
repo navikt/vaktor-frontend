@@ -12,6 +12,7 @@ import MapApproveStatus from './utils/MapApproveStatus'
 import { useTheme } from '../context/ThemeContext'
 import { Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
 import { hasAnyRole, hasRoleInGroup } from '../utils/roles'
+import { clusterDoubleShifts } from '../utils/doubleShiftClustering'
 
 type ActionFilter = 'krever_handling' | 'ikke_utbetalt' | 'alle'
 
@@ -170,6 +171,216 @@ const AdminLeder = ({}) => {
         )
     }
 
+    const DoubleOverlapTimeline = ({ schedules }: { schedules: Schedules[] }) => {
+        type Entry = { id: string; start_timestamp: number; end_timestamp: number; hasCost: boolean }
+
+        const unionIntervals = (intervals: Array<[number, number]>): Array<[number, number]> => {
+            if (intervals.length === 0) return []
+            const s = [...intervals].sort((a, b) => a[0] - b[0])
+            const res: Array<[number, number]> = [[s[0][0], s[0][1]]]
+            for (let i = 1; i < s.length; i++) {
+                const last = res[res.length - 1]
+                if (s[i][0] <= last[1]) last[1] = Math.max(last[1], s[i][1])
+                else res.push([s[i][0], s[i][1]])
+            }
+            return res
+        }
+
+        const subtractIntervals = (range: [number, number], blocked: Array<[number, number]>): Array<[number, number]> => {
+            let rem: Array<[number, number]> = [[range[0], range[1]]]
+            for (const [bs, be] of blocked) {
+                const next: Array<[number, number]> = []
+                for (const [rs, re] of rem) {
+                    if (be <= rs || bs >= re) next.push([rs, re])
+                    else {
+                        if (rs < bs) next.push([rs, bs])
+                        if (be < re) next.push([be, re])
+                    }
+                }
+                rem = next
+            }
+            return rem
+        }
+
+        const seenIds = new Set(schedules.map((s) => s.id))
+        const fromSchedules: Entry[] = schedules.map((s) => ({
+            id: s.id,
+            start_timestamp: s.start_timestamp,
+            end_timestamp: s.end_timestamp,
+            hasCost: s.cost.length > 0 && Number(s.cost[s.cost.length - 1].total_cost) > 0,
+        }))
+        const extraById = new Map<string, Entry>()
+        for (const s of schedules) {
+            for (const o of s.overlapping_schedules ?? []) {
+                if (!seenIds.has(o.id) && !extraById.has(o.id)) {
+                    extraById.set(o.id, { id: o.id, start_timestamp: o.start_timestamp, end_timestamp: o.end_timestamp, hasCost: false })
+                }
+            }
+        }
+
+        const all: Entry[] = [...fromSchedules, ...Array.from(extraById.values())]
+        const sorted = all.sort((a, b) => {
+            if (a.start_timestamp !== b.start_timestamp) return a.start_timestamp - b.start_timestamp
+            const durDiff = b.end_timestamp - b.start_timestamp - (a.end_timestamp - a.start_timestamp)
+            if (durDiff !== 0) return durDiff
+            if (a.hasCost !== b.hasCost) return a.hasCost ? -1 : 1
+            return 0
+        })
+
+        const clusterMin = Math.min(...sorted.map((s) => s.start_timestamp))
+        const clusterMax = Math.max(...sorted.map((s) => s.end_timestamp))
+        const duration = clusterMax - clusterMin || 1
+
+        const pct = (ts: number) => `${((ts - clusterMin) / duration) * 100}%`
+        const wPct = (s: number, e: number) => `${Math.max(((e - s) / duration) * 100, 0.3)}%`
+        const fmt = (ts: number) =>
+            new Date(ts * 1000)
+                .toLocaleString('no-NB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                .replace(',', '')
+        const fmtH = (sec: number) => {
+            const h = sec / 3600
+            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+        }
+
+        const claimedSoFar: Array<[number, number]> = []
+        const entryData = sorted.map((entry, i) => {
+            const range: [number, number] = [entry.start_timestamp, entry.end_timestamp]
+            let compensated: Array<[number, number]>
+            let blocked: Array<[number, number]>
+
+            if (i === 0) {
+                compensated = [range]
+                blocked = []
+            } else {
+                const allClaimed = unionIntervals([...claimedSoFar])
+                blocked = unionIntervals(
+                    allClaimed
+                        .map(([cs, ce]): [number, number] => [Math.max(entry.start_timestamp, cs), Math.min(entry.end_timestamp, ce)])
+                        .filter(([bs, be]) => be > bs)
+                )
+                compensated = subtractIntervals(range, blocked)
+            }
+
+            const compensatedDuration = compensated.reduce((sum, [a, b]) => sum + (b - a), 0)
+            for (const iv of compensated) claimedSoFar.push(iv)
+
+            return { ...entry, isPrimary: i === 0, compensated, blocked, totalDuration: range[1] - range[0], compensatedDuration }
+        })
+
+        const greenColor = isDarkMode ? '#2d7a4f' : '#287d44'
+        const redColor = isDarkMode ? '#5a1e1e' : '#f5c6cb'
+
+        return (
+            <div style={{ marginTop: '12px', marginBottom: '4px', minWidth: '600px', paddingBottom: '4px' }}>
+                {entryData.map((s) => {
+                    const hasComp = s.compensatedDuration > 0
+                    const compHours = fmtH(s.compensatedDuration)
+                    const totalHours = fmtH(s.totalDuration)
+
+                    return (
+                        <div key={s.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '14px', gap: '10px' }}>
+                            <div style={{ width: '130px', flexShrink: 0 }}>
+                                <div
+                                    style={{
+                                        fontSize: '0.8em',
+                                        fontWeight: 700,
+                                        color: s.isPrimary ? (isDarkMode ? '#7ecf9a' : '#1a5c2e') : isDarkMode ? '#b0b0b0' : '#555',
+                                    }}
+                                >
+                                    {s.isPrimary ? 'Primær' : 'Sekundær'}
+                                </div>
+                                <div style={{ fontSize: '0.72em', color: isDarkMode ? '#b0b0b0' : '#444', marginTop: '1px', fontWeight: 600 }}>
+                                    {s.isPrimary ? `${totalHours} kompensert` : hasComp ? `${compHours} kompensert` : 'ingen kompensasjon'}
+                                </div>
+                            </div>
+                            <div style={{ flex: 1, position: 'relative', height: '18px' }}>
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: 0,
+                                        right: 0,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        height: '2px',
+                                        backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+                                        borderRadius: '2px',
+                                    }}
+                                />
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.start_timestamp),
+                                        width: wPct(s.start_timestamp, s.end_timestamp),
+                                        height: '100%',
+                                        backgroundColor: isDarkMode ? '#2a2a2a' : '#efefef',
+                                        border: `1px solid ${isDarkMode ? '#555' : '#ccc'}`,
+                                        borderRadius: '3px',
+                                        boxSizing: 'border-box' as const,
+                                    }}
+                                />
+                                {s.blocked.map(([bs, be], idx) => (
+                                    <div
+                                        key={`b${idx}`}
+                                        style={{
+                                            position: 'absolute',
+                                            left: pct(bs),
+                                            width: wPct(bs, be),
+                                            height: '100%',
+                                            backgroundColor: redColor,
+                                            borderRadius: '2px',
+                                            boxSizing: 'border-box' as const,
+                                        }}
+                                    />
+                                ))}
+                                {s.compensated.map(([cs, ce], idx) => (
+                                    <div
+                                        key={`c${idx}`}
+                                        style={{
+                                            position: 'absolute',
+                                            left: pct(cs),
+                                            width: wPct(cs, ce),
+                                            height: '100%',
+                                            backgroundColor: greenColor,
+                                            borderRadius: '2px',
+                                            boxSizing: 'border-box' as const,
+                                        }}
+                                    />
+                                ))}
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.start_timestamp),
+                                        top: '100%',
+                                        marginTop: '2px',
+                                        fontSize: '0.65em',
+                                        color: isDarkMode ? '#777' : '#888',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {fmt(s.start_timestamp)}
+                                </div>
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.end_timestamp),
+                                        top: '100%',
+                                        marginTop: '2px',
+                                        fontSize: '0.65em',
+                                        color: isDarkMode ? '#777' : '#888',
+                                        whiteSpace: 'nowrap',
+                                        transform: 'translateX(-100%)',
+                                    }}
+                                >
+                                    {fmt(s.end_timestamp)}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        )
+    }
+
     function getMonthTimestamps(currentMonth: Date) {
         const year = currentMonth.getFullYear()
         const month = currentMonth.getMonth()
@@ -318,9 +529,223 @@ const AdminLeder = ({}) => {
         return level === 'primary' ? '#e0e0e0' : level === 'secondary' ? '#b0b0b0' : '#888'
     }
 
-    const mapVakter = (vaktliste: Schedules[]) => {
-        // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByGroupName: Record<string, Schedules[]> = vaktliste.reduce(
+        const mapVakter = (vaktliste: Schedules[]) => {
+        // Separate double shifts from ordinary shifts
+        const doubles = vaktliste.filter((v) => v.is_double)
+        const ordinary = vaktliste.filter((v) => !v.is_double)
+
+        // Cluster double shifts
+        const doubleClusterMap = doubles.length > 0 ? clusterDoubleShifts(vaktliste) : null
+
+        let rowCount = 0
+        const canViewCost = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'])
+        const columnCount = canViewCost ? 7 : 6
+
+        const allRows: JSX.Element[] = []
+
+        // Render double shift clusters first
+        if (doubleClusterMap && doubleClusterMap.map.size > 0) {
+            const clusterIndices = new Set<number>()
+
+            // Collect unique cluster indices
+            for (const clusterId of doubleClusterMap.map.keys()) {
+                clusterIndices.add(doubleClusterMap.map.get(clusterId)!)
+            }
+
+            // Render each cluster
+            for (const clusterIdx of clusterIndices) {
+                const clusterSchedules = doubles.filter((s) => doubleClusterMap.map.get(s.id) === clusterIdx)
+                const clusterName = doubleClusterMap.clusterNames[clusterIdx] ?? `Dobbeltvakt #${clusterIdx + 1}`
+
+                // Cluster header with DoubleOverlapTimeline
+                allRows.push(
+                    <Table.Row key={`double-header-${clusterIdx}`}>
+                        <Table.DataCell colSpan={columnCount}>
+                            <b>Dobbeltvakt #{clusterIdx + 1} — {clusterName}</b>
+                            <DoubleOverlapTimeline schedules={clusterSchedules} />
+                        </Table.DataCell>
+                    </Table.Row>
+                )
+
+                // Cluster rows
+                clusterSchedules.forEach((vakter) => {
+                    rowCount++
+                    const vaktType = vakter.type === 'bakvakt' ? 'bistand' : vakter.type
+                    const backgroundColor = getBistandBytteColor(vaktType)
+                    const icon =
+                        vaktType === 'bistand' ? (
+                            <FirstAidKitIcon aria-hidden style={{ marginRight: '8px' }} />
+                        ) : vaktType === 'bytte' ? (
+                            <RecycleIcon aria-hidden style={{ marginRight: '8px' }} />
+                        ) : null
+
+                    allRows.push(
+                        <Table.Row key={`double-row-${vakter.id}`}>
+                            <Table.DataCell>{rowCount}</Table.DataCell>
+                            <Table.DataCell scope="row" style={{ padding: '12px', backgroundColor }}>
+                                <div style={{ lineHeight: '1.5' }}>
+                                    <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                                        {icon}
+                                        {vakter.user.name}
+                                    </div>
+                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.user.id.toUpperCase()}</div>
+                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.group.name}</div>
+                                    <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
+                                        {vaktType}
+                                    </div>
+                                </div>
+                            </Table.DataCell>
+                            <Table.DataCell style={{ minWidth: '200px', padding: '12px', backgroundColor: getStatusColor(vakter.approve_level) }}>
+                                <div style={{ lineHeight: '1.6' }}>
+                                    <div style={{ marginBottom: '8px' }}>
+                                        <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
+                                    </div>
+                                    <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '4px' }}>
+                                        <b>ID:</b> {vakter.id}
+                                    </div>
+                                    <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>
+                                        <b>Uke:</b> {moment(vakter.start_timestamp * 1000).week()}
+                                        {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
+                                            ? ' - ' + moment(vakter.end_timestamp * 1000).week()
+                                            : ''}
+                                    </div>
+                                    <div style={{ fontSize: '0.85em' }}>
+                                        <b>Start:</b>{' '}
+                                        {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })}
+                                    </div>
+                                    <div style={{ fontSize: '0.85em', marginTop: '4px' }}>
+                                        <b>Slutt:</b>{' '}
+                                        {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })}
+                                    </div>
+                                </div>
+                            </Table.DataCell>
+                            <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
+                                {vakter.vakter.length > 0 ? (
+                                    <div style={{ lineHeight: '1.5' }}>
+                                        {vakter.vakter.map((endringer, idx: number) => {
+                                            const endringBgColor =
+                                                vaktType === 'ordinær vakt'
+                                                    ? getBistandBytteColor(endringer.type === 'bakvakt' ? 'bistand' : endringer.type)
+                                                    : 'transparent'
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    style={{
+                                                        marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
+                                                        paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
+                                                        borderBottom:
+                                                            idx < vakter.vakter.length - 1 ? `1px solid ${isDarkMode ? '#444' : '#e0e0e0'}` : 'none',
+                                                        backgroundColor: endringBgColor,
+                                                        padding: endringBgColor !== 'transparent' ? '8px' : '0',
+                                                        borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
+                                                    }}
+                                                >
+                                                    <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>{endringer.type}</div>
+                                                    <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
+                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
+                                                        {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
+                                                        {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ) : (
+                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
+                                )}
+                            </Table.DataCell>
+                            <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
+                                <div>
+                                    {vakter.user_id.toLowerCase() === user.id.toLowerCase() ? (
+                                        <></>
+                                    ) : (
+                                        <>
+                                            <ApproveButton
+                                                vakt={vakter}
+                                                user={user}
+                                                setResponse={setResponse as Dispatch<SetStateAction<ResponseType>>}
+                                                confirmSchedule={confirm_schedule}
+                                                setLoading={setLoading}
+                                                loading={loading}
+                                                onError={setErrorMessage}
+                                            />
+
+                                            <Button
+                                                disabled={
+                                                    loading ||
+                                                    vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
+                                                    vakter.approve_level === 0 ||
+                                                    vakter.approve_level === 2 ||
+                                                    vakter.approve_level >= 3
+                                                }
+                                                style={{
+                                                    backgroundColor: isDarkMode ? '#6b2c2c' : '#f96c6c',
+                                                    color: '#ffffff',
+                                                    height: '36px',
+                                                    marginBottom: '5px',
+                                                    width: '150px',
+                                                }}
+                                                onClick={() => disprove_schedule(vakter.id, setResponse)}
+                                            >
+                                                {loading ? <Loader /> : 'Avgodkjenn'}
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+                            </Table.DataCell>
+
+                            {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
+                                <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
+                                    {vakter.cost.length !== 0 ? (
+                                        <div
+                                            style={{
+                                                padding: '8px',
+                                                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                                                borderRadius: '4px',
+                                                border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
+                                            }}
+                                        >
+                                            <MapCost vakt={vakter} avstemming={undefined} />
+                                        </div>
+                                    ) : (
+                                        <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen kostnad</span>
+                                    )}
+                                </Table.DataCell>
+                            )}
+                        </Table.Row>
+                    )
+                })
+            }
+        }
+
+        // Group ordinary shifts by vaktlag (group name)
+        const groupedByGroupName: Record<string, Schedules[]> = ordinary.reduce(
             (acc: Record<string, Schedules[]>, current) => {
                 const groupName = current.group.name || 'group name not set'
                 if (!acc[groupName]) {
@@ -337,25 +762,20 @@ const AdminLeder = ({}) => {
             groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
         })
 
-        // Convert the grouped and sorted schedules into an array of JSX elements
-        let rowCount = 0
-        const canViewCost = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'])
-        const columnCount = canViewCost ? 7 : 6
-        const groupedRows = Object.entries(groupedByGroupName).flatMap(([koststed, schedules], index) => [
-            // This is the row for the group header
+        // Render ordinary shifts
+        Object.entries(groupedByGroupName).forEach(([koststed, schedules]) => {
+            allRows.push(
+                <Table.Row key={`header-${koststed}`}>
+                    <Table.DataCell colSpan={columnCount}>
+                        <b>{koststed}</b>
+                        <TimeLine schedules={schedules} />
+                    </Table.DataCell>
+                </Table.Row>
+            )
 
-            // TODO: Make a timeline visualization of the schedule
-            <Table.Row key={`header-${koststed}`}>
-                <Table.DataCell colSpan={columnCount}>
-                    <b>{koststed}</b>
-                    <TimeLine schedules={schedules} />
-                </Table.DataCell>
-            </Table.Row>,
-            // These are the individual rows for the schedules
-            ...schedules.map((vakter, i) => {
+            schedules.forEach((vakter) => {
                 rowCount++
                 const vaktType = vakter.type === 'bakvakt' ? 'bistand' : vakter.type
-                const isSpecialType = vaktType === 'bistand' || vaktType === 'bytte'
                 const backgroundColor = getBistandBytteColor(vaktType)
                 const icon =
                     vaktType === 'bistand' ? (
@@ -364,8 +784,8 @@ const AdminLeder = ({}) => {
                         <RecycleIcon aria-hidden style={{ marginRight: '8px' }} />
                     ) : null
 
-                return (
-                    <Table.Row key={`row-${vakter.id}-${i}`}>
+                allRows.push(
+                    <Table.Row key={`row-${vakter.id}`}>
                         <Table.DataCell>{rowCount}</Table.DataCell>
                         <Table.DataCell scope="row" style={{ padding: '12px', backgroundColor }}>
                             <div style={{ lineHeight: '1.5' }}>
@@ -498,7 +918,6 @@ const AdminLeder = ({}) => {
                                             }}
                                             onClick={() => disprove_schedule(vakter.id, setResponse)}
                                         >
-                                            {' '}
                                             {loading ? <Loader /> : 'Avgodkjenn'}
                                         </Button>
                                     </>
@@ -517,36 +936,21 @@ const AdminLeder = ({}) => {
                                             border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
                                         }}
                                     >
-                                        <MapCost vakt={vakter}></MapCost>
+                                        <MapCost vakt={vakter} avstemming={undefined} />
                                     </div>
                                 ) : (
-                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen beregning foreligger</span>
+                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen kostnad</span>
                                 )}
                             </Table.DataCell>
                         )}
-
-                        <Table.DataCell style={{ padding: '8px' }}>
-                            <div
-                                style={{
-                                    padding: '8px',
-                                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                                    borderRadius: '4px',
-                                    border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
-                                }}
-                            >
-                                {vakter.audits.length !== 0 ? (
-                                    <MapAudit audits={vakter.audits} />
-                                ) : (
-                                    <span style={{ fontSize: '0.8em', color: getTextColor('subtle') }}>Ingen hendelser</span>
-                                )}
-                            </div>
-                        </Table.DataCell>
                     </Table.Row>
                 )
-            }),
-        ])
-        return groupedRows
+            })
+        })
+
+        return allRows
     }
+
 
     useEffect(() => {
         setLoading(true)
