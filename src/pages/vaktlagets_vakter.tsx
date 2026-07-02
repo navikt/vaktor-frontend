@@ -68,10 +68,25 @@ const Home: NextPage = () => {
     if (hasAccess) {
         return (
             <div className="Container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                <div style={{ minWidth: '600px', maxWidth: '1200px', margin: '2vh auto 2vh auto' }}>
-                    <GuidePanel className="AdminGuidePanel">
-                        <p>Her kan du endre vaktperioder i vaktlag du er medlem av </p>
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{ minWidth: '600px', maxWidth: '1200px', margin: '2vh auto 2vh auto', width: '100%' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'stretch', flexWrap: 'wrap' }}>
+                        <GuidePanel className="AdminGuidePanel" style={{ flex: '2 1 500px' }}>
+                            <p>Her kan du endre vaktperioder i vaktlag du er medlem av.</p>
+                        </GuidePanel>
+                        <div
+                            style={{
+                                flex: '1 1 320px',
+                                border: '1px solid var(--a-border-default)',
+                                borderRadius: '8px',
+                                padding: '16px',
+                                backgroundColor: 'var(--a-surface-default)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '10px',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <p style={{ margin: 0, fontWeight: 600 }}>Kalender (.iCal)</p>
                             <Button
                                 size="small"
                                 icon={<CalendarIcon title="Last ned kalender" fontSize="1.5rem" />}
@@ -92,7 +107,7 @@ const Home: NextPage = () => {
                                 Last ned .iCal for mine vakter
                             </Button>
                         </div>
-                    </GuidePanel>
+                    </div>
                 </div>
                 <UpdateSchedule selectedVaktlag={selectedVaktlag} setSelectedVaktlag={setSelectedVaktlag} />
             </div>
