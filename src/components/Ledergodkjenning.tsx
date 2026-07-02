@@ -170,6 +170,216 @@ const AdminLeder = ({}) => {
         )
     }
 
+    const DoubleOverlapTimeline = ({ schedules }: { schedules: Schedules[] }) => {
+        type Entry = { id: string; start_timestamp: number; end_timestamp: number; hasCost: boolean }
+
+        const unionIntervals = (intervals: Array<[number, number]>): Array<[number, number]> => {
+            if (intervals.length === 0) return []
+            const s = [...intervals].sort((a, b) => a[0] - b[0])
+            const res: Array<[number, number]> = [[s[0][0], s[0][1]]]
+            for (let i = 1; i < s.length; i++) {
+                const last = res[res.length - 1]
+                if (s[i][0] <= last[1]) last[1] = Math.max(last[1], s[i][1])
+                else res.push([s[i][0], s[i][1]])
+            }
+            return res
+        }
+
+        const subtractIntervals = (range: [number, number], blocked: Array<[number, number]>): Array<[number, number]> => {
+            let rem: Array<[number, number]> = [[range[0], range[1]]]
+            for (const [bs, be] of blocked) {
+                const next: Array<[number, number]> = []
+                for (const [rs, re] of rem) {
+                    if (be <= rs || bs >= re) next.push([rs, re])
+                    else {
+                        if (rs < bs) next.push([rs, bs])
+                        if (be < re) next.push([be, re])
+                    }
+                }
+                rem = next
+            }
+            return rem
+        }
+
+        const seenIds = new Set(schedules.map((s) => s.id))
+        const fromSchedules: Entry[] = schedules.map((s) => ({
+            id: s.id,
+            start_timestamp: s.start_timestamp,
+            end_timestamp: s.end_timestamp,
+            hasCost: s.cost.length > 0 && Number(s.cost[s.cost.length - 1].total_cost) > 0,
+        }))
+        const extraById = new Map<string, Entry>()
+        for (const s of schedules) {
+            for (const o of s.overlapping_schedules ?? []) {
+                if (!seenIds.has(o.id) && !extraById.has(o.id)) {
+                    extraById.set(o.id, { id: o.id, start_timestamp: o.start_timestamp, end_timestamp: o.end_timestamp, hasCost: false })
+                }
+            }
+        }
+
+        const all: Entry[] = [...fromSchedules, ...Array.from(extraById.values())]
+        const sorted = all.sort((a, b) => {
+            if (a.start_timestamp !== b.start_timestamp) return a.start_timestamp - b.start_timestamp
+            const durDiff = b.end_timestamp - b.start_timestamp - (a.end_timestamp - a.start_timestamp)
+            if (durDiff !== 0) return durDiff
+            if (a.hasCost !== b.hasCost) return a.hasCost ? -1 : 1
+            return 0
+        })
+
+        const clusterMin = Math.min(...sorted.map((s) => s.start_timestamp))
+        const clusterMax = Math.max(...sorted.map((s) => s.end_timestamp))
+        const duration = clusterMax - clusterMin || 1
+
+        const pct = (ts: number) => `${((ts - clusterMin) / duration) * 100}%`
+        const wPct = (s: number, e: number) => `${Math.max(((e - s) / duration) * 100, 0.3)}%`
+        const fmt = (ts: number) =>
+            new Date(ts * 1000)
+                .toLocaleString('no-NB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                .replace(',', '')
+        const fmtH = (sec: number) => {
+            const h = sec / 3600
+            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+        }
+
+        const claimedSoFar: Array<[number, number]> = []
+        const entryData = sorted.map((entry, i) => {
+            const range: [number, number] = [entry.start_timestamp, entry.end_timestamp]
+            let compensated: Array<[number, number]>
+            let blocked: Array<[number, number]>
+
+            if (i === 0) {
+                compensated = [range]
+                blocked = []
+            } else {
+                const allClaimed = unionIntervals([...claimedSoFar])
+                blocked = unionIntervals(
+                    allClaimed
+                        .map(([cs, ce]): [number, number] => [Math.max(entry.start_timestamp, cs), Math.min(entry.end_timestamp, ce)])
+                        .filter(([bs, be]) => be > bs)
+                )
+                compensated = subtractIntervals(range, blocked)
+            }
+
+            const compensatedDuration = compensated.reduce((sum, [a, b]) => sum + (b - a), 0)
+            for (const iv of compensated) claimedSoFar.push(iv)
+
+            return { ...entry, isPrimary: i === 0, compensated, blocked, totalDuration: range[1] - range[0], compensatedDuration }
+        })
+
+        const greenColor = isDarkMode ? '#2d7a4f' : '#287d44'
+        const redColor = isDarkMode ? '#5a1e1e' : '#f5c6cb'
+
+        return (
+            <div style={{ marginTop: '12px', marginBottom: '4px', minWidth: '600px', paddingBottom: '4px' }}>
+                {entryData.map((s) => {
+                    const hasComp = s.compensatedDuration > 0
+                    const compHours = fmtH(s.compensatedDuration)
+                    const totalHours = fmtH(s.totalDuration)
+
+                    return (
+                        <div key={s.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '14px', gap: '10px' }}>
+                            <div style={{ width: '130px', flexShrink: 0 }}>
+                                <div
+                                    style={{
+                                        fontSize: '0.8em',
+                                        fontWeight: 700,
+                                        color: s.isPrimary ? (isDarkMode ? '#7ecf9a' : '#1a5c2e') : isDarkMode ? '#b0b0b0' : '#555',
+                                    }}
+                                >
+                                    {s.isPrimary ? 'Primær' : 'Sekundær'}
+                                </div>
+                                <div style={{ fontSize: '0.72em', color: isDarkMode ? '#b0b0b0' : '#444', marginTop: '1px', fontWeight: 600 }}>
+                                    {s.isPrimary ? `${totalHours} kompensert` : hasComp ? `${compHours} kompensert` : 'ingen kompensasjon'}
+                                </div>
+                            </div>
+                            <div style={{ flex: 1, position: 'relative', height: '18px' }}>
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: 0,
+                                        right: 0,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        height: '2px',
+                                        backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+                                        borderRadius: '2px',
+                                    }}
+                                />
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.start_timestamp),
+                                        width: wPct(s.start_timestamp, s.end_timestamp),
+                                        height: '100%',
+                                        backgroundColor: isDarkMode ? '#2a2a2a' : '#efefef',
+                                        border: `1px solid ${isDarkMode ? '#555' : '#ccc'}`,
+                                        borderRadius: '3px',
+                                        boxSizing: 'border-box' as const,
+                                    }}
+                                />
+                                {s.blocked.map(([bs, be], idx) => (
+                                    <div
+                                        key={`b${idx}`}
+                                        style={{
+                                            position: 'absolute',
+                                            left: pct(bs),
+                                            width: wPct(bs, be),
+                                            height: '100%',
+                                            backgroundColor: redColor,
+                                            borderRadius: '2px',
+                                            boxSizing: 'border-box' as const,
+                                        }}
+                                    />
+                                ))}
+                                {s.compensated.map(([cs, ce], idx) => (
+                                    <div
+                                        key={`c${idx}`}
+                                        style={{
+                                            position: 'absolute',
+                                            left: pct(cs),
+                                            width: wPct(cs, ce),
+                                            height: '100%',
+                                            backgroundColor: greenColor,
+                                            borderRadius: '2px',
+                                            boxSizing: 'border-box' as const,
+                                        }}
+                                    />
+                                ))}
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.start_timestamp),
+                                        top: '100%',
+                                        marginTop: '2px',
+                                        fontSize: '0.65em',
+                                        color: isDarkMode ? '#777' : '#888',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {fmt(s.start_timestamp)}
+                                </div>
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        left: pct(s.end_timestamp),
+                                        top: '100%',
+                                        marginTop: '2px',
+                                        fontSize: '0.65em',
+                                        color: isDarkMode ? '#777' : '#888',
+                                        whiteSpace: 'nowrap',
+                                        transform: 'translateX(-100%)',
+                                    }}
+                                >
+                                    {fmt(s.end_timestamp)}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        )
+    }
+
     function getMonthTimestamps(currentMonth: Date) {
         const year = currentMonth.getFullYear()
         const month = currentMonth.getMonth()
@@ -318,9 +528,247 @@ const AdminLeder = ({}) => {
         return level === 'primary' ? '#e0e0e0' : level === 'secondary' ? '#b0b0b0' : '#888'
     }
 
+    const renderAffectedPeriodsCell = (baseSchedule: Schedules) => {
+        const changeOverlaps = (baseSchedule.vakter ?? []).filter((change) => {
+            const overlapsBase = change.start_timestamp < baseSchedule.end_timestamp && change.end_timestamp > baseSchedule.start_timestamp
+            const samePersonDifferentGroup = change.user_id === baseSchedule.user_id && change.group_id !== baseSchedule.group_id
+            return overlapsBase && (change.is_double || samePersonDifferentGroup)
+        })
+
+        const backendOverlaps = (baseSchedule.overlapping_schedules ?? [])
+            .filter((overlap) => overlap.start_timestamp < baseSchedule.end_timestamp && overlap.end_timestamp > baseSchedule.start_timestamp)
+            .map((overlap) => ({
+                id: overlap.id,
+                label: itemData.find((s) => s.group_id === overlap.group_id)?.group.name ?? overlap.group_id,
+                start_timestamp: overlap.start_timestamp,
+                end_timestamp: overlap.end_timestamp,
+            }))
+
+        const overlapMap = new Map<string, { id: string; label: string; start_timestamp: number; end_timestamp: number }>()
+        changeOverlaps.forEach((change) =>
+            overlapMap.set(change.id, {
+                id: change.id,
+                label: change.user.name,
+                start_timestamp: change.start_timestamp,
+                end_timestamp: change.end_timestamp,
+            })
+        )
+        backendOverlaps.forEach((overlap) => overlapMap.set(overlap.id, overlap))
+        const overlaps = Array.from(overlapMap.values())
+
+        if (overlaps.length === 0) {
+            return (
+                <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
+                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
+                </Table.DataCell>
+            )
+        }
+
+        type TimelineEntry = {
+            key: string
+            start: number
+            end: number
+        }
+
+        const baseStart = baseSchedule.start_timestamp
+        const baseEnd = baseSchedule.end_timestamp
+        const axisDuration = Math.max(baseEnd - baseStart, 1)
+
+        const entries: TimelineEntry[] = [
+            { key: `base-${baseSchedule.id}`, start: baseStart, end: baseEnd },
+            ...overlaps.map((change) => ({
+                key: `overlap-${change.id}`,
+                start: change.start_timestamp,
+                end: change.end_timestamp,
+            })),
+        ].filter((entry) => entry.end > entry.start)
+
+        const unionIntervals = (intervals: Array<[number, number]>): Array<[number, number]> => {
+            if (intervals.length === 0) return []
+            const sorted = [...intervals].sort((a, b) => a[0] - b[0])
+            const merged: Array<[number, number]> = [[sorted[0][0], sorted[0][1]]]
+            for (let i = 1; i < sorted.length; i++) {
+                const last = merged[merged.length - 1]
+                if (sorted[i][0] <= last[1]) last[1] = Math.max(last[1], sorted[i][1])
+                else merged.push([sorted[i][0], sorted[i][1]])
+            }
+            return merged
+        }
+
+        const subtractIntervals = (range: [number, number], blocked: Array<[number, number]>): Array<[number, number]> => {
+            let rem: Array<[number, number]> = [[range[0], range[1]]]
+            for (const [bs, be] of blocked) {
+                const next: Array<[number, number]> = []
+                for (const [rs, re] of rem) {
+                    if (be <= rs || bs >= re) next.push([rs, re])
+                    else {
+                        if (rs < bs) next.push([rs, bs])
+                        if (be < re) next.push([be, re])
+                    }
+                }
+                rem = next
+            }
+            return rem
+        }
+
+        const sortedByPriority = [...entries].sort((a, b) => {
+            if (a.start !== b.start) return a.start - b.start
+            return b.end - b.start - (a.end - a.start)
+        })
+
+        const claimedSoFar: Array<[number, number]> = []
+        const entrySegments = new Map<
+            string,
+            {
+                compensated: Array<[number, number]>
+                blocked: Array<[number, number]>
+                compensatedDuration: number
+                blockedDuration: number
+            }
+        >()
+
+        sortedByPriority.forEach((entry) => {
+            const range: [number, number] = [entry.start, entry.end]
+            const blocked = unionIntervals(
+                unionIntervals([...claimedSoFar])
+                    .map(([cs, ce]): [number, number] => [Math.max(entry.start, cs), Math.min(entry.end, ce)])
+                    .filter(([bs, be]) => be > bs)
+            )
+            const compensated = subtractIntervals(range, blocked)
+            const compensatedDuration = compensated.reduce((sum, [a, b]) => sum + (b - a), 0)
+            const blockedDuration = blocked.reduce((sum, [a, b]) => sum + (b - a), 0)
+            compensated.forEach((iv) => claimedSoFar.push(iv))
+            entrySegments.set(entry.key, { compensated, blocked, compensatedDuration, blockedDuration })
+        })
+
+        const pct = (ts: number) => `${((ts - baseStart) / axisDuration) * 100}%`
+        const widthPct = (start: number, end: number) => `${Math.max(((end - start) / axisDuration) * 100, 0.25)}%`
+        const formatHours = (seconds: number) => {
+            const h = seconds / 3600
+            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+        }
+
+        const green = isDarkMode ? '#2d7a4f' : '#287d44'
+        const red = isDarkMode ? '#6b2c2c' : '#f5c6cb'
+        const track = isDarkMode ? '#333' : '#e0e0e0'
+        const ghost = isDarkMode ? '#2a2a2a' : '#efefef'
+        const ghostBorder = isDarkMode ? '#555' : '#ccc'
+
+        const baseKey = `base-${baseSchedule.id}`
+        const baseSeg = entrySegments.get(baseKey)
+        if (!baseSeg) {
+            return (
+                <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
+                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
+                </Table.DataCell>
+            )
+        }
+
+        const effectiveStart = baseSeg.compensated[0]?.[0]
+        const effectiveEnd = baseSeg.compensated[baseSeg.compensated.length - 1]?.[1]
+        const fmtDate = (ts: number) =>
+            new Date(ts * 1000)
+                .toLocaleString('no-NB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                })
+                .replace(',', '')
+
+        return (
+            <Table.DataCell style={{ minWidth: '280px', padding: '12px' }}>
+                <div
+                    style={{
+                        fontSize: '0.75em',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: isDarkMode ? '#f08080' : '#b00',
+                        marginBottom: '6px',
+                    }}
+                >
+                    Dobbeltvakt
+                </div>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div style={{ width: '95px', flexShrink: 0 }}>
+                        <div style={{ fontSize: '0.78em', fontWeight: 700 }}>Effektiv vakt</div>
+                        <div style={{ fontSize: '0.68em', color: getTextColor('secondary') }}>
+                            {formatHours(baseSeg.compensatedDuration)} / {formatHours(baseSeg.blockedDuration)}
+                        </div>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative', height: '16px' }}>
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                right: 0,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                height: '2px',
+                                backgroundColor: track,
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: pct(baseStart),
+                                width: widthPct(baseStart, baseEnd),
+                                height: '100%',
+                                backgroundColor: ghost,
+                                border: `1px solid ${ghostBorder}`,
+                                borderRadius: '3px',
+                                boxSizing: 'border-box',
+                            }}
+                        />
+                        {baseSeg.blocked.map(([bs, be], idx) => (
+                            <div
+                                key={`b-base-${idx}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: pct(bs),
+                                    width: widthPct(bs, be),
+                                    height: '100%',
+                                    backgroundColor: red,
+                                    borderRadius: '2px',
+                                }}
+                            />
+                        ))}
+                        {baseSeg.compensated.map(([cs, ce], idx) => (
+                            <div
+                                key={`c-base-${idx}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: pct(cs),
+                                    width: widthPct(cs, ce),
+                                    height: '100%',
+                                    backgroundColor: green,
+                                    borderRadius: '2px',
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '0.68em', color: getTextColor('secondary') }}>
+                    {effectiveStart && effectiveEnd ? `${fmtDate(effectiveStart)} – ${fmtDate(effectiveEnd)}` : 'Ingen kompensert periode'}
+                </div>
+            </Table.DataCell>
+        )
+    }
+
     const mapVakter = (vaktliste: Schedules[]) => {
-        // Use a record type to map the koststed to the corresponding array of Schedules
-        const groupedByGroupName: Record<string, Schedules[]> = vaktliste.reduce(
+        // Show all schedules in regular grouping. Double-shift impact is shown under "Endringer".
+        const ordinary = vaktliste
+
+        let rowCount = 0
+        const canViewCost = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'])
+        const columnCount = canViewCost ? 8 : 7
+
+        const allRows: JSX.Element[] = []
+
+        // Group ordinary shifts by vaktlag (group name)
+        const groupedByGroupName: Record<string, Schedules[]> = ordinary.reduce(
             (acc: Record<string, Schedules[]>, current) => {
                 const groupName = current.group.name || 'group name not set'
                 if (!acc[groupName]) {
@@ -337,25 +785,20 @@ const AdminLeder = ({}) => {
             groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
         })
 
-        // Convert the grouped and sorted schedules into an array of JSX elements
-        let rowCount = 0
-        const canViewCost = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'])
-        const columnCount = canViewCost ? 7 : 6
-        const groupedRows = Object.entries(groupedByGroupName).flatMap(([koststed, schedules], index) => [
-            // This is the row for the group header
+        // Render ordinary shifts
+        Object.entries(groupedByGroupName).forEach(([koststed, schedules]) => {
+            allRows.push(
+                <Table.Row key={`header-${koststed}`}>
+                    <Table.DataCell colSpan={columnCount}>
+                        <b>{koststed}</b>
+                        <TimeLine schedules={schedules} />
+                    </Table.DataCell>
+                </Table.Row>
+            )
 
-            // TODO: Make a timeline visualization of the schedule
-            <Table.Row key={`header-${koststed}`}>
-                <Table.DataCell colSpan={columnCount}>
-                    <b>{koststed}</b>
-                    <TimeLine schedules={schedules} />
-                </Table.DataCell>
-            </Table.Row>,
-            // These are the individual rows for the schedules
-            ...schedules.map((vakter, i) => {
+            schedules.forEach((vakter) => {
                 rowCount++
                 const vaktType = vakter.type === 'bakvakt' ? 'bistand' : vakter.type
-                const isSpecialType = vaktType === 'bistand' || vaktType === 'bytte'
                 const backgroundColor = getBistandBytteColor(vaktType)
                 const icon =
                     vaktType === 'bistand' ? (
@@ -364,8 +807,8 @@ const AdminLeder = ({}) => {
                         <RecycleIcon aria-hidden style={{ marginRight: '8px' }} />
                     ) : null
 
-                return (
-                    <Table.Row key={`row-${vakter.id}-${i}`}>
+                allRows.push(
+                    <Table.Row key={`row-${vakter.id}`}>
                         <Table.DataCell>{rowCount}</Table.DataCell>
                         <Table.DataCell scope="row" style={{ padding: '12px', backgroundColor }}>
                             <div style={{ lineHeight: '1.5' }}>
@@ -416,55 +859,7 @@ const AdminLeder = ({}) => {
                                 </div>
                             </div>
                         </Table.DataCell>
-                        <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
-                            {vakter.vakter.length > 0 ? (
-                                <div style={{ lineHeight: '1.5' }}>
-                                    {vakter.vakter.map((endringer, idx: number) => {
-                                        const endringBgColor =
-                                            vaktType === 'ordinær vakt'
-                                                ? getBistandBytteColor(endringer.type === 'bakvakt' ? 'bistand' : endringer.type)
-                                                : 'transparent'
-                                        return (
-                                            <div
-                                                key={idx}
-                                                style={{
-                                                    marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                    paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                    borderBottom:
-                                                        idx < vakter.vakter.length - 1 ? `1px solid ${isDarkMode ? '#444' : '#e0e0e0'}` : 'none',
-                                                    backgroundColor: endringBgColor,
-                                                    padding: endringBgColor !== 'transparent' ? '8px' : '0',
-                                                    borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
-                                                }}
-                                            >
-                                                <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>{endringer.type}</div>
-                                                <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
-                                                <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                    {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </div>
-                                                <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                    {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            ) : (
-                                <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
-                            )}
-                        </Table.DataCell>
+                        {renderAffectedPeriodsCell(vakter)}
                         <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
                             <div>
                                 {vakter.user_id.toLowerCase() === user.id.toLowerCase() ? (
@@ -498,7 +893,6 @@ const AdminLeder = ({}) => {
                                             }}
                                             onClick={() => disprove_schedule(vakter.id, setResponse)}
                                         >
-                                            {' '}
                                             {loading ? <Loader /> : 'Avgodkjenn'}
                                         </Button>
                                     </>
@@ -517,15 +911,14 @@ const AdminLeder = ({}) => {
                                             border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
                                         }}
                                     >
-                                        <MapCost vakt={vakter}></MapCost>
+                                        <MapCost vakt={vakter} avstemming={undefined} />
                                     </div>
                                 ) : (
-                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen beregning foreligger</span>
+                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen kostnad</span>
                                 )}
                             </Table.DataCell>
                         )}
-
-                        <Table.DataCell style={{ padding: '8px' }}>
+                        <Table.DataCell style={{ padding: '8px', minWidth: '200px' }}>
                             <div
                                 style={{
                                     padding: '8px',
@@ -543,10 +936,12 @@ const AdminLeder = ({}) => {
                         </Table.DataCell>
                     </Table.Row>
                 )
-            }),
-        ])
-        return groupedRows
+            })
+        })
+
+        return allRows
     }
+
 
     useEffect(() => {
         setLoading(true)
@@ -620,7 +1015,7 @@ const AdminLeder = ({}) => {
     let filteredListeAvVakter = mapVakter(listeAvVakter)
     const uniqueApproveLevels = Array.from(new Set(listeAvVakter.map((vakt) => vakt.approve_level)))
     const canBulkApprove = uniqueApproveLevels.length === 1 && (uniqueApproveLevels[0] === 1 || uniqueApproveLevels[0] === 3) && listeAvVakter.length > 0
-    const tableColumnCount = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? 7 : 6
+    const tableColumnCount = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? 8 : 7
 
     return (
         <>

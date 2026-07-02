@@ -27,6 +27,7 @@ import VarsleModal from './VarsleModal'
 import ErrorModal from './utils/ErrorModal'
 import AuditModal from './AuditModal'
 import { hasAnyRole } from '../utils/roles'
+import { clusterDoubleShifts } from '../utils/doubleShiftClustering'
 import { FirstAidKitIcon, RecycleIcon, Buildings3Icon, WaitingRoomIcon, FunnelIcon } from '@navikt/aksel-icons'
 
 const STATUS_OPTIONS = [
@@ -717,35 +718,7 @@ const AvstemmingOkonomi = () => {
     // Cluster overlapping double shifts using overlapping_schedules from backend (BFS)
     const doubleClusterMap = (() => {
         if (!FilterOnDoubleSchedules) return null
-        const doubles = displayedVakter.filter((s) => s.is_double)
-        const doubleById = new Map(doubles.map((s) => [s.id, s]))
-        const visited = new Set<string>()
-        const clusters: string[][] = []
-        for (const s of doubles) {
-            if (visited.has(s.id)) continue
-            const clusterIds = new Set<string>()
-            const queue: string[] = [s.id]
-            while (queue.length > 0) {
-                const id = queue.shift()!
-                if (clusterIds.has(id)) continue
-                clusterIds.add(id)
-                const node = doubleById.get(id)
-                if (node) {
-                    for (const overlap of node.overlapping_schedules ?? []) {
-                        if (!clusterIds.has(overlap.id)) queue.push(overlap.id)
-                    }
-                }
-            }
-            clusterIds.forEach((id) => visited.add(id))
-            clusters.push(Array.from(clusterIds))
-        }
-        const map = new Map<string, number>()
-        clusters.forEach((cluster, i) => cluster.forEach((id) => map.set(id, i)))
-        const clusterNames = clusters.map((ids) => {
-            const names = new Set(ids.map((id) => displayedVakter.find((s) => s.id === id)?.user?.name).filter(Boolean))
-            return Array.from(names).join(' & ')
-        })
-        return { map, clusterNames }
+        return clusterDoubleShifts(displayedVakter)
     })()
 
     let listeAvVakter = mapVakterAdmin({
