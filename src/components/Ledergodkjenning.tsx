@@ -11,7 +11,9 @@ import ErrorModal from './utils/ErrorModal'
 import MapApproveStatus from './utils/MapApproveStatus'
 import { useTheme } from '../context/ThemeContext'
 import { Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
-import { hasAnyRole } from '../utils/roles'
+import { hasAnyRole, hasRoleInGroup } from '../utils/roles'
+
+type ActionFilter = 'krever_handling' | 'ikke_utbetalt' | 'alle'
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
@@ -26,8 +28,7 @@ const AdminLeder = ({}) => {
     const [groupNames, setGroupNames] = useState<string[]>([])
 
     const [searchFilter, setSearchFilter] = useState('')
-    const [searchFilterRole, setSearchFilterRole] = useState('')
-    const [searchFilterAction, setSearchFilterAction] = useState(9)
+    const [actionFilter, setActionFilter] = useState<ActionFilter>('krever_handling')
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -568,45 +569,57 @@ const AdminLeder = ({}) => {
     if (itemData === undefined) return <></>
     if (selectedMonth === undefined) setSelected(new Date())
 
+    const isVakthaverVaktsjefForGroup = (schedule: Schedules): boolean => {
+        const isVaktsjefInGroup =
+            schedule.user.group_roles?.some((groupRole) => groupRole.group_id === schedule.group_id && groupRole.role?.title === 'vaktsjef') ?? false
+        const isGlobalVaktsjef = schedule.user.roles?.some((role) => role.title === 'vaktsjef') ?? false
+        return isVaktsjefInGroup || isGlobalVaktsjef
+    }
+
+    const isActionableForUser = (schedule: Schedules): boolean => {
+        const canApproveAsBDM = hasAnyRole(user, ['bdm']) && schedule.approve_level === 3
+        const canApproveAsVaktsjef = hasRoleInGroup(user, schedule.group_id, ['vaktsjef']) && schedule.approve_level === 1
+        const canApproveAsLeveranseleder =
+            hasRoleInGroup(user, schedule.group_id, ['leveranseleder']) && schedule.approve_level === 1 && isVakthaverVaktsjefForGroup(schedule)
+        return canApproveAsBDM || canApproveAsVaktsjef || canApproveAsLeveranseleder
+    }
+
+    const isNotPaidForUser = (schedule: Schedules): boolean => {
+        if (hasAnyRole(user, ['bdm']) && schedule.approve_level <= 3) return true
+        if (hasRoleInGroup(user, schedule.group_id, ['vaktsjef']) && schedule.approve_level <= 1) return true
+        if (hasRoleInGroup(user, schedule.group_id, ['leveranseleder']) && schedule.approve_level <= 1) return true
+        return false
+    }
+
     let listeAvVakter = itemData.filter((value: Schedules) => {
         const month = new Date(value.start_timestamp * 1000).getMonth()
         const year = new Date(value.start_timestamp * 1000).getFullYear()
-        // Check for role and approvelevel
-        const checkRole =
-            (hasAnyRole(user, ['bdm']) && value.approve_level == 3) ||
-            (hasAnyRole(user, ['vaktsjef']) && value.approve_level == 1) ||
-            (hasAnyRole(user, ['leveranseleder']) && value.approve_level == 1)
         const isExternal = value.user.ekstern == false
         // Ignore approved periods in the future
         const futurePeriodsMonth = month <= selectedMonth!.getMonth()
         const futurePeriodsYear = year <= selectedMonth!.getFullYear()
 
-        // Determine if the date filtering should be applied.
-        const isDateMatching = checkRole || (month === selectedMonth!.getMonth() && year === selectedMonth!.getFullYear())
+        // Always keep selected month as baseline for all action filters.
+        const isDateMatching = month === selectedMonth!.getMonth() && year === selectedMonth!.getFullYear()
 
         // Apply other filtering conditions.
         const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
-        const isRoleMatching =
-            searchFilterRole === ''
-                ? true
-                : (value.user.roles?.some((role) => role.title.toLowerCase().includes(searchFilterRole.toLowerCase())) ?? false)
         const isGroupMatch = value.group.name.endsWith(searchFilterGroup)
-        const isApproveLevelMatching = searchFilterAction === 9 ? true : value.approve_level === searchFilterAction
+        const isActionMatching =
+            actionFilter === 'alle'
+                ? true
+                : actionFilter === 'ikke_utbetalt'
+                  ? isNotPaidForUser(value)
+                  : // krev_handling: kun manuelle handlinger i status 0/1/3
+                    value.approve_level <= 3 && isActionableForUser(value)
 
         // Combine all conditions for filtering.
-        return (
-            isDateMatching &&
-            isNameMatching &&
-            isRoleMatching &&
-            isGroupMatch &&
-            isApproveLevelMatching &&
-            isExternal &&
-            futurePeriodsMonth &&
-            futurePeriodsYear
-        )
+        return isDateMatching && isNameMatching && isGroupMatch && isActionMatching && isExternal && futurePeriodsMonth && futurePeriodsYear
     })
 
     let filteredListeAvVakter = mapVakter(listeAvVakter)
+    const uniqueApproveLevels = Array.from(new Set(listeAvVakter.map((vakt) => vakt.approve_level)))
+    const canBulkApprove = uniqueApproveLevels.length === 1 && (uniqueApproveLevels[0] === 1 || uniqueApproveLevels[0] === 3) && listeAvVakter.length > 0
 
     return (
         <>
@@ -631,40 +644,28 @@ const AdminLeder = ({}) => {
                         ))}
                     </Select>
                 </div>
-                <div style={{ width: '200px', minWidth: '180px', flex: '0 1 auto' }}>
+                <div style={{ width: '240px', minWidth: '220px', flex: '0 1 auto' }}>
                     <Select
                         label={
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span>Velg rolle</span>
-                                <HelpText strategy="fixed" title="Om rollefilter">
+                                <span>Krever handling</span>
+                                <HelpText strategy="fixed" title="Om handlingsfilter">
                                     <div>
-                                        <b>Velg rolle</b>
+                                        <b>Krever handling</b>
                                         <br />
-                                        Her kan du velge for eksempel <i>Vaktsjef</i> for kun å vise vakter fra de som har denne rollen. Dette er
-                                        nyttig for leveranseledere.
+                                        <i>Trenger godkjenning</i> viser perioder du kan/må behandle nå.
+                                        <br />
+                                        <i>Vis åpne perioder</i> viser perioder som ikke er utbetalt ennå innenfor ditt ansvarsområde.
                                     </div>
                                 </HelpText>
                             </div>
                         }
-                        onChange={(e) => setSearchFilterRole(e.target.value)}
+                        value={actionFilter}
+                        onChange={(e) => setActionFilter(e.target.value as ActionFilter)}
                     >
-                        <option value="">Alle</option>
-                        <option value="vakthaver">Vakthaver</option>
-                        <option value="vaktsjef">Vaktsjef</option>
-                    </Select>
-                </div>
-                <div style={{ width: '200px', minWidth: '180px', flex: '0 1 auto' }}>
-                    <Select label="Velg status" onChange={(e) => setSearchFilterAction(Number(e.target.value))}>
-                        <option value={9}>Alle</option>
-                        <option value={0}>Trenger godkjenning</option>
-                        <option value={1}>Godkjent av ansatt</option>
-                        <option value={2}>Venter på utregning</option>
-                        <option value={3}>Godkjent av vaktsjef</option>
-                        <option value={4}>Godkjent av BDM</option>
-                        <option value={5}>Overført til lønn</option>
-                        <option value={6}>Venter på utregning av diff</option>
-                        <option value={7}>Utregning fullført med diff</option>
-                        <option value={8}>Overført til lønn etter rekjøring</option>
+                        <option value="krever_handling">Trenger godkjenning</option>
+                        <option value="ikke_utbetalt">Vis åpne perioder</option>
+                        <option value="alle">Vis alle</option>
                     </Select>
                 </div>
 
@@ -678,14 +679,13 @@ const AdminLeder = ({}) => {
                                 Denne knappen vil godkjenne samtlige vakter i lista under. Du kan bruke filterfunksjonaliteten (til venstre) for å
                                 redusere antall vakter du godkjenner i bulk. <br />
                                 <br />
-                                Vakter i forskjellig status kan ikke godkjennes samtidig, derfor <b>må</b> <i>status</i> velges i nedtrekksmenyen til
-                                venstre.
+                                Vakter i forskjellig status kan ikke godkjennes samtidig.
                             </div>
                         </HelpText>
                     </div>
                     <Button
                         style={{ width: '100%', height: '50px' }}
-                        disabled={!(searchFilterAction === 3 || searchFilterAction === 1) || listeAvVakter.length === 0}
+                        disabled={!canBulkApprove}
                         onClick={() =>
                             confirm_schedules_bulk(
                                 listeAvVakter.map((vakt) => vakt.id),

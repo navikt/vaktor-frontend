@@ -10,8 +10,11 @@ const ROLE_LABELS: Record<string, string> = {
     bdm: 'BDM',
 }
 
-const getTargetRole = (schedule: Schedules): string => {
+const NOTIFIABLE_LEVELS = new Set([0, 1, 3])
+
+const getTargetRole = (schedule: Schedules): string | null => {
     const level = schedule.approve_level
+    if (!NOTIFIABLE_LEVELS.has(level)) return null
     if (level === 1) {
         const isVaktsjef =
             schedule.user.group_roles?.some(
@@ -26,6 +29,7 @@ const getTargetRole = (schedule: Schedules): string => {
 const groupByRole = (vakter: Schedules[]): Record<string, Schedules[]> =>
     vakter.reduce<Record<string, Schedules[]>>((acc, s) => {
         const role = getTargetRole(s)
+        if (!role) return acc
         if (!acc[role]) acc[role] = []
         acc[role].push(s)
         return acc
@@ -40,6 +44,8 @@ const VarsleModal = (props: { listeAvVakter: Schedules[]; handleClose: Function;
 
     const selectedMonth = props.month.toLocaleString('nb-NO', { month: 'long' })
     const grouped = groupByRole(props.listeAvVakter)
+    const notifiableCount = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0)
+    const skippedCount = props.listeAvVakter.length - notifiableCount
 
     const handleSendAlert = async () => {
         setIsSubmitting(true)
@@ -97,6 +103,14 @@ const VarsleModal = (props: { listeAvVakter: Schedules[]; handleClose: Function;
 
                     {!result?.ok && (
                         <div style={{ marginTop: '16px' }}>
+                            {skippedCount > 0 && (
+                                <p style={{ fontSize: '0.85rem', color: isDarkMode ? '#b0b0b0' : '#666', marginBottom: '10px' }}>
+                                    {skippedCount} vakt{skippedCount !== 1 ? 'er' : ''} med annen status er ekskludert og varsles ikke.
+                                </p>
+                            )}
+                            {notifiableCount === 0 && (
+                                <Alert variant="info">Ingen vakter med status som krever varsling.</Alert>
+                            )}
                             {Object.entries(grouped).map(([role, schedules]) => (
                                 <div key={role} style={{ marginBottom: '12px' }}>
                                     <div style={{ fontWeight: 600, marginBottom: '4px', color: isDarkMode ? '#fff' : '#000' }}>
@@ -134,7 +148,7 @@ const VarsleModal = (props: { listeAvVakter: Schedules[]; handleClose: Function;
                         <Button onClick={() => props.handleClose()}>Lukk</Button>
                     ) : (
                         <>
-                            <Button onClick={handleSendAlert} loading={isSubmitting}>
+                            <Button onClick={handleSendAlert} loading={isSubmitting} disabled={notifiableCount === 0}>
                                 Send varsel
                             </Button>
                             <Button variant="tertiary" onClick={() => props.handleClose()} disabled={isSubmitting}>
