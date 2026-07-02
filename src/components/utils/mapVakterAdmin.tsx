@@ -165,6 +165,200 @@ export const mapVakterAdmin = ({
         }
     }
 
+    const renderDoubleShiftTimeline = (vakter: Schedules, overlapping: OverlappingSchedule[]) => {
+        type Entry = { id: string; label: string; start: number; end: number; hasCost: boolean; isBase: boolean }
+
+        const baseEntry: Entry = {
+            id: vakter.id,
+            label: `Ordinær (${vakter.group.name})`,
+            start: vakter.start_timestamp,
+            end: vakter.end_timestamp,
+            hasCost: vakter.cost.length > 0 && Number(vakter.cost[vakter.cost.length - 1].total_cost) > 0,
+            isBase: true,
+        }
+
+        const overlapEntries: Entry[] = overlapping.map((o) => ({
+            id: o.id,
+            label: groupNameByGroupId.get(o.group_id) ?? o.group_id,
+            start: o.start_timestamp,
+            end: o.end_timestamp,
+            hasCost: false,
+            isBase: false,
+        }))
+
+        const entries: Entry[] = [baseEntry, ...overlapEntries].sort((a, b) => {
+            if (a.start !== b.start) return a.start - b.start
+            const durationDiff = b.end - b.start - (a.end - a.start)
+            if (durationDiff !== 0) return durationDiff
+            if (a.hasCost !== b.hasCost) return a.hasCost ? -1 : 1
+            return 0
+        })
+
+        const unionIntervals = (intervals: Array<[number, number]>): Array<[number, number]> => {
+            if (intervals.length === 0) return []
+            const sorted = [...intervals].sort((a, b) => a[0] - b[0])
+            const merged: Array<[number, number]> = [[sorted[0][0], sorted[0][1]]]
+            for (let i = 1; i < sorted.length; i++) {
+                const last = merged[merged.length - 1]
+                if (sorted[i][0] <= last[1]) last[1] = Math.max(last[1], sorted[i][1])
+                else merged.push([sorted[i][0], sorted[i][1]])
+            }
+            return merged
+        }
+
+        const subtractIntervals = (range: [number, number], blocked: Array<[number, number]>): Array<[number, number]> => {
+            let rem: Array<[number, number]> = [[range[0], range[1]]]
+            for (const [bs, be] of blocked) {
+                const next: Array<[number, number]> = []
+                for (const [rs, re] of rem) {
+                    if (be <= rs || bs >= re) next.push([rs, re])
+                    else {
+                        if (rs < bs) next.push([rs, bs])
+                        if (be < re) next.push([be, re])
+                    }
+                }
+                rem = next
+            }
+            return rem
+        }
+
+        const claimed: Array<[number, number]> = []
+        const resultMap = new Map<
+            string,
+            {
+                compensated: Array<[number, number]>
+                blocked: Array<[number, number]>
+                compSec: number
+                blockedSec: number
+                start: number
+                end: number
+            }
+        >()
+
+        entries.forEach((e) => {
+            const blocked = unionIntervals(
+                unionIntervals([...claimed])
+                    .map(([cs, ce]): [number, number] => [Math.max(e.start, cs), Math.min(e.end, ce)])
+                    .filter(([bs, be]) => be > bs)
+            )
+            const compensated = subtractIntervals([e.start, e.end], blocked)
+            compensated.forEach((iv) => claimed.push(iv))
+            const compSec = compensated.reduce((sum, [a, b]) => sum + (b - a), 0)
+            const blockedSec = blocked.reduce((sum, [a, b]) => sum + (b - a), 0)
+            resultMap.set(e.id, { compensated, blocked, compSec, blockedSec, start: e.start, end: e.end })
+        })
+
+        const axisMin = Math.min(...entries.map((e) => e.start))
+        const axisMax = Math.max(...entries.map((e) => e.end))
+        const axisDuration = Math.max(axisMax - axisMin, 1)
+        const pct = (ts: number) => `${((ts - axisMin) / axisDuration) * 100}%`
+        const widthPct = (s: number, e: number) => `${Math.max(((e - s) / axisDuration) * 100, 0.25)}%`
+        const fmtH = (sec: number) => {
+            const h = sec / 3600
+            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+        }
+
+        const green = isDarkMode ? '#2d7a4f' : '#287d44'
+        const red = isDarkMode ? '#6b2c2c' : '#f5c6cb'
+        const track = isDarkMode ? '#333' : '#e0e0e0'
+        const ghost = isDarkMode ? '#2a2a2a' : '#efefef'
+        const ghostBorder = isDarkMode ? '#555' : '#ccc'
+
+        const baseResult = resultMap.get(vakter.id)
+        if (!baseResult) return null
+        const effectiveStart = baseResult.compensated[0]?.[0]
+        const effectiveEnd = baseResult.compensated[baseResult.compensated.length - 1]?.[1]
+        const fmtDate = (ts: number) =>
+            new Date(ts * 1000)
+                .toLocaleString('no-NB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                })
+                .replace(',', '')
+
+        return (
+            <div style={{ marginTop: '8px' }}>
+                <div
+                    style={{
+                        fontSize: '0.75em',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: isDarkMode ? '#f08080' : '#b00',
+                        marginBottom: '6px',
+                    }}
+                >
+                    Dobbeltvakt
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '120px', flexShrink: 0 }}>
+                        <div style={{ fontSize: '0.75em', fontWeight: 700, color: getTextColor('primary') }}>Effektiv vakt</div>
+                        <div style={{ fontSize: '0.68em', color: getTextColor('subtle') }}>
+                            {fmtH(baseResult.compSec)} komp / {fmtH(baseResult.blockedSec)} blokk
+                        </div>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative', height: '14px' }}>
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                right: 0,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                height: '2px',
+                                backgroundColor: track,
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: pct(baseResult.start),
+                                width: widthPct(baseResult.start, baseResult.end),
+                                height: '100%',
+                                backgroundColor: ghost,
+                                border: `1px solid ${ghostBorder}`,
+                                borderRadius: '3px',
+                                boxSizing: 'border-box',
+                            }}
+                        />
+                        {baseResult.blocked.map(([bs, be], idx) => (
+                            <div
+                                key={`b-base-${idx}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: pct(bs),
+                                    width: widthPct(bs, be),
+                                    height: '100%',
+                                    backgroundColor: red,
+                                    borderRadius: '2px',
+                                }}
+                            />
+                        ))}
+                        {baseResult.compensated.map(([cs, ce], idx) => (
+                            <div
+                                key={`c-base-${idx}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: pct(cs),
+                                    width: widthPct(cs, ce),
+                                    height: '100%',
+                                    backgroundColor: green,
+                                    borderRadius: '2px',
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '0.68em', color: getTextColor('secondary') }}>
+                    {effectiveStart && effectiveEnd ? `${fmtDate(effectiveStart)} – ${fmtDate(effectiveEnd)}` : 'Ingen kompensert periode'}
+                </div>
+            </div>
+        )
+    }
+
     let rowCount = 0
     const totalCols = showActions ? 7 : 5
     const groupedRows = Object.entries(grouped).flatMap(([groupKey, schedules]) => {
@@ -334,215 +528,7 @@ export const mapVakterAdmin = ({
                                                             }}
                                                         />
                                                     )}
-                                                    <div
-                                                        style={{
-                                                            fontSize: '0.75em',
-                                                            fontWeight: 700,
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.04em',
-                                                            color: isDarkMode ? '#f08080' : '#b00',
-                                                            marginBottom: '6px',
-                                                        }}
-                                                    >
-                                                        Dobbeltvakt
-                                                    </div>
-                                                    {overlapping.map((other, idx) => {
-                                                        // Build full cluster: this vakt + all overlapping entries, apply cumulative interval logic
-                                                        type CEntry = { id: string; start: number; end: number; hasCost: boolean }
-                                                        const unionIvs = (ivs: Array<[number, number]>): Array<[number, number]> => {
-                                                            if (!ivs.length) return []
-                                                            const s = [...ivs].sort((a, b) => a[0] - b[0])
-                                                            const r: Array<[number, number]> = [[s[0][0], s[0][1]]]
-                                                            for (let i = 1; i < s.length; i++) {
-                                                                const l = r[r.length - 1]
-                                                                if (s[i][0] <= l[1]) l[1] = Math.max(l[1], s[i][1])
-                                                                else r.push([s[i][0], s[i][1]])
-                                                            }
-                                                            return r
-                                                        }
-                                                        const subtractIvs = (
-                                                            range: [number, number],
-                                                            blocked: Array<[number, number]>
-                                                        ): Array<[number, number]> => {
-                                                            let rem: Array<[number, number]> = [[range[0], range[1]]]
-                                                            for (const [bs, be] of blocked) {
-                                                                const next: Array<[number, number]> = []
-                                                                for (const [rs, re] of rem) {
-                                                                    if (be <= rs || bs >= re) next.push([rs, re])
-                                                                    else {
-                                                                        if (rs < bs) next.push([rs, bs])
-                                                                        if (be < re) next.push([be, re])
-                                                                    }
-                                                                }
-                                                                rem = next
-                                                            }
-                                                            return rem
-                                                        }
-
-                                                        const allEntries: CEntry[] = [
-                                                            {
-                                                                id: vakter.id,
-                                                                start: vakter.start_timestamp,
-                                                                end: vakter.end_timestamp,
-                                                                hasCost:
-                                                                    vakter.cost.length > 0 &&
-                                                                    Number(vakter.cost[vakter.cost.length - 1].total_cost) > 0,
-                                                            },
-                                                            ...overlapping.map((o) => ({
-                                                                id: o.id,
-                                                                start: o.start_timestamp,
-                                                                end: o.end_timestamp,
-                                                                hasCost: false,
-                                                            })),
-                                                        ].sort((a, b) => {
-                                                            if (a.start !== b.start) return a.start - b.start
-                                                            const dd = b.end - b.start - (a.end - a.start)
-                                                            if (dd !== 0) return dd
-                                                            if (a.hasCost !== b.hasCost) return a.hasCost ? -1 : 1
-                                                            return 0
-                                                        })
-
-                                                        const claimed: Array<[number, number]> = []
-                                                        const entryResults = allEntries.map((e, ei) => {
-                                                            let compensated: Array<[number, number]>
-                                                            if (ei === 0) {
-                                                                compensated = [[e.start, e.end]]
-                                                            } else {
-                                                                compensated = subtractIvs([e.start, e.end], unionIvs([...claimed]))
-                                                            }
-                                                            for (const iv of compensated) claimed.push(iv)
-                                                            const dur = compensated.reduce((s, [a, b]) => s + (b - a), 0)
-                                                            return { ...e, compensated, compensatedDuration: dur }
-                                                        })
-
-                                                        const thisEntry = entryResults.find((e) => e.id === vakter.id)!
-                                                        const isPrimary = entryResults[0].id === vakter.id
-
-                                                        const totalSec = vakter.end_timestamp - vakter.start_timestamp
-                                                        const compSec = thisEntry.compensatedDuration
-                                                        const blockedSec = totalSec - compSec
-                                                        const fmtH = (s: number) => {
-                                                            const h = s / 3600
-                                                            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
-                                                        }
-                                                        const fmtDate = (ts: number) =>
-                                                            new Date(ts * 1000)
-                                                                .toLocaleString('no-NB', {
-                                                                    day: '2-digit',
-                                                                    month: '2-digit',
-                                                                    year: 'numeric',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit',
-                                                                })
-                                                                .replace(',', '')
-
-                                                        const effectiveStart =
-                                                            thisEntry.compensated.length > 0 ? thisEntry.compensated[0][0] : vakter.start_timestamp
-                                                        const effectiveEnd =
-                                                            thisEntry.compensated.length > 0
-                                                                ? thisEntry.compensated[thisEntry.compensated.length - 1][1]
-                                                                : vakter.end_timestamp
-
-                                                        return (
-                                                            <div
-                                                                key={idx}
-                                                                style={{
-                                                                    marginBottom: idx < overlapping.length - 1 ? '8px' : '0',
-                                                                    padding: '6px 8px',
-                                                                    borderRadius: '4px',
-                                                                    border: `1px solid ${isDarkMode ? '#6b3a35' : '#f5c6cb'}`,
-                                                                    backgroundColor: isDarkMode ? '#3a1e1e' : '#fff5f5',
-                                                                    fontSize: '0.8em',
-                                                                }}
-                                                            >
-                                                                <div
-                                                                    style={{
-                                                                        display: 'inline-flex',
-                                                                        alignItems: 'center',
-                                                                        gap: '4px',
-                                                                        color: getTextColor('subtle'),
-                                                                        marginBottom: '4px',
-                                                                        cursor: 'pointer',
-                                                                        border: `1px solid ${isDarkMode ? '#444' : '#ddd'}`,
-                                                                        borderRadius: '3px',
-                                                                        padding: '1px 5px',
-                                                                        fontFamily: 'monospace',
-                                                                        fontSize: '0.85em',
-                                                                    }}
-                                                                    title="Klikk for å kopiere ID"
-                                                                    onClick={() => navigator.clipboard.writeText(other.id)}
-                                                                >
-                                                                    {other.id.slice(0, 8)}…
-                                                                </div>
-                                                                <div style={{ color: getTextColor('secondary'), marginBottom: '6px' }}>
-                                                                    <b>{groupNameByGroupId.get(other.group_id) ?? other.group_id}</b>
-                                                                </div>
-                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                                                    {isPrimary ? (
-                                                                        <div
-                                                                            style={{
-                                                                                color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
-                                                                                fontWeight: 600,
-                                                                                marginBottom: '2px',
-                                                                            }}
-                                                                        >
-                                                                            Starter først — dekker overlappet
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div
-                                                                            style={{
-                                                                                color: isDarkMode ? '#f08080' : '#b00',
-                                                                                fontWeight: 600,
-                                                                                marginBottom: '2px',
-                                                                            }}
-                                                                        >
-                                                                            Andre vakt starter først
-                                                                        </div>
-                                                                    )}
-                                                                    {blockedSec > 0 && (
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
-                                                                            <span style={{ color: getTextColor('subtle') }}>
-                                                                                Blokkert (ingen komp.)
-                                                                            </span>
-                                                                            <span style={{ color: isDarkMode ? '#f08080' : '#b00', fontWeight: 600 }}>
-                                                                                {fmtH(blockedSec)}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
-                                                                        <span style={{ color: getTextColor('subtle') }}>Kompensert</span>
-                                                                        <span style={{ fontWeight: 700, color: isDarkMode ? '#7ecf9a' : '#1a5c2e' }}>
-                                                                            {compSec > 0 ? fmtH(compSec) : 'Ingen'}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                {compSec > 0 && (
-                                                                    <div
-                                                                        style={{
-                                                                            marginTop: '6px',
-                                                                            paddingTop: '5px',
-                                                                            borderTop: `1px solid ${isDarkMode ? '#555' : '#eee'}`,
-                                                                            color: isDarkMode ? '#7ecf9a' : '#1a5c2e',
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                    >
-                                                                        <div
-                                                                            style={{
-                                                                                fontSize: '0.75em',
-                                                                                fontWeight: 700,
-                                                                                textTransform: 'uppercase',
-                                                                                letterSpacing: '0.04em',
-                                                                                marginBottom: '2px',
-                                                                            }}
-                                                                        >
-                                                                            Effektiv vakt
-                                                                        </div>
-                                                                        {`${fmtDate(effectiveStart)} – ${fmtDate(effectiveEnd)}`}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )
-                                                    })}
+                                                    {renderDoubleShiftTimeline(vakter, overlapping)}
                                                 </div>
                                             )}
                                         </div>

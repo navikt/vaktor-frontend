@@ -12,7 +12,6 @@ import MapApproveStatus from './utils/MapApproveStatus'
 import { useTheme } from '../context/ThemeContext'
 import { Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@navikt/aksel-icons'
 import { hasAnyRole, hasRoleInGroup } from '../utils/roles'
-import { clusterDoubleShifts } from '../utils/doubleShiftClustering'
 
 type ActionFilter = 'krever_handling' | 'ikke_utbetalt' | 'alle'
 
@@ -529,220 +528,244 @@ const AdminLeder = ({}) => {
         return level === 'primary' ? '#e0e0e0' : level === 'secondary' ? '#b0b0b0' : '#888'
     }
 
-        const mapVakter = (vaktliste: Schedules[]) => {
-        // Separate double shifts from ordinary shifts
-        const doubles = vaktliste.filter((v) => v.is_double)
-        const ordinary = vaktliste.filter((v) => !v.is_double)
+    const renderAffectedPeriodsCell = (baseSchedule: Schedules) => {
+        const changeOverlaps = (baseSchedule.vakter ?? []).filter((change) => {
+            const overlapsBase = change.start_timestamp < baseSchedule.end_timestamp && change.end_timestamp > baseSchedule.start_timestamp
+            const samePersonDifferentGroup = change.user_id === baseSchedule.user_id && change.group_id !== baseSchedule.group_id
+            return overlapsBase && (change.is_double || samePersonDifferentGroup)
+        })
 
-        // Cluster double shifts
-        const doubleClusterMap = doubles.length > 0 ? clusterDoubleShifts(vaktliste) : null
+        const backendOverlaps = (baseSchedule.overlapping_schedules ?? [])
+            .filter((overlap) => overlap.start_timestamp < baseSchedule.end_timestamp && overlap.end_timestamp > baseSchedule.start_timestamp)
+            .map((overlap) => ({
+                id: overlap.id,
+                label: itemData.find((s) => s.group_id === overlap.group_id)?.group.name ?? overlap.group_id,
+                start_timestamp: overlap.start_timestamp,
+                end_timestamp: overlap.end_timestamp,
+            }))
+
+        const overlapMap = new Map<string, { id: string; label: string; start_timestamp: number; end_timestamp: number }>()
+        changeOverlaps.forEach((change) =>
+            overlapMap.set(change.id, {
+                id: change.id,
+                label: change.user.name,
+                start_timestamp: change.start_timestamp,
+                end_timestamp: change.end_timestamp,
+            })
+        )
+        backendOverlaps.forEach((overlap) => overlapMap.set(overlap.id, overlap))
+        const overlaps = Array.from(overlapMap.values())
+
+        if (overlaps.length === 0) {
+            return (
+                <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
+                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
+                </Table.DataCell>
+            )
+        }
+
+        type TimelineEntry = {
+            key: string
+            start: number
+            end: number
+        }
+
+        const baseStart = baseSchedule.start_timestamp
+        const baseEnd = baseSchedule.end_timestamp
+        const axisDuration = Math.max(baseEnd - baseStart, 1)
+
+        const entries: TimelineEntry[] = [
+            { key: `base-${baseSchedule.id}`, start: baseStart, end: baseEnd },
+            ...overlaps.map((change) => ({
+                key: `overlap-${change.id}`,
+                start: change.start_timestamp,
+                end: change.end_timestamp,
+            })),
+        ].filter((entry) => entry.end > entry.start)
+
+        const unionIntervals = (intervals: Array<[number, number]>): Array<[number, number]> => {
+            if (intervals.length === 0) return []
+            const sorted = [...intervals].sort((a, b) => a[0] - b[0])
+            const merged: Array<[number, number]> = [[sorted[0][0], sorted[0][1]]]
+            for (let i = 1; i < sorted.length; i++) {
+                const last = merged[merged.length - 1]
+                if (sorted[i][0] <= last[1]) last[1] = Math.max(last[1], sorted[i][1])
+                else merged.push([sorted[i][0], sorted[i][1]])
+            }
+            return merged
+        }
+
+        const subtractIntervals = (range: [number, number], blocked: Array<[number, number]>): Array<[number, number]> => {
+            let rem: Array<[number, number]> = [[range[0], range[1]]]
+            for (const [bs, be] of blocked) {
+                const next: Array<[number, number]> = []
+                for (const [rs, re] of rem) {
+                    if (be <= rs || bs >= re) next.push([rs, re])
+                    else {
+                        if (rs < bs) next.push([rs, bs])
+                        if (be < re) next.push([be, re])
+                    }
+                }
+                rem = next
+            }
+            return rem
+        }
+
+        const sortedByPriority = [...entries].sort((a, b) => {
+            if (a.start !== b.start) return a.start - b.start
+            return b.end - b.start - (a.end - a.start)
+        })
+
+        const claimedSoFar: Array<[number, number]> = []
+        const entrySegments = new Map<
+            string,
+            {
+                compensated: Array<[number, number]>
+                blocked: Array<[number, number]>
+                compensatedDuration: number
+                blockedDuration: number
+            }
+        >()
+
+        sortedByPriority.forEach((entry) => {
+            const range: [number, number] = [entry.start, entry.end]
+            const blocked = unionIntervals(
+                unionIntervals([...claimedSoFar])
+                    .map(([cs, ce]): [number, number] => [Math.max(entry.start, cs), Math.min(entry.end, ce)])
+                    .filter(([bs, be]) => be > bs)
+            )
+            const compensated = subtractIntervals(range, blocked)
+            const compensatedDuration = compensated.reduce((sum, [a, b]) => sum + (b - a), 0)
+            const blockedDuration = blocked.reduce((sum, [a, b]) => sum + (b - a), 0)
+            compensated.forEach((iv) => claimedSoFar.push(iv))
+            entrySegments.set(entry.key, { compensated, blocked, compensatedDuration, blockedDuration })
+        })
+
+        const pct = (ts: number) => `${((ts - baseStart) / axisDuration) * 100}%`
+        const widthPct = (start: number, end: number) => `${Math.max(((end - start) / axisDuration) * 100, 0.25)}%`
+        const formatHours = (seconds: number) => {
+            const h = seconds / 3600
+            return Number.isInteger(h) ? `${h}t` : `${Math.floor(h)}t ${Math.round((h % 1) * 60)}m`
+        }
+
+        const green = isDarkMode ? '#2d7a4f' : '#287d44'
+        const red = isDarkMode ? '#6b2c2c' : '#f5c6cb'
+        const track = isDarkMode ? '#333' : '#e0e0e0'
+        const ghost = isDarkMode ? '#2a2a2a' : '#efefef'
+        const ghostBorder = isDarkMode ? '#555' : '#ccc'
+
+        const baseKey = `base-${baseSchedule.id}`
+        const baseSeg = entrySegments.get(baseKey)
+        if (!baseSeg) {
+            return (
+                <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
+                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
+                </Table.DataCell>
+            )
+        }
+
+        const effectiveStart = baseSeg.compensated[0]?.[0]
+        const effectiveEnd = baseSeg.compensated[baseSeg.compensated.length - 1]?.[1]
+        const fmtDate = (ts: number) =>
+            new Date(ts * 1000)
+                .toLocaleString('no-NB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                })
+                .replace(',', '')
+
+        return (
+            <Table.DataCell style={{ minWidth: '280px', padding: '12px' }}>
+                <div
+                    style={{
+                        fontSize: '0.75em',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: isDarkMode ? '#f08080' : '#b00',
+                        marginBottom: '6px',
+                    }}
+                >
+                    Dobbeltvakt
+                </div>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div style={{ width: '95px', flexShrink: 0 }}>
+                        <div style={{ fontSize: '0.78em', fontWeight: 700 }}>Effektiv vakt</div>
+                        <div style={{ fontSize: '0.68em', color: getTextColor('secondary') }}>
+                            {formatHours(baseSeg.compensatedDuration)} / {formatHours(baseSeg.blockedDuration)}
+                        </div>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative', height: '16px' }}>
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                right: 0,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                height: '2px',
+                                backgroundColor: track,
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: pct(baseStart),
+                                width: widthPct(baseStart, baseEnd),
+                                height: '100%',
+                                backgroundColor: ghost,
+                                border: `1px solid ${ghostBorder}`,
+                                borderRadius: '3px',
+                                boxSizing: 'border-box',
+                            }}
+                        />
+                        {baseSeg.blocked.map(([bs, be], idx) => (
+                            <div
+                                key={`b-base-${idx}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: pct(bs),
+                                    width: widthPct(bs, be),
+                                    height: '100%',
+                                    backgroundColor: red,
+                                    borderRadius: '2px',
+                                }}
+                            />
+                        ))}
+                        {baseSeg.compensated.map(([cs, ce], idx) => (
+                            <div
+                                key={`c-base-${idx}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: pct(cs),
+                                    width: widthPct(cs, ce),
+                                    height: '100%',
+                                    backgroundColor: green,
+                                    borderRadius: '2px',
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '0.68em', color: getTextColor('secondary') }}>
+                    {effectiveStart && effectiveEnd ? `${fmtDate(effectiveStart)} – ${fmtDate(effectiveEnd)}` : 'Ingen kompensert periode'}
+                </div>
+            </Table.DataCell>
+        )
+    }
+
+    const mapVakter = (vaktliste: Schedules[]) => {
+        // Show all schedules in regular grouping. Double-shift impact is shown under "Endringer".
+        const ordinary = vaktliste
 
         let rowCount = 0
         const canViewCost = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm'])
-        const columnCount = canViewCost ? 7 : 6
+        const columnCount = canViewCost ? 8 : 7
 
         const allRows: JSX.Element[] = []
-
-        // Render double shift clusters first
-        if (doubleClusterMap && doubleClusterMap.map.size > 0) {
-            const clusterIndices = new Set<number>()
-
-            // Collect unique cluster indices
-            for (const clusterId of doubleClusterMap.map.keys()) {
-                clusterIndices.add(doubleClusterMap.map.get(clusterId)!)
-            }
-
-            // Render each cluster
-            for (const clusterIdx of clusterIndices) {
-                const clusterSchedules = doubles.filter((s) => doubleClusterMap.map.get(s.id) === clusterIdx)
-                const clusterName = doubleClusterMap.clusterNames[clusterIdx] ?? `Dobbeltvakt #${clusterIdx + 1}`
-
-                // Cluster header with DoubleOverlapTimeline
-                allRows.push(
-                    <Table.Row key={`double-header-${clusterIdx}`}>
-                        <Table.DataCell colSpan={columnCount}>
-                            <b>Dobbeltvakt #{clusterIdx + 1} — {clusterName}</b>
-                            <DoubleOverlapTimeline schedules={clusterSchedules} />
-                        </Table.DataCell>
-                    </Table.Row>
-                )
-
-                // Cluster rows
-                clusterSchedules.forEach((vakter) => {
-                    rowCount++
-                    const vaktType = vakter.type === 'bakvakt' ? 'bistand' : vakter.type
-                    const backgroundColor = getBistandBytteColor(vaktType)
-                    const icon =
-                        vaktType === 'bistand' ? (
-                            <FirstAidKitIcon aria-hidden style={{ marginRight: '8px' }} />
-                        ) : vaktType === 'bytte' ? (
-                            <RecycleIcon aria-hidden style={{ marginRight: '8px' }} />
-                        ) : null
-
-                    allRows.push(
-                        <Table.Row key={`double-row-${vakter.id}`}>
-                            <Table.DataCell>{rowCount}</Table.DataCell>
-                            <Table.DataCell scope="row" style={{ padding: '12px', backgroundColor }}>
-                                <div style={{ lineHeight: '1.5' }}>
-                                    <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
-                                        {icon}
-                                        {vakter.user.name}
-                                    </div>
-                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.user.id.toUpperCase()}</div>
-                                    <div style={{ fontSize: '0.85em', color: getTextColor('secondary') }}>{vakter.group.name}</div>
-                                    <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
-                                        {vaktType}
-                                    </div>
-                                </div>
-                            </Table.DataCell>
-                            <Table.DataCell style={{ minWidth: '200px', padding: '12px', backgroundColor: getStatusColor(vakter.approve_level) }}>
-                                <div style={{ lineHeight: '1.6' }}>
-                                    <div style={{ marginBottom: '8px' }}>
-                                        <MapApproveStatus status={vakter.approve_level} error={vakter.error_messages} />
-                                    </div>
-                                    <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '4px' }}>
-                                        <b>ID:</b> {vakter.id}
-                                    </div>
-                                    <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>
-                                        <b>Uke:</b> {moment(vakter.start_timestamp * 1000).week()}
-                                        {moment(vakter.start_timestamp * 1000).week() < moment(vakter.end_timestamp * 1000).week()
-                                            ? ' - ' + moment(vakter.end_timestamp * 1000).week()
-                                            : ''}
-                                    </div>
-                                    <div style={{ fontSize: '0.85em' }}>
-                                        <b>Start:</b>{' '}
-                                        {new Date(vakter.start_timestamp * 1000).toLocaleString('no-NB', {
-                                            day: '2-digit',
-                                            month: '2-digit',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </div>
-                                    <div style={{ fontSize: '0.85em', marginTop: '4px' }}>
-                                        <b>Slutt:</b>{' '}
-                                        {new Date(vakter.end_timestamp * 1000).toLocaleString('no-NB', {
-                                            day: '2-digit',
-                                            month: '2-digit',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </div>
-                                </div>
-                            </Table.DataCell>
-                            <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
-                                {vakter.vakter.length > 0 ? (
-                                    <div style={{ lineHeight: '1.5' }}>
-                                        {vakter.vakter.map((endringer, idx: number) => {
-                                            const endringBgColor =
-                                                vaktType === 'ordinær vakt'
-                                                    ? getBistandBytteColor(endringer.type === 'bakvakt' ? 'bistand' : endringer.type)
-                                                    : 'transparent'
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    style={{
-                                                        marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                        paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                        borderBottom:
-                                                            idx < vakter.vakter.length - 1 ? `1px solid ${isDarkMode ? '#444' : '#e0e0e0'}` : 'none',
-                                                        backgroundColor: endringBgColor,
-                                                        padding: endringBgColor !== 'transparent' ? '8px' : '0',
-                                                        borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
-                                                    }}
-                                                >
-                                                    <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>{endringer.type}</div>
-                                                    <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
-                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                        {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                                            day: '2-digit',
-                                                            month: '2-digit',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        })}
-                                                    </div>
-                                                    <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                        {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                                            day: '2-digit',
-                                                            month: '2-digit',
-                                                            year: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                ) : (
-                                    <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
-                                )}
-                            </Table.DataCell>
-                            <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
-                                <div>
-                                    {vakter.user_id.toLowerCase() === user.id.toLowerCase() ? (
-                                        <></>
-                                    ) : (
-                                        <>
-                                            <ApproveButton
-                                                vakt={vakter}
-                                                user={user}
-                                                setResponse={setResponse as Dispatch<SetStateAction<ResponseType>>}
-                                                confirmSchedule={confirm_schedule}
-                                                setLoading={setLoading}
-                                                loading={loading}
-                                                onError={setErrorMessage}
-                                            />
-
-                                            <Button
-                                                disabled={
-                                                    loading ||
-                                                    vakter.user_id.toLowerCase() === user.id.toLowerCase() ||
-                                                    vakter.approve_level === 0 ||
-                                                    vakter.approve_level === 2 ||
-                                                    vakter.approve_level >= 3
-                                                }
-                                                style={{
-                                                    backgroundColor: isDarkMode ? '#6b2c2c' : '#f96c6c',
-                                                    color: '#ffffff',
-                                                    height: '36px',
-                                                    marginBottom: '5px',
-                                                    width: '150px',
-                                                }}
-                                                onClick={() => disprove_schedule(vakter.id, setResponse)}
-                                            >
-                                                {loading ? <Loader /> : 'Avgodkjenn'}
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </Table.DataCell>
-
-                            {hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) && (
-                                <Table.DataCell style={{ padding: '8px', minWidth: '280px' }}>
-                                    {vakter.cost.length !== 0 ? (
-                                        <div
-                                            style={{
-                                                padding: '8px',
-                                                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                                                borderRadius: '4px',
-                                                border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
-                                            }}
-                                        >
-                                            <MapCost vakt={vakter} avstemming={undefined} />
-                                        </div>
-                                    ) : (
-                                        <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen kostnad</span>
-                                    )}
-                                </Table.DataCell>
-                            )}
-                        </Table.Row>
-                    )
-                })
-            }
-        }
 
         // Group ordinary shifts by vaktlag (group name)
         const groupedByGroupName: Record<string, Schedules[]> = ordinary.reduce(
@@ -836,55 +859,7 @@ const AdminLeder = ({}) => {
                                 </div>
                             </div>
                         </Table.DataCell>
-                        <Table.DataCell style={{ minWidth: '180px', padding: '12px' }}>
-                            {vakter.vakter.length > 0 ? (
-                                <div style={{ lineHeight: '1.5' }}>
-                                    {vakter.vakter.map((endringer, idx: number) => {
-                                        const endringBgColor =
-                                            vaktType === 'ordinær vakt'
-                                                ? getBistandBytteColor(endringer.type === 'bakvakt' ? 'bistand' : endringer.type)
-                                                : 'transparent'
-                                        return (
-                                            <div
-                                                key={idx}
-                                                style={{
-                                                    marginBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                    paddingBottom: idx < vakter.vakter.length - 1 ? '12px' : '0',
-                                                    borderBottom:
-                                                        idx < vakter.vakter.length - 1 ? `1px solid ${isDarkMode ? '#444' : '#e0e0e0'}` : 'none',
-                                                    backgroundColor: endringBgColor,
-                                                    padding: endringBgColor !== 'transparent' ? '8px' : '0',
-                                                    borderRadius: endringBgColor !== 'transparent' ? '4px' : '0',
-                                                }}
-                                            >
-                                                <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '2px' }}>{endringer.type}</div>
-                                                <div style={{ fontSize: '0.85em', marginBottom: '4px' }}>{endringer.user.name}</div>
-                                                <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                    {new Date(endringer.start_timestamp * 1000).toLocaleString('no-NB', {
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </div>
-                                                <div style={{ fontSize: '0.8em', color: getTextColor('secondary') }}>
-                                                    {new Date(endringer.end_timestamp * 1000).toLocaleString('no-NB', {
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            ) : (
-                                <span style={{ fontSize: '0.85em', color: getTextColor('subtle') }}>Ingen endringer</span>
-                            )}
-                        </Table.DataCell>
+                        {renderAffectedPeriodsCell(vakter)}
                         <Table.DataCell style={{ minWidth: '110px', padding: '8px' }}>
                             <div>
                                 {vakter.user_id.toLowerCase() === user.id.toLowerCase() ? (
@@ -943,6 +918,22 @@ const AdminLeder = ({}) => {
                                 )}
                             </Table.DataCell>
                         )}
+                        <Table.DataCell style={{ padding: '8px', minWidth: '200px' }}>
+                            <div
+                                style={{
+                                    padding: '8px',
+                                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                                    borderRadius: '4px',
+                                    border: isDarkMode ? '1px solid #444' : '1px solid #e0e0e0',
+                                }}
+                            >
+                                {vakter.audits.length !== 0 ? (
+                                    <MapAudit audits={vakter.audits} />
+                                ) : (
+                                    <span style={{ fontSize: '0.8em', color: getTextColor('subtle') }}>Ingen hendelser</span>
+                                )}
+                            </div>
+                        </Table.DataCell>
                     </Table.Row>
                 )
             })
@@ -1024,7 +1015,7 @@ const AdminLeder = ({}) => {
     let filteredListeAvVakter = mapVakter(listeAvVakter)
     const uniqueApproveLevels = Array.from(new Set(listeAvVakter.map((vakt) => vakt.approve_level)))
     const canBulkApprove = uniqueApproveLevels.length === 1 && (uniqueApproveLevels[0] === 1 || uniqueApproveLevels[0] === 3) && listeAvVakter.length > 0
-    const tableColumnCount = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? 7 : 6
+    const tableColumnCount = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? 8 : 7
 
     return (
         <>
