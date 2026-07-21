@@ -942,7 +942,6 @@ const AdminLeder = ({}) => {
         return allRows
     }
 
-
     useEffect(() => {
         setLoading(true)
         const path = `/api/leader_schedules?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
@@ -1014,7 +1013,8 @@ const AdminLeder = ({}) => {
 
     let filteredListeAvVakter = mapVakter(listeAvVakter)
     const uniqueApproveLevels = Array.from(new Set(listeAvVakter.map((vakt) => vakt.approve_level)))
-    const canBulkApprove = uniqueApproveLevels.length === 1 && (uniqueApproveLevels[0] === 1 || uniqueApproveLevels[0] === 3) && listeAvVakter.length > 0
+    const canBulkApprove =
+        uniqueApproveLevels.length === 1 && (uniqueApproveLevels[0] === 1 || uniqueApproveLevels[0] === 3) && listeAvVakter.length > 0
     const tableColumnCount = hasAnyRole(user, ['leveranseleder', 'personalleder', 'okonomi', 'admin', 'bdm']) ? 8 : 7
 
     return (
@@ -1126,9 +1126,7 @@ const AdminLeder = ({}) => {
                                         <div style={{ fontSize: '4rem', lineHeight: 1, marginBottom: '12px' }} aria-hidden>
                                             ✅
                                         </div>
-                                        <div style={{ fontSize: '2rem', fontWeight: 700, color: isDarkMode ? '#7ddc83' : '#1f7a2e' }}>
-                                            All good!
-                                        </div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 700, color: isDarkMode ? '#7ddc83' : '#1f7a2e' }}>All good!</div>
                                         <div style={{ fontSize: '1.4rem', marginTop: '8px', color: isDarkMode ? '#b8d8b8' : '#2f5f34' }}>
                                             Ingen perioder trenger godkjenning.
                                         </div>

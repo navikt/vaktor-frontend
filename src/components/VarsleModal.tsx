@@ -17,9 +17,8 @@ const getTargetRole = (schedule: Schedules): string | null => {
     if (!NOTIFIABLE_LEVELS.has(level)) return null
     if (level === 1) {
         const isVaktsjef =
-            schedule.user.group_roles?.some(
-                (gr) => gr.group_id === schedule.group_id && gr.role?.title?.toLowerCase() === 'vaktsjef'
-            ) || schedule.user.roles?.some((r) => r.title?.toLowerCase() === 'vaktsjef')
+            schedule.user.group_roles?.some((gr) => gr.group_id === schedule.group_id && gr.role?.title?.toLowerCase() === 'vaktsjef') ||
+            schedule.user.roles?.some((r) => r.title?.toLowerCase() === 'vaktsjef')
         return isVaktsjef ? 'leveranseleder' : 'vaktsjef'
     }
     if (level === 3) return 'bdm'
@@ -108,9 +107,7 @@ const VarsleModal = (props: { listeAvVakter: Schedules[]; handleClose: Function;
                                     {skippedCount} vakt{skippedCount !== 1 ? 'er' : ''} med annen status er ekskludert og varsles ikke.
                                 </p>
                             )}
-                            {notifiableCount === 0 && (
-                                <Alert variant="info">Ingen vakter med status som krever varsling.</Alert>
-                            )}
+                            {notifiableCount === 0 && <Alert variant="info">Ingen vakter med status som krever varsling.</Alert>}
                             {Object.entries(grouped).map(([role, schedules]) => (
                                 <div key={role} style={{ marginBottom: '12px' }}>
                                     <div style={{ fontWeight: 600, marginBottom: '4px', color: isDarkMode ? '#fff' : '#000' }}>
