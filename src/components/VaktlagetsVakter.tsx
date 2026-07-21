@@ -27,7 +27,7 @@ const UpdateSchedule = ({ selectedVaktlag, setSelectedVaktlag }: UpdateScheduleP
 
     const today = new Date()
     const fromDate = moment('Oct 01 2022', 'MMM DD YYYY').toDate()
-    const toDate = moment(today.getFullYear(), 'YYYY').endOf('year').toDate() + 2 // December 31, 20XX
+    const toDate = moment(today.getFullYear() + 2, 'YYYY').endOf('year').toDate() // December 31, 20XX
     const defaultSelected = moment().locale('en-GB').startOf('month').toDate()
 
     const { monthpickerProps, inputProps, selectedMonth } = useMonthpicker({
