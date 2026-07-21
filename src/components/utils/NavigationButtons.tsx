@@ -29,9 +29,10 @@ export const NavigationButtons = (props: {
     setVisibleTimeEnd: Dispatch<SetStateAction<number>>
     setTimeUnit: Dispatch<SetStateAction<string>>
 }) => {
+    const today = new Date()
     const { datepickerProps, inputProps } = useDatepicker({
         fromDate: new Date('2022-10-01'),
-        toDate: new Date('2027-12-31'),
+        toDate: new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()),
         onDateChange: (date) => {
             if (date) {
                 const startOfDay = moment(date).startOf('day').valueOf()

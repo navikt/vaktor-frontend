@@ -17,10 +17,10 @@ function DatePickeroo({ index, handleChildProps }: props) {
     const handleDateChange = (from: Number, to: Number) => {
         handleChildProps(index, { from: from, to: to })
     }
-
+    const today = new Date()
     const { datepickerProps, toInputProps, fromInputProps, selectedRange } = useRangeDatepicker({
         fromDate: new Date(now), //+ numWeeksInMs),
-        toDate: new Date('Feb 01 2027'),
+        toDate: new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()),
         defaultMonth: new Date(now + numWeeksInMs),
         onRangeChange: (val) => {
             if (val && val.from && val.to) {

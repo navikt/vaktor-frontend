@@ -191,10 +191,11 @@ const Vaktperioder = () => {
     const [lastVakt, setLastVakt] = useState<Schedules | undefined>()
     const [startTimestamp, setStartTimestamp] = useState<number>(0)
 
+    const today = new Date()
     const { datepickerProps, inputProps, selectedDay } = useDatepicker({
         fromDate: new Date('Jan 01 2023'),
-        toDate: new Date('Dec 31 2027'),
-        defaultSelected: new Date('Jan 01 2023'),
+        toDate: new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()),
+        defaultSelected: today,
     })
 
     const {
@@ -204,8 +205,8 @@ const Vaktperioder = () => {
         setSelected: setSelectedEnd,
     } = useDatepicker({
         fromDate: new Date('Jan 01 2023'),
-        toDate: new Date('Dec 31 2027'),
-        defaultSelected: new Date('Jan 01 2023'),
+        toDate: new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()),
+        defaultSelected: today,
     })
 
     const {
@@ -215,8 +216,8 @@ const Vaktperioder = () => {
         setSelected: setSelectedStart,
     } = useDatepicker({
         fromDate: new Date('Jan 01 2023'),
-        toDate: new Date('Dec 31 2027'),
-        defaultSelected: new Date('Jan 01 2023'),
+        toDate: new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()),
+        defaultSelected: today,
     })
 
     const mapMembersMidlertidig = (members: User[]) =>

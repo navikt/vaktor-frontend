@@ -15,9 +15,10 @@ import { useTheme } from '../context/ThemeContext'
 let today = Date.now()
 
 const DateRangePicker = ({ onRangeSelected }: { onRangeSelected: (start: number, end: number) => void }) => {
+    const today = new Date()
     const { datepickerProps, toInputProps, fromInputProps } = useRangeDatepicker({
         fromDate: new Date('2022-10-01'),
-        toDate: new Date('2027-12-31'),
+        toDate: new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()),
         onRangeChange: (range) => {
             if (range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
                 const startOfDay = moment(range.from).startOf('day').valueOf()

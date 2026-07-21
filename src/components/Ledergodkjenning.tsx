@@ -32,14 +32,12 @@ const AdminLeder = ({}) => {
     const [searchFilterGroup, setSearchFilterGroup] = useState('')
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
+    const today = new Date()
     const { monthpickerProps, inputProps, selectedMonth, setSelected } = useMonthpicker({
         fromDate: new Date('Oct 01 2022'),
-        toDate: new Date('Aug 23 2027'),
+        toDate: new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()),
         defaultSelected:
-            new Date().getDate() <= 10
-                ? new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)
-                : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+            today.getDate() <= 10 ? new Date(today.getFullYear(), today.getMonth() - 1, 1) : new Date(today.getFullYear(), today.getMonth(), 1),
     })
 
     const TimeLine = ({ schedules }: { schedules: Schedules[] }) => {
