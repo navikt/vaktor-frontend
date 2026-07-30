@@ -47,8 +47,8 @@ interface SchedulePreviewProps {
 
 const StyledTable = styled(Table)`
     .navds-table__header-cell {
-        background-color: var(--a-blue-100);
-        color: var(--a-text-default);
+        background-color: var(--ax-bg-accent-soft);
+        color: var(--ax-text-neutral);
         font-weight: 600;
         position: sticky;
         top: 0;
@@ -56,24 +56,24 @@ const StyledTable = styled(Table)`
     }
 
     .navds-table__data-cell {
-        padding: var(--a-spacing-4);
+        padding: var(--ax-space-16);
     }
 `
 
 const TableContainer = styled.div`
     max-height: 500px;
     overflow-y: auto;
-    border: 2px solid var(--a-border-default);
-    border-radius: var(--a-border-radius-medium);
-    background-color: var(--a-surface-default);
+    border: 2px solid var(--ax-border-neutral-subtle);
+    border-radius: var(--ax-radius-8);
+    background-color: var(--ax-bg-default);
 `
 
 const UserBadge = styled.span`
     display: inline-block;
-    padding: var(--a-spacing-1) var(--a-spacing-3);
-    background-color: var(--a-blue-600);
-    color: white;
-    border-radius: var(--a-border-radius-medium);
+    padding: var(--ax-space-4) var(--ax-space-12);
+    background-color: var(--ax-bg-accent-strong);
+    color: var(--ax-text-accent-contrast);
+    border-radius: var(--ax-radius-8);
     font-weight: 600;
     font-size: 0.875rem;
 `
@@ -81,16 +81,16 @@ const UserBadge = styled.span`
 const DateText = styled.span`
     font-family: 'Source Code Pro', monospace;
     font-size: 0.875rem;
-    color: var(--a-text-default);
+    color: var(--ax-text-neutral);
     font-weight: 500;
 `
 
 const WeekBadge = styled.span`
     display: inline-block;
-    padding: var(--a-spacing-1) var(--a-spacing-2);
-    background-color: var(--a-deepblue-600);
-    color: white;
-    border-radius: var(--a-border-radius-small);
+    padding: var(--ax-space-4) var(--ax-space-8);
+    background-color: var(--ax-bg-brand-blue-strong);
+    color: var(--ax-text-brand-blue-contrast);
+    border-radius: var(--ax-radius-4);
     font-size: 0.75rem;
     font-weight: 600;
 `
@@ -173,7 +173,7 @@ const SchedulePreview = ({
                     {previewData && (
                         <>
                             {previewData.warning && (
-                                <Alert variant="warning" style={{ marginBottom: 'var(--a-spacing-4)' }}>
+                                <Alert variant="warning" style={{ marginBottom: 'var(--ax-space-16)' }}>
                                     <Heading size="small" spacing>
                                         Advarsel: Overlappende vakter
                                     </Heading>
@@ -181,7 +181,7 @@ const SchedulePreview = ({
                                     <BodyShort>Antall overlappende vakter: {previewData.warning.overlapping_count}</BodyShort>
                                     {previewData.warning.overlapping_periods.length > 0 && (
                                         <>
-                                            <BodyShort spacing style={{ marginTop: 'var(--a-spacing-3)' }}>
+                                            <BodyShort spacing style={{ marginTop: 'var(--ax-space-12)' }}>
                                                 <strong>Eksempler på overlappende vakter:</strong>
                                             </BodyShort>
                                             <Table size="small">
