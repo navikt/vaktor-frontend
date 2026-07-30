@@ -797,7 +797,7 @@ const Vaktperioder = () => {
                                             .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
                                             .map((user: User) => user.id)}
                                         users={Object.fromEntries(
-                                            itemData.map((user: User) => [user.id, user.name])
+                                            itemData.map((user: User) => [user.id.toUpperCase(), user.name])
                                         )}
                                         startTimestamp={startTimestamp || (selectedDay ? selectedDay.getTime() / 1000 : 0)}
                                         endTimestamp={endTimestamp}
