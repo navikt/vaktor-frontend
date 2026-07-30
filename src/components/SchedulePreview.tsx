@@ -58,39 +58,49 @@ const StyledTable = styled(Table)`
 
     .navds-table__data-cell {
         padding: var(--ax-space-16);
+        vertical-align: middle;
     }
 `
 
 const TableContainer = styled.div`
     max-height: 500px;
     overflow-y: auto;
+    overflow-x: auto;
     border: 2px solid var(--ax-border-neutral-subtle);
     border-radius: var(--ax-radius-8);
     background-color: var(--ax-bg-default);
 `
 
 const UserBadge = styled.span`
-    display: inline-block;
-    padding: var(--ax-space-4) var(--ax-space-12);
-    background-color: var(--ax-bg-accent-strong);
-    color: var(--ax-text-accent-contrast);
-    border-radius: var(--ax-radius-8);
-    font-weight: 600;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    padding: var(--ax-space-4) var(--ax-space-10);
+    background-color: var(--ax-bg-accent-soft);
+    color: var(--ax-text-accent);
+    border: 1px solid var(--ax-border-accent-subtle);
+    border-radius: var(--ax-radius-full);
+    font-weight: 500;
     font-size: 0.875rem;
+    line-height: 1.4;
+    word-break: break-word;
 `
 
 const DateText = styled.span`
-    font-family: 'Source Code Pro', monospace;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
     font-size: 0.875rem;
     color: var(--ax-text-neutral);
     font-weight: 500;
+    white-space: nowrap;
 `
 
 const WeekBadge = styled.span`
     display: inline-block;
     padding: var(--ax-space-4) var(--ax-space-8);
-    background-color: var(--ax-bg-brand-blue-strong);
-    color: var(--ax-text-brand-blue-contrast);
+    background-color: var(--ax-bg-brand-blue-soft);
+    color: var(--ax-text-brand-blue);
+    border: 1px solid var(--ax-border-brand-blue-subtle);
     border-radius: var(--ax-radius-4);
     font-size: 0.75rem;
     font-weight: 600;
@@ -213,7 +223,7 @@ const SchedulePreview = ({
                                 <StyledTable size="small" zebraStripes>
                                     <Table.Header>
                                         <Table.Row>
-                                            <Table.HeaderCell scope="col" style={{ width: '140px' }}>
+                                            <Table.HeaderCell scope="col" style={{ width: '220px' }}>
                                                 Bruker
                                             </Table.HeaderCell>
                                             <Table.HeaderCell scope="col">Fra</Table.HeaderCell>
