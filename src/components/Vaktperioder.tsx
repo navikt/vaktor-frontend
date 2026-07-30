@@ -796,6 +796,9 @@ const Vaktperioder = () => {
                                             .filter((user: User) => user.group_order_index !== 100)
                                             .sort((a: User, b: User) => a.group_order_index! - b.group_order_index!)
                                             .map((user: User) => user.id)}
+                                        users={Object.fromEntries(
+                                            itemData.map((user: User) => [user.id, user.name])
+                                        )}
                                         startTimestamp={startTimestamp || (selectedDay ? selectedDay.getTime() / 1000 : 0)}
                                         endTimestamp={endTimestamp}
                                         rolloverDay={rolloverDay}
