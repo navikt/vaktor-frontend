@@ -197,7 +197,7 @@ const SchedulePreview = ({
                                                 <Table.Body>
                                                     {previewData.warning.overlapping_periods.map((period, idx) => (
                                                         <Table.Row key={idx}>
-                                                            <Table.DataCell>{users[period.user_id] ?? period.user_id}</Table.DataCell>
+                                                            <Table.DataCell>{users[period.user_id?.toUpperCase()] ?? period.user_id}</Table.DataCell>
                                                             <Table.DataCell>{period.start_date}</Table.DataCell>
                                                             <Table.DataCell>{period.end_date}</Table.DataCell>
                                                         </Table.Row>
@@ -227,7 +227,7 @@ const SchedulePreview = ({
                                         {previewData.periods.slice(0, 100).map((period, idx) => (
                                             <Table.Row key={idx}>
                                                 <Table.DataCell>
-                                                    <UserBadge>{users[period.user_id] ?? period.user_id}</UserBadge>
+                                                    <UserBadge>{users[period.user_id?.toUpperCase()] ?? period.user_id}</UserBadge>
                                                 </Table.DataCell>
                                                 <Table.DataCell>
                                                     <DateText>{period.start_date}</DateText>
