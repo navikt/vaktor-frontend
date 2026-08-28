@@ -30,9 +30,10 @@ interface GroupForm {
     type: string
     phone: string
     koststed: string
+    oppgavekode: string
 }
 
-const emptyForm: GroupForm = { name: '', description: '', type: '', phone: '', koststed: '' }
+const emptyForm: GroupForm = { name: '', description: '', type: '', phone: '', koststed: '', oppgavekode: '' }
 
 const VaktlagAdmin: React.FC = () => {
     const { theme } = useTheme()
@@ -185,7 +186,7 @@ const VaktlagAdmin: React.FC = () => {
             }
 
             const groupRes = await fetch(
-                `/api/create_new_vaktlag?name=${encodeURIComponent(createForm.name)}&phone=${encodeURIComponent(createForm.phone)}&description=${encodeURIComponent(createForm.description)}&type=${encodeURIComponent(createForm.type)}&koststed=${encodeURIComponent(createForm.koststed)}&teamkatalog=`,
+                `/api/create_new_vaktlag?name=${encodeURIComponent(createForm.name)}&phone=${encodeURIComponent(createForm.phone)}&description=${encodeURIComponent(createForm.description)}&type=${encodeURIComponent(createForm.type)}&koststed=${encodeURIComponent(createForm.koststed)}&oppgavekode=${encodeURIComponent(createForm.oppgavekode)}&teamkatalog=`,
                 { method: 'POST' }
             )
             if (!groupRes.ok) throw new Error((await groupRes.json()).detail || 'Kunne ikke opprette vaktlag')
@@ -226,6 +227,7 @@ const VaktlagAdmin: React.FC = () => {
             type: group.type || '',
             phone: group.phone || '',
             koststed: koststedVal,
+            oppgavekode: group.oppgavekode || '',
         })
         const currentMembers: SelectedMember[] = (group.members || []).map((m) => ({
             id: m.id,
@@ -261,6 +263,7 @@ const VaktlagAdmin: React.FC = () => {
                     description: editForm.description,
                     type: editForm.type,
                     koststed: editForm.koststed,
+                    oppgavekode: editForm.oppgavekode,
                 }),
             })
             if (!res.ok) throw new Error((await res.json()).detail || 'Kunne ikke oppdatere vaktlag')
@@ -276,6 +279,7 @@ const VaktlagAdmin: React.FC = () => {
                     type: refreshed.type || '',
                     phone: refreshed.phone || '',
                     koststed: koststedVal,
+                    oppgavekode: refreshed.oppgavekode || '',
                 })
             }
         } catch (err) {
@@ -554,7 +558,7 @@ const VaktlagAdmin: React.FC = () => {
                                             key={group.id}
                                             style={highlight ? { backgroundColor: isDarkMode ? '#1e3a28' : '#e8f5eb' } : undefined}
                                         >
-                                            <Table.HeaderCell scope="row" style={{ minWidth: '180px' }}>
+                                            <Table.HeaderCell scope="row" style={{ minWidth: '200px' }}>
                                                 <div
                                                     style={{
                                                         display: 'flex',
@@ -569,17 +573,8 @@ const VaktlagAdmin: React.FC = () => {
                                                         {group.type || '-'}
                                                     </Tag>
                                                 </div>
-                                                <div
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.75rem',
-                                                        fontSize: '0.8em',
-                                                        color: 'var(--a-text-subtle)',
-                                                        flexWrap: 'wrap',
-                                                    }}
-                                                >
-                                                    {group.phone && (
+                                                {group.phone && (
+                                                    <div style={{ marginBottom: '0.25rem' }}>
                                                         <span
                                                             style={{
                                                                 display: 'inline-flex',
@@ -588,24 +583,53 @@ const VaktlagAdmin: React.FC = () => {
                                                                 border: '1px solid var(--a-border-subtle)',
                                                                 borderRadius: '4px',
                                                                 padding: '1px 6px',
-                                                                fontSize: '0.85em',
+                                                                fontSize: '0.8em',
+                                                                color: 'var(--a-text-subtle)',
                                                                 backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5',
                                                             }}
                                                         >
                                                             <PhoneIcon aria-hidden fontSize="0.9em" />
                                                             {group.phone}
                                                         </span>
+                                                    </div>
+                                                )}
+                                                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                                    {koststed && (
+                                                        <span
+                                                            style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.25rem',
+                                                                border: '1px solid var(--a-border-subtle)',
+                                                                borderRadius: '4px',
+                                                                padding: '1px 6px',
+                                                                fontSize: '0.78em',
+                                                                color: 'var(--a-text-subtle)',
+                                                                backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5',
+                                                            }}
+                                                        >
+                                                            <span style={{ opacity: 0.6 }}>Koststed:</span> {koststed}
+                                                        </span>
                                                     )}
-                                                    <span
-                                                        style={{ cursor: 'pointer', borderBottom: '1px dashed var(--a-border-subtle)' }}
-                                                        onClick={() => navigator.clipboard.writeText(group.id)}
-                                                        title="Klikk for å kopiere ID"
-                                                    >
-                                                        {group.id}
-                                                    </span>
+                                                    {group.oppgavekode && (
+                                                        <span
+                                                            style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.25rem',
+                                                                border: '1px solid var(--a-border-subtle)',
+                                                                borderRadius: '4px',
+                                                                padding: '1px 6px',
+                                                                fontSize: '0.78em',
+                                                                color: 'var(--a-text-subtle)',
+                                                                backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5',
+                                                            }}
+                                                        >
+                                                            <span style={{ opacity: 0.6 }}>Oppgavekode:</span> {group.oppgavekode}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </Table.HeaderCell>
-                                            <Table.DataCell>{koststed || '-'}</Table.DataCell>
                                             <Table.DataCell style={{ minWidth: '160px' }}>
                                                 <div style={{ fontSize: '0.875em' }}>
                                                     {leveranseledere.length === 0 && (
@@ -645,7 +669,6 @@ const VaktlagAdmin: React.FC = () => {
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.HeaderCell scope="col">Navn</Table.HeaderCell>
-                                        <Table.HeaderCell scope="col">Koststed</Table.HeaderCell>
                                         <Table.HeaderCell scope="col">Ledere</Table.HeaderCell>
                                         <Table.HeaderCell scope="col">Medlemmer</Table.HeaderCell>
                                         <Table.HeaderCell scope="col"></Table.HeaderCell>
@@ -700,7 +723,7 @@ const VaktlagAdmin: React.FC = () => {
                         <div
                             style={{
                                 display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                gridTemplateColumns: 'repeat(3, 1fr)',
                                 gap: '1rem',
                                 marginBottom: '1rem',
                             }}
@@ -720,10 +743,24 @@ const VaktlagAdmin: React.FC = () => {
                                 value={createForm.phone}
                                 onChange={(e) => setCreateForm((f) => ({ ...f, phone: e.target.value }))}
                             />
+                        </div>
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, 1fr)',
+                                gap: '1rem',
+                                marginBottom: '1rem',
+                            }}
+                        >
                             <TextField
                                 label="Koststed"
                                 value={createForm.koststed}
                                 onChange={(e) => setCreateForm((f) => ({ ...f, koststed: e.target.value }))}
+                            />
+                            <TextField
+                                label="Oppgavekode"
+                                value={createForm.oppgavekode}
+                                onChange={(e) => setCreateForm((f) => ({ ...f, oppgavekode: e.target.value }))}
                             />
                         </div>
                         <Textarea
@@ -764,7 +801,7 @@ const VaktlagAdmin: React.FC = () => {
                             <div
                                 style={{
                                     display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                    gridTemplateColumns: 'repeat(3, 1fr)',
                                     gap: '1rem',
                                     marginBottom: '1rem',
                                 }}
@@ -784,10 +821,24 @@ const VaktlagAdmin: React.FC = () => {
                                     value={editForm.phone}
                                     onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
                                 />
+                            </div>
+                            <div
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(2, 1fr)',
+                                    gap: '1rem',
+                                    marginBottom: '1rem',
+                                }}
+                            >
                                 <TextField
                                     label="Koststed"
                                     value={editForm.koststed}
                                     onChange={(e) => setEditForm((f) => ({ ...f, koststed: e.target.value }))}
+                                />
+                                <TextField
+                                    label="Oppgavekode"
+                                    value={editForm.oppgavekode}
+                                    onChange={(e) => setEditForm((f) => ({ ...f, oppgavekode: e.target.value }))}
                                 />
                             </div>
                             <Textarea

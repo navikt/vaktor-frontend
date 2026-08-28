@@ -45,6 +45,7 @@ export interface Vaktlag {
     leveranseleder: User[]
     vaktsjef: User[]
     koststed: string[]
+    oppgavekode?: string
 }
 
 export interface OverlappingSchedule {
