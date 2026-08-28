@@ -6,6 +6,7 @@ interface GroupRequestBody {
     description: string
     type: string
     koststed?: string
+    oppgavekode?: string
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -16,6 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const koststed = req.query.koststed as string | undefined
+    const oppgavekode = req.query.oppgavekode as string | undefined
 
     const requestBody: GroupRequestBody = {
         name: req.query.name as string,
@@ -23,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: req.query.description as string,
         type: req.query.type as string,
         ...(koststed ? { koststed } : {}),
+        ...(oppgavekode ? { oppgavekode } : {}),
     }
 
     const path = `${process.env.BACKEND_URL}/api/v1/groups/`
