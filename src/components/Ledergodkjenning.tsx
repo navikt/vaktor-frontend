@@ -14,6 +14,8 @@ import { Buildings3Icon, FirstAidKitIcon, RecycleIcon, WaitingRoomIcon } from '@
 import { hasAnyRole, hasRoleInGroup } from '../utils/roles'
 
 type ActionFilter = 'krever_handling' | 'ikke_utbetalt' | 'alle'
+const HISTORICAL_OPEN_APPROVE_LEVELS = new Set([0, 1, 2, 3, 4])
+const LEADER_SCHEDULE_LOOKBACK_MONTHS = 24
 
 const AdminLeder = ({}) => {
     const { user } = useAuth()
@@ -765,36 +767,78 @@ const AdminLeder = ({}) => {
 
         const allRows: JSX.Element[] = []
 
-        // Group ordinary shifts by vaktlag (group name)
-        const groupedByGroupName: Record<string, Schedules[]> = ordinary.reduce(
+        const selectedMonthKey = moment(selectedMonth!).format('YYYY-MM')
+        const groupedByMonth: Record<string, Schedules[]> = ordinary.reduce(
             (acc: Record<string, Schedules[]>, current) => {
-                const groupName = current.group.name || 'group name not set'
-                if (!acc[groupName]) {
-                    acc[groupName] = []
+                const monthKey = moment(current.start_timestamp * 1000).format('YYYY-MM')
+                if (!acc[monthKey]) {
+                    acc[monthKey] = []
                 }
-                acc[groupName].push(current)
+                acc[monthKey].push(current)
                 return acc
             },
             {} as Record<string, Schedules[]>
         )
 
-        // Sort each group by start_timestamp
-        Object.keys(groupedByGroupName).forEach((groupNameKey) => {
-            groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
-        })
+        const monthKeys = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a))
 
-        // Render ordinary shifts
-        Object.entries(groupedByGroupName).forEach(([koststed, schedules]) => {
+        monthKeys.forEach((monthKey) => {
+            const schedulesInMonth = groupedByMonth[monthKey]
+            const isHistoricalMonth = monthKey !== selectedMonthKey
+            const monthLabel = moment(`${monthKey}-01`).format('MMMM YYYY')
+
             allRows.push(
-                <Table.Row key={`header-${koststed}`}>
-                    <Table.DataCell colSpan={columnCount}>
-                        <b>{koststed}</b>
-                        <TimeLine schedules={schedules} />
+                <Table.Row key={`month-header-${monthKey}`}>
+                    <Table.DataCell colSpan={columnCount} style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                            <b style={{ fontSize: '1.05rem' }}>{monthLabel}</b>
+                            {isHistoricalMonth && (
+                                <span
+                                    style={{
+                                        fontSize: '0.8rem',
+                                        fontWeight: 700,
+                                        color: isDarkMode ? '#f0c674' : '#7a4300',
+                                        backgroundColor: isDarkMode ? '#4a3a1a' : '#fff4cc',
+                                        borderRadius: '999px',
+                                        padding: '4px 10px',
+                                    }}
+                                >
+                                    Historiske perioder
+                                </span>
+                            )}
+                        </div>
                     </Table.DataCell>
                 </Table.Row>
             )
 
-            schedules.forEach((vakter) => {
+            const groupedByGroupName: Record<string, Schedules[]> = schedulesInMonth.reduce(
+                (acc: Record<string, Schedules[]>, current) => {
+                    const groupName = current.group.name || 'group name not set'
+                    if (!acc[groupName]) {
+                        acc[groupName] = []
+                    }
+                    acc[groupName].push(current)
+                    return acc
+                },
+                {} as Record<string, Schedules[]>
+            )
+
+            Object.keys(groupedByGroupName).forEach((groupNameKey) => {
+                groupedByGroupName[groupNameKey].sort((a, b) => a.start_timestamp - b.start_timestamp)
+            })
+
+            Object.entries(groupedByGroupName).forEach(([koststed, schedules]) => {
+                allRows.push(
+                    <Table.Row key={`header-${monthKey}-${koststed}`}>
+                        <Table.DataCell colSpan={columnCount}>
+                            <b>{koststed}</b>
+                            <TimeLine schedules={schedules} />
+                        </Table.DataCell>
+                    </Table.Row>
+                )
+
+                schedules.forEach((vakter) => {
+                    const isHistoricalRow = moment(vakter.start_timestamp * 1000).format('YYYY-MM') !== selectedMonthKey
                 rowCount++
                 const vaktType = vakter.type === 'bakvakt' ? 'bistand' : vakter.type
                 const backgroundColor = getBistandBytteColor(vaktType)
@@ -819,6 +863,22 @@ const AdminLeder = ({}) => {
                                 <div style={{ fontSize: '0.85em', color: getTextColor('subtle'), marginTop: '4px', fontStyle: 'italic' }}>
                                     {vaktType}
                                 </div>
+                                {isHistoricalRow && (
+                                    <div style={{ marginTop: '6px' }}>
+                                        <span
+                                            style={{
+                                                fontSize: '0.75em',
+                                                fontWeight: 700,
+                                                color: isDarkMode ? '#f0c674' : '#7a4300',
+                                                backgroundColor: isDarkMode ? '#4a3a1a' : '#fff4cc',
+                                                borderRadius: '999px',
+                                                padding: '2px 8px',
+                                            }}
+                                        >
+                                            Historisk
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </Table.DataCell>
                         <Table.DataCell style={{ minWidth: '200px', padding: '12px', backgroundColor: getStatusColor(vakter.approve_level) }}>
@@ -936,13 +996,15 @@ const AdminLeder = ({}) => {
                 )
             })
         })
+        })
 
         return allRows
     }
 
     useEffect(() => {
         setLoading(true)
-        const path = `/api/leader_schedules?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}`
+        const historicalStatuses = Array.from(HISTORICAL_OPEN_APPROVE_LEVELS).join(',')
+        const path = `/api/leader_schedules?start_timestamp=${startTimestamp}&end_timestamp=${endTimestamp}&selected_month_start=${startTimestamp}&selected_month_end=${endTimestamp}&include_historical_open=true&historical_statuses=${encodeURIComponent(historicalStatuses)}&lookback_months=${LEADER_SCHEDULE_LOOKBACK_MONTHS}`
 
         Promise.all([fetch(path).then((res) => res.json())])
             .then(([itemData]) => {
@@ -984,15 +1046,14 @@ const AdminLeder = ({}) => {
     }
 
     let listeAvVakter = itemData.filter((value: Schedules) => {
-        const month = new Date(value.start_timestamp * 1000).getMonth()
-        const year = new Date(value.start_timestamp * 1000).getFullYear()
+        const periodDate = new Date(value.start_timestamp * 1000)
+        const periodMonth = periodDate.getMonth()
+        const periodYear = periodDate.getFullYear()
+        const selectedMonthStart = new Date(selectedMonth!.getFullYear(), selectedMonth!.getMonth(), 1)
+        const selectedMonthEnd = new Date(selectedMonth!.getFullYear(), selectedMonth!.getMonth() + 1, 1)
         const isExternal = value.user.ekstern == false
-        // Ignore approved periods in the future
-        const futurePeriodsMonth = month <= selectedMonth!.getMonth()
-        const futurePeriodsYear = year <= selectedMonth!.getFullYear()
-
-        // Always keep selected month as baseline for all action filters.
-        const isDateMatching = month === selectedMonth!.getMonth() && year === selectedMonth!.getFullYear()
+        const isDateMatching = periodMonth === selectedMonth!.getMonth() && periodYear === selectedMonth!.getFullYear()
+        const isHistoricalOpenPeriod = periodDate < selectedMonthStart && HISTORICAL_OPEN_APPROVE_LEVELS.has(value.approve_level)
 
         // Apply other filtering conditions.
         const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
@@ -1005,8 +1066,10 @@ const AdminLeder = ({}) => {
                   : // krev_handling: kun manuelle handlinger i status 0/1/3
                     value.approve_level <= 3 && isActionableForUser(value)
 
-        // Combine all conditions for filtering.
-        return isDateMatching && isNameMatching && isGroupMatch && isActionMatching && isExternal && futurePeriodsMonth && futurePeriodsYear
+        const isInSelectedMonthWithActionFilter = isDateMatching && periodDate >= selectedMonthStart && periodDate < selectedMonthEnd && isActionMatching
+
+        // Historical open periods must always remain visible for leaders.
+        return (isInSelectedMonthWithActionFilter || isHistoricalOpenPeriod) && isNameMatching && isGroupMatch && isExternal
     })
 
     let filteredListeAvVakter = mapVakter(listeAvVakter)
@@ -1050,6 +1113,8 @@ const AdminLeder = ({}) => {
                                         <i>Trenger godkjenning</i> viser perioder du kan/må behandle nå.
                                         <br />
                                         <i>Vis åpne perioder</i> viser perioder som ikke er utbetalt ennå innenfor ditt ansvarsområde.
+                                        <br />
+                                        Historiske perioder med status 0-4 vises alltid.
                                     </div>
                                 </HelpText>
                             </div>
