@@ -407,6 +407,10 @@ const AdminLeder = ({}) => {
         endTimestamp = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0).getTime() / 1000
     }
 
+    const selectedMonthKey = moment(startTimestamp * 1000).format('YYYY-MM')
+    const currentMonthKey = moment().format('YYYY-MM')
+    const isHistoricalMonth = (monthKey: string) => monthKey < selectedMonthKey && monthKey < currentMonthKey
+
     const confirm_schedules_bulk = async (scheduleIds: string[], setResponse: Dispatch<any>) => {
         setLoading(true)
         try {
@@ -767,7 +771,6 @@ const AdminLeder = ({}) => {
 
         const allRows: JSX.Element[] = []
 
-        const selectedMonthKey = moment(selectedMonth!).format('YYYY-MM')
         const groupedByMonth: Record<string, Schedules[]> = ordinary.reduce(
             (acc: Record<string, Schedules[]>, current) => {
                 const monthKey = moment(current.start_timestamp * 1000).format('YYYY-MM')
@@ -784,7 +787,7 @@ const AdminLeder = ({}) => {
 
         monthKeys.forEach((monthKey) => {
             const schedulesInMonth = groupedByMonth[monthKey]
-            const isHistoricalMonth = monthKey !== selectedMonthKey
+            const showHistoricalChip = isHistoricalMonth(monthKey)
             const monthLabel = moment(`${monthKey}-01`).format('MMMM YYYY')
 
             allRows.push(
@@ -792,19 +795,25 @@ const AdminLeder = ({}) => {
                     <Table.DataCell colSpan={columnCount} style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                             <b style={{ fontSize: '1.05rem' }}>{monthLabel}</b>
-                            {isHistoricalMonth && (
-                                <span
-                                    style={{
-                                        fontSize: '0.8rem',
-                                        fontWeight: 700,
-                                        color: isDarkMode ? '#f0c674' : '#7a4300',
-                                        backgroundColor: isDarkMode ? '#4a3a1a' : '#fff4cc',
-                                        borderRadius: '999px',
-                                        padding: '4px 10px',
-                                    }}
-                                >
-                                    Historiske perioder
-                                </span>
+                            {showHistoricalChip && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span
+                                        style={{
+                                            fontSize: '0.8rem',
+                                            fontWeight: 700,
+                                            color: isDarkMode ? '#f0c674' : '#7a4300',
+                                            backgroundColor: isDarkMode ? '#4a3a1a' : '#fff4cc',
+                                            borderRadius: '999px',
+                                            padding: '4px 10px',
+                                        }}
+                                    >
+                                        Historiske perioder
+                                    </span>
+                                    <HelpText title="Hva er historiske perioder?" placement="left">
+                                        Dette er perioder fra tidligere måneder som mangler godkjenning eller ennå ikke er overført til lønn.
+                                        Se statusen for hver periode.
+                                    </HelpText>
+                                </div>
                             )}
                         </div>
                     </Table.DataCell>
@@ -838,7 +847,7 @@ const AdminLeder = ({}) => {
                 )
 
                 schedules.forEach((vakter) => {
-                    const isHistoricalRow = moment(vakter.start_timestamp * 1000).format('YYYY-MM') !== selectedMonthKey
+                    const isHistoricalRow = isHistoricalMonth(moment(vakter.start_timestamp * 1000).format('YYYY-MM'))
                 rowCount++
                 const vaktType = vakter.type === 'bakvakt' ? 'bistand' : vakter.type
                 const backgroundColor = getBistandBytteColor(vaktType)
@@ -1046,14 +1055,10 @@ const AdminLeder = ({}) => {
     }
 
     let listeAvVakter = itemData.filter((value: Schedules) => {
-        const periodDate = new Date(value.start_timestamp * 1000)
-        const periodMonth = periodDate.getMonth()
-        const periodYear = periodDate.getFullYear()
-        const selectedMonthStart = new Date(selectedMonth!.getFullYear(), selectedMonth!.getMonth(), 1)
-        const selectedMonthEnd = new Date(selectedMonth!.getFullYear(), selectedMonth!.getMonth() + 1, 1)
+        const periodMonthKey = moment(value.start_timestamp * 1000).format('YYYY-MM')
         const isExternal = value.user.ekstern == false
-        const isDateMatching = periodMonth === selectedMonth!.getMonth() && periodYear === selectedMonth!.getFullYear()
-        const isHistoricalOpenPeriod = periodDate < selectedMonthStart && HISTORICAL_OPEN_APPROVE_LEVELS.has(value.approve_level)
+        const isDateMatching = periodMonthKey === selectedMonthKey
+        const isHistoricalOpenPeriod = isHistoricalMonth(periodMonthKey) && HISTORICAL_OPEN_APPROVE_LEVELS.has(value.approve_level)
 
         // Apply other filtering conditions.
         const isNameMatching = value.user.name.toLowerCase().includes(searchFilter)
@@ -1066,7 +1071,7 @@ const AdminLeder = ({}) => {
                   : // krev_handling: kun manuelle handlinger i status 0/1/3
                     value.approve_level <= 3 && isActionableForUser(value)
 
-        const isInSelectedMonthWithActionFilter = isDateMatching && periodDate >= selectedMonthStart && periodDate < selectedMonthEnd && isActionMatching
+        const isInSelectedMonthWithActionFilter = isDateMatching && isActionMatching
 
         // Historical open periods must always remain visible for leaders.
         return (isInSelectedMonthWithActionFilter || isHistoricalOpenPeriod) && isNameMatching && isGroupMatch && isExternal
